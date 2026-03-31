@@ -1,0 +1,12 @@
+[2026-03-31 17:41:51]
+{"event":"manual-test","ok":true}
+
+[2026-03-31 17:43:08]
+{"timestamp":"2026-03-31T15:43:07.984Z","hook_event_name":"UserPromptSubmit","session_id":"073d0232-b888-4ddf-bb56-9a0b20ecb60f","transcript_path":"c:\\Users\\lukab\\AppData\\Roaming\\Code\\User\\workspaceStorage\\93007e7bf84f8c7156877a276a6162eb\\GitHub.copilot-chat\\transcripts\\073d0232-b888-4ddf-bb56-9a0b20ecb60f.jsonl","prompt":"mgt.clearMarks is not a function kakav si mi ovo error izbacio","cwd":"c:\\Users\\lukab\\Documents\\Projekt\\Razvoj-web-aplikacija-u-ASP.NET-MVC-tehnologiji"}
+
+[2026-03-31 17:43:19]
+{"timestamp":"2026-03-31T15:43:19.320Z","hook_event_name":"PreToolUse","session_id":"073d0232-b888-4ddf-bb56-9a0b20ecb60f","transcript_path":"c:\\Users\\lukab\\AppData\\Roaming\\Code\\User\\workspaceStorage\\93007e7bf84f8c7156877a276a6162eb\\GitHub.copilot-chat\\transcripts\\073d0232-b888-4ddf-bb56-9a0b20ecb60f.jsonl","tool_name":"grep_search","tool_input":{"maxResults":50,"query":"mgt.clearMarks|clearMarks","isRegexp":true,"includePattern":"**/*"},"tool_use_id":"call_BA4Xy44Xpchy40lDwijrtVse__vscode-1774971341076","cwd":"c:\\Users\\lukab\\Documents\\Projekt\\Razvoj-web-aplikacija-u-ASP.NET-MVC-tehnologiji"}
+
+[2026-03-31 17:43:41]
+{"timestamp":"2026-03-31T15:43:41.430Z","hook_event_name":"PreToolUse","session_id":"073d0232-b888-4ddf-bb56-9a0b20ecb60f","transcript_path":"c:\\Users\\lukab\\AppData\\Roaming\\Code\\User\\workspaceStorage\\93007e7bf84f8c7156877a276a6162eb\\GitHub.copilot-chat\\transcripts\\073d0232-b888-4ddf-bb56-9a0b20ecb60f.jsonl","tool_name":"read_file","tool_input":{"filePath":"c:\\Users\\lukab\\Documents\\Projekt\\Razvoj-web-aplikacija-u-ASP.NET-MVC-tehnologiji\\.github\\hooks\\agent-logging.json","startLine":1,"endLine":200},"tool_use_id":"call_MB5pgRqJI6t9eqNRPymc4MKO__vscode-1774971341078","cwd":"c:\\Users\\lukab\\Documents\\Projekt\\Razvoj-web-aplikacija-u-ASP.NET-MVC-tehnologiji"}
+
