@@ -1,4 +1,10 @@
+using planinarenje.Entiteti;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Lab 1: inicijalno punjenje objekata podacima iz dataset dokumenta.
+var lab1Podaci = Lab1PodaciFactory.Kreiraj();
+Console.WriteLine($"Lab1 podaci ucitani: Podrucja={lab1Podaci.Podrucja.Count}, Korisnici={lab1Podaci.Korisnici.Count}, Posjeti={lab1Podaci.Posjeti.Count}");
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
