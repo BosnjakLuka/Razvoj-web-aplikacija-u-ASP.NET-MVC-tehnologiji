@@ -6,6 +6,7 @@ public class Podrucje
     public string Naziv { get; set; } = string.Empty;
     public string? Opis { get; set; }
     public string? Regija { get; set; }
+    public int UkupanBrojKT { get; set; }
     public int MinimalanBrojKTZaObilazak { get; set; }
 
     public List<KontrolnaTocka> KontrolneTocke { get; set; } = new();
