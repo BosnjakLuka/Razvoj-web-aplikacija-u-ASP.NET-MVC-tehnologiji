@@ -226,3 +226,9 @@
 [2026-04-02 10:28:19]
 {"timestamp":"2026-04-02T08:28:19.061Z","hook_event_name":"PreToolUse","session_id":"88d2c3ab-8972-4b2c-bcf9-e7e652318a74","transcript_path":"c:\\Users\\lukab\\AppData\\Roaming\\Code\\User\\workspaceStorage\\93007e7bf84f8c7156877a276a6162eb\\GitHub.copilot-chat\\transcripts\\88d2c3ab-8972-4b2c-bcf9-e7e652318a74.jsonl","tool_name":"kill_terminal","tool_input":{"id":"98b728da-90c4-439c-8b08-3f3265ef8ad9"},"tool_use_id":"call_oyKmwqTgMMzVMuS5Di5QUOsU__vscode-1775107702361","cwd":"c:\\Users\\lukab\\Documents\\Projekt\\Razvoj-web-aplikacija-u-ASP.NET-MVC-tehnologiji"}
 
+[2026-04-02 10:38:23]
+{"timestamp":"2026-04-02T08:38:23.390Z","hook_event_name":"UserPromptSubmit","session_id":"88d2c3ab-8972-4b2c-bcf9-e7e652318a74","transcript_path":"c:\\Users\\lukab\\AppData\\Roaming\\Code\\User\\workspaceStorage\\93007e7bf84f8c7156877a276a6162eb\\GitHub.copilot-chat\\transcripts\\88d2c3ab-8972-4b2c-bcf9-e7e652318a74.jsonl","prompt":"Sljedeci zadatak iz .md file lab.1,md nam je  async await, prije nego po-ìnemo raditi i pri-ìati o async waitu molim te ga objasni, sto je, kako radi, za sto sluzi i kako se on koristi. ","cwd":"c:\\Users\\lukab\\Documents\\Projekt\\Razvoj-web-aplikacija-u-ASP.NET-MVC-tehnologiji"}
+
+[2026-04-02 10:50:05]
+{"timestamp":"2026-04-02T08:50:04.843Z","hook_event_name":"UserPromptSubmit","session_id":"88d2c3ab-8972-4b2c-bcf9-e7e652318a74","transcript_path":"c:\\Users\\lukab\\AppData\\Roaming\\Code\\User\\workspaceStorage\\93007e7bf84f8c7156877a276a6162eb\\GitHub.copilot-chat\\transcripts\\88d2c3ab-8972-4b2c-bcf9-e7e652318a74.jsonl","prompt":"u mojoj aplikaciji async bi se koristio za:\r\nUpload fotografije\r\nawait UploadSlike();\r\n","cwd":"c:\\Users\\lukab\\Documents\\Projekt\\Razvoj-web-aplikacija-u-ASP.NET-MVC-tehnologiji"}
+
