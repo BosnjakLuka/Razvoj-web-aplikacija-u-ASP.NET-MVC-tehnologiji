@@ -1,31 +1,354 @@
-html {
-  font-size: 14px;
+/* ==========================================================================
+   GLOBAL DESIGN SYSTEM: Planinarska Knjižica
+   ========================================================================== */
+
+:root {
+    /* Color Palette - HPS Inspired & Hiking Aesthetic */
+    --color-primary-blue: #004b87;        /* Strong HPS Blue */
+    --color-dark-blue: #002d56;           /* Deep elevation / footer blue */
+    --color-hiking-green: #2e7d32;        /* Vibrant forest green */
+    --color-hiking-green-hover: #1f5f25;
+    --color-olive-sage: #6b8e23;          /* Secondary outdoor/trail accent */
+    --color-accent-orange: #d32f2f;       /* Hiking red/orange for CTA / badges */
+    
+    /* Backgrounds & Surfaces */
+    --bg-body-warm: #fcfbf9;              /* Warm beige / digital logbook paper */
+    --bg-surface-light: #ffffff;          /* Clean white for cards */
+    --bg-surface-muted: #f2efe9;          /* Slightly darker beige for contrasting sections */
+    
+    /* Text Colors */
+    --text-main: #2c3e50;                 /* Soft black/navy for readability */
+    --text-muted: #6c757d;                /* Secondary text */
+    --text-inverse: #ffffff;              /* Text on dark backgrounds */
+
+    /* Borders & Shadows (Tinted with primary blue for cohesion) */
+    --border-subtle: rgba(0, 75, 135, 0.1);
+    --border-strong: rgba(0, 75, 135, 0.2);
+    --shadow-1: 0 2px 4px rgba(0, 45, 86, 0.04), 0 1px 2px rgba(0, 45, 86, 0.02);
+    --shadow-2: 0 6px 12px rgba(0, 45, 86, 0.06), 0 2px 4px rgba(0, 45, 86, 0.04);
+    --shadow-3: 0 16px 32px rgba(0, 45, 86, 0.08), 0 4px 8px rgba(0, 45, 86, 0.04);
+
+    /* Geometry */
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-pill: 9999px;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
+/* ==========================================================================
+   GLOBAL TYPOGRAPHY & BODY
+   ========================================================================== */
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-  margin-bottom: 60px;
+    background-color: var(--bg-body-warm);
+    color: var(--text-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+h1, h2, h3, h4, h5, h6, .section-title {
+    color: var(--color-dark-blue);
+    font-weight: 700;
+    letter-spacing: -0.02em;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+a {
+    color: var(--color-hiking-green);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--color-olive-sage);
+}
+
+/* ==========================================================================
+   LAYOUT SHELL
+   ========================================================================== */
+
+.app-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.page-container {
+    flex: 1 0 auto;
+    padding: 2.5rem 0 4rem 0;
+    width: 100%;
+}
+
+/* ==========================================================================
+   TOPBAR & NAVIGATION
+   ========================================================================== */
+
+.topbar {
+    background-color: var(--color-primary-blue);
+    box-shadow: var(--shadow-2);
+    padding: 0.75rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.brand-mark {
+    color: var(--text-inverse) !important;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.brand-mark svg {
+    color: var(--color-accent-orange);
+}
+
+.main-nav .nav-link {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.5rem 1rem !important;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.main-nav .nav-link:hover,
+.main-nav .nav-link.active {
+    color: var(--text-inverse) !important;
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.breadcrumb-wrap {
+    background-color: var(--bg-surface-light);
+    border-bottom: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-1);
+    padding: 0.75rem 0;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.breadcrumb-wrap a { color: var(--text-muted); }
+.breadcrumb-wrap .active { color: var(--color-hiking-green); }
+
+/* ==========================================================================
+   UI COMPONENTS (Cards, Panels, Badges)
+   ========================================================================== */
+
+.app-card {
+    background-color: var(--bg-surface-light);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-1);
+    padding: 1.5rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    height: 100%;
+}
+
+.app-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-2);
+    border-color: var(--border-strong);
+}
+
+.detail-panel {
+    background-color: var(--bg-surface-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-2);
+    border-top: 6px solid var(--color-hiking-green);
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background-color: var(--bg-surface-light);
+    border-radius: var(--radius-md);
+    border-left: 5px solid var(--color-hiking-green);
+    box-shadow: var(--shadow-1);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card .stat-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--color-dark-blue);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.stat-card .stat-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.quick-link-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg-surface-light);
+    border-radius: var(--radius-sm);
+    padding: 1.25rem 1.5rem;
+    color: var(--color-primary-blue);
+    font-weight: 600;
+    font-size: 1.05rem;
+    box-shadow: var(--shadow-1);
+    border: 1px solid var(--border-subtle);
+    transition: all 0.2s ease;
+}
+
+.quick-link-card:hover {
+    background-color: var(--color-hiking-green);
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-2);
+    transform: translateX(4px);
+}
+
+.app-badge {
+    display: inline-block;
+    padding: 0.4em 0.85em;
+    border-radius: var(--radius-pill);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.app-badge.badge-primary { background-color: var(--color-primary-blue); color: var(--text-inverse); }
+.app-badge.badge-accent { background-color: var(--color-accent-orange); color: var(--text-inverse); }
+.app-badge.badge-success { background-color: var(--color-hiking-green); color: var(--text-inverse); }
+.app-badge.badge-subtle { background-color: var(--bg-surface-muted); color: var(--text-main); border: 1px solid var(--border-subtle); }
+
+.section-title {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 0.75rem;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 4px;
+    background-color: var(--color-hiking-green);
+    border-radius: var(--radius-pill);
+}
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+
+.btn-primary {
+    background-color: var(--color-hiking-green);
+    border-color: var(--color-hiking-green);
+    font-weight: 600;
+    padding: 0.6rem 1.5rem;
+    border-radius: var(--radius-pill);
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-hiking-green-hover);
+    border-color: var(--color-hiking-green-hover);
+    box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3);
+}
+
+/* ==========================================================================
+   HERO & IMAGE INTEGRATIONS
+   ========================================================================== */
+
+.hero-section {
+    position: relative;
+    padding: 8rem 0;
+    display: flex;
+    align-items: center;
+    color: var(--text-inverse);
+}
+
+.bg-hero-hpo {
+    background-image: url('/Slike/Dizajn/hpo.jpg');
+    background-size: cover;
+    background-position: center 30%;
+    background-attachment: fixed; /* Parallax effect */
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 45, 86, 0.85) 0%, rgba(46, 125, 50, 0.75) 100%);
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-actions {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Usage for karta-hpo.jpg */
+.img-karta-hpo {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-3);
+    border: 6px solid var(--bg-surface-light);
+    width: 100%;
+    height: auto;
+}
+
+/* Usage for karte1.jpg */
+.bg-texture-karte {
+    background-image: url('/Slike/Dizajn/karte1.jpg');
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(252, 251, 249, 0.94);
+    background-blend-mode: overlay;
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+/* ==========================================================================
+   FOOTER
+   ========================================================================== */
+
+.footer-shell {
+    background-color: var(--color-dark-blue);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 2.5rem 0;
+    margin-top: auto;
+}
+
+.footer-shell strong {
+    color: var(--text-inverse);
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .hero-section { padding: 5rem 0; }
+    .hero-content h1 { font-size: 2.5rem; }
+    .stat-card { margin-bottom: 1rem; }
+    .hero-actions { justify-content: center; }
 }

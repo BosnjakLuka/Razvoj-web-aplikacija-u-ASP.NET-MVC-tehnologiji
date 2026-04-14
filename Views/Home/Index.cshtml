@@ -1,8 +1,102 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Naslovnica";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!-- HERO SECTION -->
+<section class="hero-section bg-hero-hpo">
+    <div class="hero-overlay"></div>
+    <div class="container hero-content text-center text-md-start">
+        <div class="row align-items-center">
+            <div class="col-md-9 col-lg-7">
+                <span class="app-badge badge-accent mb-3">Hrvatska Planinarska Obilaznica</span>
+                <h1 class="display-4 mb-4">Digitalna Planinarska Knjižica</h1>
+                <p class="lead mb-4" style="opacity: 0.9;">Vaša osobna evidencija osvojenih vrhova, prohodanih ruta i posjećenih planinarskih područja. Pratite svoj napredak i kreirajte nezaboravne uspomene na jednom mjestu.</p>
+                <div class="hero-actions">
+                    <a asp-controller="KontrolnaTocka" asp-action="Index" class="btn btn-primary btn-lg">Pregledaj vrhove</a>
+                    <a asp-controller="Podrucje" asp-action="Index" class="btn btn-outline-light btn-lg border-2 rounded-pill px-4">Istraži područja</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- QUICK STATS SECTION -->
+<section class="py-5 bg-transparent">
+    <div class="container">
+        <div class="row g-4 mb-5 pb-2">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-value">152</div>
+                    <div class="stat-label">Kontrolne točke</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-value">20</div>
+                    <div class="stat-label">Područja regija</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-value">6+</div>
+                    <div class="stat-label">Stupnjeva priznanja</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-value">80</div>
+                    <div class="stat-label">Planinarskih kuća</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row g-3">
+            <div class="col-md-4"><a asp-controller="Ruta" asp-action="Index" class="quick-link-card"><span>Otkrij nove rute</span> <span>➔</span></a></div>
+            <div class="col-md-4"><a asp-controller="Medalja" asp-action="Index" class="quick-link-card"><span>Sustav HPO medalja</span> <span>➔</span></a></div>
+            <div class="col-md-4"><a asp-controller="Posjet" asp-action="Index" class="quick-link-card"><span>Moj dnevnik posjeta</span> <span>➔</span></a></div>
+        </div>
+    </div>
+</section>
+
+<!-- MAP / AREAS SECTION -->
+<section class="py-5" style="background-color: var(--bg-surface-light);">
+    <div class="container py-4">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6 order-2 order-lg-1">
+                <img src="~/Slike/Dizajn/karta-hpo.jpg" alt="Karta hrvatskih planinarskih područja" class="img-karta-hpo" />
+            </div>
+            <div class="col-lg-6 order-1 order-lg-2">
+                <h2 class="section-title">Planinarska Područja Hrvatske</h2>
+                <p class="text-muted mb-4 fs-5">
+                    Hrvatske planine podijeljene su u impresivnih 20 planinarskih regija koje obuhvaćaju sve najatraktivnije 
+                    vrhove, od slavonskog gorja, preko šumovitog Gorskog kotara i moćnog Velebita, sve do krševitih jadranskih otoka i dalmatinske zagore.
+                </p>
+                <div class="d-flex align-items-center mb-4 p-3 bg-light rounded-3 border">
+                    <div class="me-3 px-3 py-2 bg-white rounded shadow-sm text-center">
+                        <span class="fs-4 fw-bold" style="color: var(--color-hiking-green);">20</span><br><small class="text-muted text-uppercase" style="font-size: 0.7rem; font-weight:700;">Grupacija</small>
+                    </div>
+                    <p class="mb-0 text-muted small">Svako područje zahtijeva pronalazak određenog broja žigova kako bi se ispunili uvjeti za stjecanje visokih priznanja.</p>
+                </div>
+                <a asp-controller="Podrucje" asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">Pregledaj sva područja</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SECONDARY THEMATIC SECTION / ABOUT -->
+<section class="py-5 bg-texture-karte">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center app-card">
+                <h2 class="section-title border-0 pb-0 text-center mx-auto mb-4" style="width: fit-content;">Vaš digitalni planinarski put</h2>
+                <p class="text-muted mb-4 fs-5">
+                    Moderna zamjena za klasičnu papirnatu knjižicu. Mjesto gdje svaki vaš pečat s vrhova, prehodana markacija i posjećeni dom dobiva svoj digitalni trag.
+                </p>
+                <hr class="w-25 mx-auto mb-4 border-2" style="color: var(--color-hiking-green); opacity: 1;">
+                <p class="text-muted">
+                    Sustav je usklađen s pravilnikom i logikom provjerenih planinarskih obilaznica, omogućujući vam brz pregled uvjeta potrebnih za ostvarivanje brončanih, srebrnih i zlatnih obilazničkih znački.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>

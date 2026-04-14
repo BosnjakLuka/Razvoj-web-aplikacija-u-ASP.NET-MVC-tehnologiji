@@ -1,4 +1,5 @@
 using planinarenje.Entiteti;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -143,6 +144,24 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+// Resolve project root robustly (works when launched from project root or bin/Debug).
+string ResolveProjectRoot(string startPath)
+{
+    var dir = new DirectoryInfo(startPath);
+    while (dir is not null)
+    {
+        if (File.Exists(Path.Combine(dir.FullName, "planinarenje.csproj")))
+        {
+            return dir.FullName;
+        }
+        dir = dir.Parent;
+    }
+
+    return startPath;
+}
+
+var projectRoot = ResolveProjectRoot(app.Environment.ContentRootPath);
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -152,16 +171,41 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+var webRootPath = Path.Combine(projectRoot, "wwwroot");
+if (Directory.Exists(webRootPath))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(webRootPath)
+    });
+}
+else
+{
+    app.Logger.LogWarning("Folder 'wwwroot' nije pronađen. Očekivana putanja: {WebRootPath}", webRootPath);
+}
+
+// Resolve the project-level Slike folder even when the app starts from bin/Debug.
+var slikePath = Path.Combine(projectRoot, "Slike");
+
+if (Directory.Exists(slikePath))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(slikePath),
+        RequestPath = "/Slike"
+    });
+}
+else
+{
+    app.Logger.LogWarning("Folder 'Slike' nije pronađen. Očekivana putanja: {SlikePath}", slikePath);
+}
 app.UseRouting();
 
 app.UseAuthorization();
 
-app.MapStaticAssets();
-
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 
 app.Run();
