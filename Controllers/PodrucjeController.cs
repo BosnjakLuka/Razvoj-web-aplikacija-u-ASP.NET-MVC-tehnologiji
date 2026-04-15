@@ -1,16 +1,24 @@
 using Microsoft.AspNetCore.Mvc;
 using planinarenje.Entiteti;
 using planinarenje.Models;
+using planinarenje.Repositories;
 
 namespace planinarenje.Controllers
 {
     public class PodrucjeController : Controller
     {
+        private readonly IPodrucjeMockRepository _podrucjeRepository;
+        private readonly IKontrolnaTockaMockRepository _kontrolnaTockaRepository;
+
+        public PodrucjeController(IPodrucjeMockRepository podrucjeRepository, IKontrolnaTockaMockRepository kontrolnaTockaRepository)
+        {
+            _podrucjeRepository = podrucjeRepository;
+            _kontrolnaTockaRepository = kontrolnaTockaRepository;
+        }
+
         public IActionResult Index()
         {
-            var podaci = Lab1PodaciFactory.Kreiraj();
-
-            var model = podaci.Podrucja
+            var model = _podrucjeRepository.GetAll()
                 .OrderBy(p => p.IdPodrucje)
                 .Select(p => new PodrucjeIndexCardViewModel
                 {
@@ -29,14 +37,13 @@ namespace planinarenje.Controllers
 
         public IActionResult Details(int id)
         {
-            var podaci = Lab1PodaciFactory.Kreiraj();
-            var podrucje = podaci.Podrucja.SingleOrDefault(p => p.IdPodrucje == id);
+            var podrucje = _podrucjeRepository.GetById(id);
             if (podrucje is null)
             {
                 return NotFound();
             }
 
-            podrucje.KontrolneTocke = podaci.KontrolneTocke
+            podrucje.KontrolneTocke = _kontrolnaTockaRepository.GetAll()
                 .Where(kt => kt.IdPodrucje == podrucje.IdPodrucje)
                 .OrderBy(kt => kt.Naziv)
                 .ToList();

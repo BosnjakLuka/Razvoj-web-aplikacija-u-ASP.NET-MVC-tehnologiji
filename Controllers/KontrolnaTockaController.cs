@@ -1,17 +1,28 @@
 using Microsoft.AspNetCore.Mvc;
 using planinarenje.Entiteti;
 using planinarenje.Models;
+using planinarenje.Repositories;
 
 namespace planinarenje.Controllers
 {
     public class KontrolnaTockaController : Controller
     {
+        private readonly IKontrolnaTockaMockRepository _kontrolnaTockaRepository;
+        private readonly IPodrucjeMockRepository _podrucjeRepository;
+
+        public KontrolnaTockaController(
+            IKontrolnaTockaMockRepository kontrolnaTockaRepository,
+            IPodrucjeMockRepository podrucjeRepository)
+        {
+            _kontrolnaTockaRepository = kontrolnaTockaRepository;
+            _podrucjeRepository = podrucjeRepository;
+        }
+
         public IActionResult Index()
         {
-            var podaci = Lab1PodaciFactory.Kreiraj();
-            var podrucjaById = podaci.Podrucja.ToDictionary(p => p.IdPodrucje, p => p.Naziv);
+            var podrucjaById = _podrucjeRepository.GetAll().ToDictionary(p => p.IdPodrucje, p => p.Naziv);
 
-            var model = podaci.KontrolneTocke
+            var model = _kontrolnaTockaRepository.GetAll()
                 .OrderBy(k => k.Naziv)
                 .Select(k => new KontrolnaTockaIndexCardViewModel
                 {
@@ -31,14 +42,13 @@ namespace planinarenje.Controllers
 
         public IActionResult Details(int id)
         {
-            var podaci = Lab1PodaciFactory.Kreiraj();
-            var kontrolnaTocka = podaci.KontrolneTocke.SingleOrDefault(k => k.IdKontrolnaTocka == id);
+            var kontrolnaTocka = _kontrolnaTockaRepository.GetById(id);
             if (kontrolnaTocka is null)
             {
                 return NotFound();
             }
 
-            kontrolnaTocka.Podrucje = podaci.Podrucja.SingleOrDefault(p => p.IdPodrucje == kontrolnaTocka.IdPodrucje);
+            kontrolnaTocka.Podrucje = _podrucjeRepository.GetById(kontrolnaTocka.IdPodrucje);
             ViewData["Title"] = kontrolnaTocka.Naziv;
             return View(kontrolnaTocka);
         }

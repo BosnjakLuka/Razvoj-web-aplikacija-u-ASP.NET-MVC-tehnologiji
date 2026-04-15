@@ -1,0 +1,150 @@
+@model planinarenje.Models.KorisnikDetailsViewModel
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Korisnik" asp-action="Index">Korisnici</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Ime @Model.Prezime</li>
+        </ol>
+    </nav>
+}
+
+<section class="detail-panel">
+    <div class="row g-4">
+        <!-- Lijevi stupac: Slika i osnovni profil -->
+    <div class="col-lg-4">
+        <div class="app-card h-auto text-center mb-4">
+            <div class="mb-3">
+                @if (!string.IsNullOrEmpty(Model.ProfilnaSlika))
+                {
+                    <img src="@Model.ProfilnaSlika" alt="Profilna slika korisnika @Model.Ime" class="img-fluid rounded-circle shadow-sm" style="width: 150px; height: 150px; object-fit: cover;" />
+                }
+                else
+                {
+                    <div class="d-inline-flex align-items-center justify-content-center bg-secondary-subtle text-secondary rounded-circle shadow-sm" style="width: 150px; height: 150px; font-size: 3rem;">
+                        <i class="bi bi-person"></i>
+                    </div>
+                }
+            </div>
+            
+            <h2 class="h4 mb-1">@Model.Ime @Model.Prezime</h2>
+            <p class="text-muted mb-3">@Model.KorisnickoIme</p>
+            
+            <div class="mb-3">
+                @if (Model.StatusAktivan)
+                {
+                    <span class="badge bg-success-subtle text-success fs-6"><i class="bi bi-check-circle me-1"></i>Aktivan korisnik</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary-subtle text-secondary fs-6"><i class="bi bi-x-circle me-1"></i>Neaktivan korisnik</span>
+                }
+            </div>
+            
+            <div class="d-grid gap-2">
+                <a href="mailto:@Model.Email" class="btn btn-outline-primary"><i class="bi bi-envelope me-2"></i>Kontaktiraj</a>
+            </div>
+        </div>
+
+        @if (Model.Knjizica != null)
+        {
+            <a asp-controller="Knjizica" asp-action="Details" asp-route-id="@Model.Knjizica.IdKnjizica" class="text-decoration-none">
+                <div class="app-card h-auto bg-primary-subtle text-primary border-primary-subtle mb-4 shadow-sm hover-shadow" style="transition: transform 0.2s, box-shadow 0.2s;">
+                    <h3 class="h5 border-bottom border-primary pb-2 mb-3"><i class="bi bi-journal-bookmark me-2"></i>Aktivna knjižica</h3>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><strong>Knjižica ID:</strong> #@Model.Knjizica.IdKnjizica</li>
+                        <li class="mb-2"><strong>Aplikacija:</strong> @Model.Knjizica.NazivAplikacije</li>
+                        <li><strong>Izdana:</strong> @Model.Knjizica.DatumIzdavanja.ToString("dd.MM.yyyy.")</li>
+                    </ul>
+                    <div class="text-end mt-2">
+                        <span class="small fw-bold">Otvori E-Knjižicu <i class="bi bi-arrow-right"></i></span>
+                    </div>
+                </div>
+            </a>
+        }
+        else
+        {
+             <div class="app-card h-auto mb-4 bg-light text-muted text-center">
+                 <p class="mb-0"><i class="bi bi-journal text-secondary fs-4 d-block mb-2"></i>Korisnik nema aktivnu knjizicu</p>
+             </div>
+        }
+    </div>
+
+    <!-- Desni stupac: Detalji, Posjeti, Medalje -->
+    <div class="col-lg-8">
+        <div class="app-card h-auto mb-4">
+            <h3 class="h5 border-bottom pb-2 mb-3">Osobni podaci</h3>
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <label class="text-muted small">E-mail adresa</label>
+                    <div class="fw-medium">@Model.Email</div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="text-muted small">Broj mobitela</label>
+                    <div class="fw-medium">@(string.IsNullOrEmpty(Model.BrojMobitela) ? "Nije navedeno" : Model.BrojMobitela)</div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="text-muted small">Datum rođenja</label>
+                    <div class="fw-medium">@(Model.DatumRodenja?.ToString("dd.MM.yyyy.") ?? "Nije navedeno")</div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="text-muted small">Datum registracije</label>
+                    <div class="fw-medium">@Model.DatumRegistracije.ToString("dd.MM.yyyy.")</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Osvojene medalje -->
+        <h3 class="h5 mb-3 mt-5"><i class="bi bi-award me-2 text-warning"></i>Osvojene medalje (@Model.Medalje.Count)</h3>
+        @if (!Model.Medalje.Any())
+        {
+            <div class="app-card h-auto bg-light text-center py-4 mb-4">
+                <p class="text-muted mb-0">Korisnik još nije osvojio nijednu medalju.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-3 mb-4">
+                @foreach (var medalja in Model.Medalje)
+                {
+                    <div class="col-md-6">
+                        <div class="app-card h-100 p-3 bg-warning-subtle text-dark border-warning-subtle d-flex align-items-center">
+                            <i class="bi bi-award-fill fs-2 text-warning me-3"></i>
+                            <div>
+                                <h4 class="h6 fw-bold mb-1">@medalja.NazivMedalje</h4>
+                                <div class="small mb-1 text-muted">@medalja.Opis</div>
+                                <div class="small fw-medium">Osvojeno: @medalja.DatumOsvajanja.ToString("dd.MM.yyyy.")</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Posjeti -->
+        <h3 class="h5 mb-3 mt-5"><i class="bi bi-signpost-split me-2 text-primary"></i>Nedavni posjeti (@Model.Posjeti.Count)</h3>
+        @if (!Model.Posjeti.Any())
+        {
+            <div class="app-card h-auto bg-light text-center py-4">
+                <p class="text-muted mb-0">Nema evidentiranih posjeta za ovog korisnika.</p>
+            </div>
+        }
+        else
+        {
+            <div class="list-group list-group-flush shadow-sm rounded border">
+                @foreach (var posjet in Model.Posjeti)
+                {
+                    <div class="list-group-item p-3 list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                            <h4 class="h6 mb-0 fw-bold">@posjet.NazivKontrolneTocke</h4>
+                            <small class="text-muted">@posjet.DatumPosjeta.ToString("dd.MM.yyyy. HH:mm")</small>
+                        </div>
+                        <p class="mb-1 small text-muted">@posjet.NazivRute</p>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+</section>

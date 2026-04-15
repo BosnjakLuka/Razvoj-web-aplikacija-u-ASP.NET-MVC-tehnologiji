@@ -1,0 +1,158 @@
+@model planinarenje.Models.PlaninarskaUdrugaDetailsViewModel
+@{
+    ViewData["Title"] = "Profil planinarske udruge";
+}
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Udruge</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Naziv</li>
+        </ol>
+    </nav>
+}
+
+<div class="row align-items-center mt-3 mb-4">
+    <div class="col-md-8">
+        <h1 class="h3 mb-1 text-primary-dark">@Model.Naziv</h1>
+        <p class="text-muted mb-0"><i class="bi bi-info-circle me-1"></i>Planinarska udruga - OIB: <span class="font-monospace">@Model.OIB</span></p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Lijevi stupac: Kontakt & Adresa detalji -->
+    <div class="col-lg-4">
+        <div class="app-card h-auto text-center mb-4 border-top border-5 border-primary">
+            <div class="bg-light rounded-circle shadow-sm p-4 d-inline-block mt-4 mb-3 border">
+                <i class="bi bi-shield-fill-check text-primary" style="font-size: 3rem;"></i>
+            </div>
+            <h2 class="h5 mb-4">Sjedište udruge</h2>
+            
+            <div class="px-4 pb-4">
+                <ul class="list-unstyled text-start mb-0 small">
+                    <li class="mb-3">
+                        <span class="d-block text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">GRAD I ZUPANIJA</span>
+                        <div class="fw-medium mt-1">
+                            <i class="bi bi-geo-alt text-primary opacity-75 me-2"></i>
+                            @(string.IsNullOrWhiteSpace(Model.Grad) ? "Nepoznat grad" : Model.Grad), 
+                            @(string.IsNullOrWhiteSpace(Model.Zupanija) ? "Nepoznata županija" : Model.Zupanija)
+                        </div>
+                    </li>
+                    <li class="mb-3">
+                        <span class="d-block text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Adresa</span>
+                        <div class="fw-medium mt-1 text-break">
+                            <i class="bi bi-signpost-2 text-primary opacity-75 me-2"></i>
+                            @(string.IsNullOrWhiteSpace(Model.Adresa) ? "Nema podnesene adrese" : Model.Adresa) 
+                            @(string.IsNullOrWhiteSpace(Model.PostanskiBroj) ? "" : $"({Model.PostanskiBroj})")
+                        </div>
+                    </li>
+                    <li class="mb-3">
+                        <span class="d-block text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">E-mail adresa</span>
+                        <div class="fw-medium mt-1 text-break">
+                            <i class="bi bi-envelope text-primary opacity-75 me-2"></i>
+                            @if (!string.IsNullOrWhiteSpace(Model.Email))
+                            {
+                                <a href="mailto:@Model.Email" class="text-decoration-none">@Model.Email</a>
+                            }
+                            else
+                            {
+                                <span>Nedostupno</span>
+                            }
+                        </div>
+                    </li>
+                    <li class="mb-3">
+                        <span class="d-block text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Telefon</span>
+                        <div class="fw-medium mt-1">
+                            <i class="bi bi-telephone text-primary opacity-75 me-2"></i>
+                            @(string.IsNullOrWhiteSpace(Model.BrojTelefona) ? "Nedostupno" : Model.BrojTelefona)
+                        </div>
+                    </li>
+                    <li>
+                        <span class="d-block text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">ČLANSTVO</span>
+                        <div class="fw-medium mt-1">
+                            <i class="bi bi-people text-primary opacity-75 me-2"></i>
+                            @if (Model.BrojClanova.HasValue)
+                            {
+                                <span>@Model.BrojClanova članova registrirano</span>
+                            }
+                            else
+                            {
+                                <span>Nema podataka o broju članova</span>
+                            }
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="text-center mt-3">
+            <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                <i class="bi bi-arrow-left me-2"></i>Natrag na imenik udruga
+            </a>
+        </div>
+    </div>
+
+    <!-- Desni stupac: Planinarski objekti pod nadležnošću udruge -->
+    <div class="col-lg-8">
+        <div class="app-card h-auto detail-panel border">
+            <div class="card-header bg-white p-4 border-bottom d-flex align-items-center justify-content-between">
+                <h4 class="h5 mb-0 text-primary-dark">
+                    <i class="bi bi-house-door me-2 text-primary"></i>Planinarski objekti pod upravljanjem (@Model.PlaninarskiObjekti.Count)
+                </h4>
+            </div>
+
+            @if (Model.PlaninarskiObjekti.Any())
+            {
+                <div class="p-0">
+                    <div class="table-responsive mb-0 p-0 m-0">
+                        <table class="table table-hover align-middle m-0 p-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Naziv objekta</th>
+                                    <th>Tip</th>
+                                    <th>N. visina</th>
+                                    <th class="text-end pe-4">Akcije</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var objekt in Model.PlaninarskiObjekti)
+                                {
+                                    <tr>
+                                        <td class="ps-4 fw-medium text-dark">
+                                            @objekt.Naziv
+                                            @if (objekt.ImaNocenje)
+                                            {
+                                                <i class="bi bi-moon-stars text-warning ms-1" title="Nudi noćenje"></i>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge @(objekt.TipObjekta == "Planinarski dom" ? "bg-primary" : "bg-secondary") bg-opacity-75">
+                                                @objekt.TipObjekta
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted small">@objekt.NadmorskaVisina m</span>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <a asp-controller="PlaninarskiObjekt" asp-action="Details" asp-route-id="@objekt.IdPlaninarskiObjekt" class="btn btn-sm btn-light border">
+                                                Detalji objekta
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="p-5 text-center text-muted">
+                    <i class="bi bi-house d-block fs-1 mb-3 opacity-25"></i>
+                    Ova udruga trenutno ne upravlja ni s jednim planinarskim objektom u bazi podataka.
+                </div>
+            }
+        </div>
+    </div>
+</div>

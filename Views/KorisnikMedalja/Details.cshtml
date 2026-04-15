@@ -1,0 +1,88 @@
+@model planinarenje.Models.KorisnikMedaljaDetailsViewModel
+@{
+    ViewData["Title"] = "Zapis o dodjeli medalje";
+}
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Dodijeljene medalje</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Evidencija #@Model.IdKorisnikMedalja</li>
+        </ol>
+    </nav>
+}
+
+<div class="row align-items-center mt-3 mb-4">
+    <div class="col-md-8">
+        <h1 class="h3 mb-1 text-primary-dark">Službena evidencija o dodjeli medalje</h1>
+        <p class="text-muted mb-0"><i class="bi bi-file-earmark-text me-1"></i>Zapis ID: <span class="font-monospace">@Model.IdKorisnikMedalja</span></p>
+    </div>
+</div>
+
+<div class="row g-4 justify-content-center">
+    <div class="col-lg-6">
+        <div class="app-card h-auto text-center mb-4 border-top border-5 border-warning shadow-sm position-relative overflow-hidden">
+            <!-- Dekorativna pozadinska zvijezda -->
+            <i class="bi bi-star-fill text-warning position-absolute" style="font-size: 15rem; top: -2rem; right: -2rem; opacity: 0.1; z-index: 0"></i>
+            
+            <div class="position-relative" style="z-index: 1;">
+                <div class="bg-light rounded-circle shadow-sm p-0 d-inline-flex mt-4 border border-warning align-items-center justify-content-center overflow-hidden" style="border-width: 3px !important; width: 100px; height: 100px;">
+                    @if (!string.IsNullOrEmpty(Model.ProfilnaSlikaUrl))
+                    {
+                        <img src="@Model.ProfilnaSlikaUrl" alt="@Model.ImePrezimeKorisnika" class="img-fluid" style="width: 100%; height: 100%; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <i class="bi bi-award-fill text-warning" style="font-size: 3rem;"></i>
+                    }
+                </div>
+                
+                <div class="px-5 py-4">
+                    <div class="mb-4 pb-3 border-bottom border-light">
+                        <span class="d-block text-muted fw-bold small text-uppercase mb-2">DOBITNIK (PLANINAR)</span>
+                        <a asp-controller="Korisnik" asp-action="Details" asp-route-id="@Model.IdKorisnik" class="text-decoration-none">
+                            <h2 class="h4 fw-bold text-dark mb-0">
+                                <i class="bi bi-person-circle fs-5 me-2 text-primary opacity-75"></i>@Model.ImePrezimeKorisnika
+                            </h2>
+                        </a>
+                    </div>
+
+                    <div class="mb-4 pb-3 border-bottom border-light">
+                        <span class="d-block text-muted fw-bold small text-uppercase mb-2">OSVOJENA MEDALJA</span>
+                        <a asp-controller="Medalja" asp-action="Details" asp-route-id="@Model.IdMedalja" class="text-decoration-none">
+                            <h3 class="h4 fw-bold text-primary mb-0">
+                                <i class="bi bi-shield-check fs-5 me-2 text-warning opacity-75"></i>@Model.NazivMedalje
+                            </h3>
+                        </a>
+                    </div>
+
+                    <div class="mb-4">
+                        <span class="d-block text-muted fw-bold small text-uppercase mb-2">SLUŽBENI DATUM DODJELE</span>
+                        <span class="badge bg-light text-dark border py-2 px-3 fw-medium fs-6 shadow-sm">
+                            <i class="bi bi-calendar-check text-success me-2"></i>@Model.DatumDodjele.ToString("dd.MM.yyyy.")
+                        </span>
+                    </div>
+
+                    <div class="bg-light rounded p-3 text-start mb-2">
+                        <span class="d-block text-muted fw-bold small text-uppercase mb-2"><i class="bi bi-journal-text me-1"></i>NAPOMENA O DODJELI</span>
+                        @if (!string.IsNullOrWhiteSpace(Model.Napomena))
+                        {
+                            <p class="mb-0 text-dark fst-italic">"@Model.Napomena"</p>
+                        }
+                        else
+                        {
+                            <p class="mb-0 text-muted opacity-50 small">Nema službene primjedbe za ovaj zapis.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-3">
+            <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                <i class="bi bi-arrow-left me-2"></i>Natrag na evidenciju svih medalja
+            </a>
+        </div>
+    </div>
+</div>
