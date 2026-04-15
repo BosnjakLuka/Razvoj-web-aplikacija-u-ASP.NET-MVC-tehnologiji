@@ -1,12 +1,27 @@
 using Microsoft.AspNetCore.Mvc;
 using planinarenje.Entiteti;
 using planinarenje.Models;
+using planinarenje.Repositories;
 using System.IO;
 
 namespace planinarenje.Controllers;
 
 public class FotografijaController : Controller
 {
+    private readonly IFotografijaMockRepository _fotografijaRepository;
+    private readonly IPosjetMockRepository _posjetRepository;
+    private readonly IKontrolnaTockaMockRepository _kontrolnaTockaRepository;
+
+    public FotografijaController(
+        IFotografijaMockRepository fotografijaRepository,
+        IPosjetMockRepository posjetRepository,
+        IKontrolnaTockaMockRepository kontrolnaTockaRepository)
+    {
+        _fotografijaRepository = fotografijaRepository;
+        _posjetRepository = posjetRepository;
+        _kontrolnaTockaRepository = kontrolnaTockaRepository;
+    }
+
     private string FormatirajTipSlike(TipSlike tip)
     {
         return tip switch
@@ -51,13 +66,11 @@ public class FotografijaController : Controller
 
     public IActionResult Index()
     {
-        var podaci = Lab1PodaciFactory.Kreiraj();
-
-        var model = podaci.Fotografije
+        var model = _fotografijaRepository.GetAll()
             .OrderByDescending(f => f.DatumUploada)
             .Select(f => {
-                var posjet = podaci.Posjeti.FirstOrDefault(p => p.IdPosjet == f.IdPosjet);
-                var kt = posjet != null ? podaci.KontrolneTocke.FirstOrDefault(k => k.IdKontrolnaTocka == posjet.IdKontrolnaTocka) : null;
+                var posjet = _posjetRepository.GetById(f.IdPosjet);
+                var kt = posjet != null ? _kontrolnaTockaRepository.GetById(posjet.IdKontrolnaTocka) : null;
                 
                 return new FotografijaIndexViewModel
                 {
@@ -75,13 +88,12 @@ public class FotografijaController : Controller
 
     public IActionResult Details(int id)
     {
-        var podaci = Lab1PodaciFactory.Kreiraj();
-        var f = podaci.Fotografije.FirstOrDefault(fot => fot.IdFotografija == id);
+        var f = _fotografijaRepository.GetById(id);
 
         if (f == null) return NotFound();
 
-        var posjet = podaci.Posjeti.FirstOrDefault(p => p.IdPosjet == f.IdPosjet);
-        var kt = posjet != null ? podaci.KontrolneTocke.FirstOrDefault(k => k.IdKontrolnaTocka == posjet.IdKontrolnaTocka) : null;
+        var posjet = _posjetRepository.GetById(f.IdPosjet);
+        var kt = posjet != null ? _kontrolnaTockaRepository.GetById(posjet.IdKontrolnaTocka) : null;
 
         var model = new FotografijaDetailsViewModel
         {

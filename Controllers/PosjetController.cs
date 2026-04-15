@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using planinarenje.Entiteti;
 using planinarenje.Models;
+using planinarenje.Repositories;
 using System;
 using System.Linq;
 
@@ -8,6 +9,29 @@ namespace planinarenje.Controllers
 {
     public class PosjetController : Controller
     {
+        private readonly IPosjetMockRepository _posjetRepository;
+        private readonly IKorisnikMockRepository _korisnikRepository;
+        private readonly IKnjizicaMockRepository _knjizicaRepository;
+        private readonly IKontrolnaTockaMockRepository _kontrolnaTockaRepository;
+        private readonly IRutaMockRepository _rutaRepository;
+        private readonly IFotografijaMockRepository _fotografijaRepository;
+
+        public PosjetController(
+            IPosjetMockRepository posjetRepository,
+            IKorisnikMockRepository korisnikRepository,
+            IKnjizicaMockRepository knjizicaRepository,
+            IKontrolnaTockaMockRepository kontrolnaTockaRepository,
+            IRutaMockRepository rutaRepository,
+            IFotografijaMockRepository fotografijaRepository)
+        {
+            _posjetRepository = posjetRepository;
+            _korisnikRepository = korisnikRepository;
+            _knjizicaRepository = knjizicaRepository;
+            _kontrolnaTockaRepository = kontrolnaTockaRepository;
+            _rutaRepository = rutaRepository;
+            _fotografijaRepository = fotografijaRepository;
+        }
+
         // Helper za hrvatski opis doživljaja
         private string FormatirajDozivljaj(DozivljajPosjeta dozivljaj)
         {
@@ -57,14 +81,12 @@ namespace planinarenje.Controllers
 
         public IActionResult Index()
         {
-            var podaci = Lab1PodaciFactory.Kreiraj();
-
-            var model = podaci.Posjeti
+            var model = _posjetRepository.GetAll()
                 .OrderByDescending(p => p.DatumVrijemePosjeta)
                 .Select(p => {
-                    var korisnik = podaci.Korisnici.FirstOrDefault(k => k.IdKorisnik == p.IdKorisnik);
-                    var kt = podaci.KontrolneTocke.FirstOrDefault(k => k.IdKontrolnaTocka == p.IdKontrolnaTocka);
-                    var ruta = podaci.Rute.FirstOrDefault(r => r.IdRuta == p.IdRuta);
+                    var korisnik = _korisnikRepository.GetById(p.IdKorisnik);
+                    var kt = _kontrolnaTockaRepository.GetById(p.IdKontrolnaTocka);
+                    var ruta = _rutaRepository.GetById(p.IdRuta);
 
                     return new PosjetIndexViewModel
                     {
@@ -83,17 +105,16 @@ namespace planinarenje.Controllers
 
         public IActionResult Details(int id)
         {
-            var podaci = Lab1PodaciFactory.Kreiraj();
-            var p = podaci.Posjeti.FirstOrDefault(pos => pos.IdPosjet == id);
+            var p = _posjetRepository.GetById(id);
 
             if (p == null) return NotFound();
 
-            var korisnik = podaci.Korisnici.FirstOrDefault(k => k.IdKorisnik == p.IdKorisnik);
-            var knjizica = podaci.Knjizice.FirstOrDefault(knj => knj.IdKnjizica == p.IdKnjizica);
-            var kt = podaci.KontrolneTocke.FirstOrDefault(k => k.IdKontrolnaTocka == p.IdKontrolnaTocka);
-            var ruta = podaci.Rute.FirstOrDefault(r => r.IdRuta == p.IdRuta);
+            var korisnik = _korisnikRepository.GetById(p.IdKorisnik);
+            var knjizica = _knjizicaRepository.GetById(p.IdKnjizica);
+            var kt = _kontrolnaTockaRepository.GetById(p.IdKontrolnaTocka);
+            var ruta = _rutaRepository.GetById(p.IdRuta);
             
-            var fotografijePosjeta = podaci.Fotografije
+            var fotografijePosjeta = _fotografijaRepository.GetAll()
                 .Where(f => f.IdPosjet == p.IdPosjet)
                 .Select(f => new FotografijaPosjetaViewModel
                 {

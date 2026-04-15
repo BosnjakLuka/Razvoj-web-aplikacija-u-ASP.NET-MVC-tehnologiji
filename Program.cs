@@ -1,5 +1,6 @@
 using planinarenje.Entiteti;
 using Microsoft.Extensions.FileProviders;
+using planinarenje.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -141,6 +142,18 @@ var _ = knjizice.Count + medalje.Count;
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSingleton<ILab1DataStore, Lab1DataStore>();
+builder.Services.AddSingleton<IPodrucjeMockRepository, PodrucjeMockRepository>();
+builder.Services.AddSingleton<IKorisnikMockRepository, KorisnikMockRepository>();
+builder.Services.AddSingleton<IKnjizicaMockRepository, KnjizicaMockRepository>();
+builder.Services.AddSingleton<IMedaljaMockRepository, MedaljaMockRepository>();
+builder.Services.AddSingleton<IPlaninarskaUdrugaMockRepository, PlaninarskaUdrugaMockRepository>();
+builder.Services.AddSingleton<IPlaninarskiObjektMockRepository, PlaninarskiObjektMockRepository>();
+builder.Services.AddSingleton<IKontrolnaTockaMockRepository, KontrolnaTockaMockRepository>();
+builder.Services.AddSingleton<IRutaMockRepository, RutaMockRepository>();
+builder.Services.AddSingleton<IPosjetMockRepository, PosjetMockRepository>();
+builder.Services.AddSingleton<IFotografijaMockRepository, FotografijaMockRepository>();
+builder.Services.AddSingleton<IKorisnikMedaljaMockRepository, KorisnikMedaljaMockRepository>();
 
 var app = builder.Build();
 

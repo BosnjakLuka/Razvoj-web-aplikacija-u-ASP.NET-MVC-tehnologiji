@@ -1,12 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using planinarenje.Entiteti;
 using planinarenje.Models;
+using planinarenje.Repositories;
 using System.Linq;
 
 namespace planinarenje.Controllers;
 
 public class PlaninarskaUdrugaController : Controller
 {
+    private readonly IPlaninarskaUdrugaMockRepository _udrugaRepository;
+    private readonly IPlaninarskiObjektMockRepository _objektRepository;
+
+    public PlaninarskaUdrugaController(IPlaninarskaUdrugaMockRepository udrugaRepository, IPlaninarskiObjektMockRepository objektRepository)
+    {
+        _udrugaRepository = udrugaRepository;
+        _objektRepository = objektRepository;
+    }
+
     private string FormatirajTipObjekta(TipObjekta tip)
     {
         return tip switch
@@ -20,9 +30,7 @@ public class PlaninarskaUdrugaController : Controller
 
     public IActionResult Index()
     {
-        var podaci = Lab1PodaciFactory.Kreiraj();
-
-        var model = podaci.PlaninarskeUdruge
+        var model = _udrugaRepository.GetAll()
             .OrderBy(u => u.Naziv)
             .Select(u => new PlaninarskaUdrugaIndexViewModel
             {
@@ -39,12 +47,11 @@ public class PlaninarskaUdrugaController : Controller
 
     public IActionResult Details(int id)
     {
-        var podaci = Lab1PodaciFactory.Kreiraj();
-        var u = podaci.PlaninarskeUdruge.FirstOrDefault(x => x.IdPlaninarskaUdruga == id);
+        var u = _udrugaRepository.GetById(id);
 
         if (u == null) return NotFound();
 
-        var objekti = podaci.PlaninarskiObjekti
+        var objekti = _objektRepository.GetAll()
             .Where(o => o.IdPlaninarskaUdruga == id)
             .Select(o => new ObjektUdrugeViewModel
             {

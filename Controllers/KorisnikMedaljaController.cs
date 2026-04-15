@@ -1,12 +1,27 @@
 using Microsoft.AspNetCore.Mvc;
 using planinarenje.Entiteti;
 using planinarenje.Models;
+using planinarenje.Repositories;
 using System.Linq;
 
 namespace planinarenje.Controllers;
 
 public class KorisnikMedaljaController : Controller
 {
+    private readonly IKorisnikMedaljaMockRepository _korisnikMedaljaRepository;
+    private readonly IKorisnikMockRepository _korisnikRepository;
+    private readonly IMedaljaMockRepository _medaljaRepository;
+
+    public KorisnikMedaljaController(
+        IKorisnikMedaljaMockRepository korisnikMedaljaRepository,
+        IKorisnikMockRepository korisnikRepository,
+        IMedaljaMockRepository medaljaRepository)
+    {
+        _korisnikMedaljaRepository = korisnikMedaljaRepository;
+        _korisnikRepository = korisnikRepository;
+        _medaljaRepository = medaljaRepository;
+    }
+
     private string? FormatProfileSlika(string? absolutePath)
     {
         if (string.IsNullOrEmpty(absolutePath)) return null;
@@ -33,13 +48,11 @@ public class KorisnikMedaljaController : Controller
 
     public IActionResult Index()
     {
-        var podaci = Lab1PodaciFactory.Kreiraj();
-
-        var model = podaci.KorisnikMedalje
+        var model = _korisnikMedaljaRepository.GetAll()
             .OrderByDescending(km => km.DatumDodjele)
             .Select(km => {
-                var korisnik = podaci.Korisnici.FirstOrDefault(k => k.IdKorisnik == km.IdKorisnik);
-                var medalja = podaci.Medalje.FirstOrDefault(m => m.IdMedalja == km.IdMedalja);
+                var korisnik = _korisnikRepository.GetById(km.IdKorisnik);
+                var medalja = _medaljaRepository.GetById(km.IdMedalja);
 
                 return new KorisnikMedaljaIndexViewModel
                 {
@@ -58,13 +71,12 @@ public class KorisnikMedaljaController : Controller
 
     public IActionResult Details(int id)
     {
-        var podaci = Lab1PodaciFactory.Kreiraj();
-        var km = podaci.KorisnikMedalje.FirstOrDefault(x => x.IdKorisnikMedalja == id);
+        var km = _korisnikMedaljaRepository.GetById(id);
 
         if (km == null) return NotFound();
 
-        var korisnik = podaci.Korisnici.FirstOrDefault(k => k.IdKorisnik == km.IdKorisnik);
-        var medalja = podaci.Medalje.FirstOrDefault(m => m.IdMedalja == km.IdMedalja);
+        var korisnik = _korisnikRepository.GetById(km.IdKorisnik);
+        var medalja = _medaljaRepository.GetById(km.IdMedalja);
 
         var model = new KorisnikMedaljaDetailsViewModel
         {

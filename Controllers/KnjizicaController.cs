@@ -1,20 +1,38 @@
 using Microsoft.AspNetCore.Mvc;
 using planinarenje.Entiteti;
 using planinarenje.Models;
+using planinarenje.Repositories;
 using System.Linq;
 
 namespace planinarenje.Controllers;
 
 public class KnjizicaController : Controller
 {
+    private readonly IKnjizicaMockRepository _knjizicaRepository;
+    private readonly IKorisnikMockRepository _korisnikRepository;
+    private readonly IPosjetMockRepository _posjetRepository;
+    private readonly IKontrolnaTockaMockRepository _kontrolnaTockaRepository;
+
+    public KnjizicaController(
+        IKnjizicaMockRepository knjizicaRepository,
+        IKorisnikMockRepository korisnikRepository,
+        IPosjetMockRepository posjetRepository,
+        IKontrolnaTockaMockRepository kontrolnaTockaRepository)
+    {
+        _knjizicaRepository = knjizicaRepository;
+        _korisnikRepository = korisnikRepository;
+        _posjetRepository = posjetRepository;
+        _kontrolnaTockaRepository = kontrolnaTockaRepository;
+    }
+
     public IActionResult Index()
     {
-        var podaci = Lab1PodaciFactory.Kreiraj();
-        var model = podaci.Knjizice.Select(k => new KnjizicaIndexViewModel
+        var korisnici = _korisnikRepository.GetAll();
+        var model = _knjizicaRepository.GetAll().Select(k => new KnjizicaIndexViewModel
         {
             IdKnjizica = k.IdKnjizica,
             IdKorisnik = k.IdKorisnik,
-            ImePrezimeKorisnika = podaci.Korisnici.FirstOrDefault(u => u.IdKorisnik == k.IdKorisnik)?.Ime + " " + podaci.Korisnici.FirstOrDefault(u => u.IdKorisnik == k.IdKorisnik)?.Prezime ?? "Nepoznat planer",
+            ImePrezimeKorisnika = korisnici.FirstOrDefault(u => u.IdKorisnik == k.IdKorisnik)?.Ime + " " + korisnici.FirstOrDefault(u => u.IdKorisnik == k.IdKorisnik)?.Prezime ?? "Nepoznat planer",
             DatumKreiranja = k.DatumKreiranja,
             StatusAktivna = k.StatusAktivna
         }).OrderByDescending(k => k.DatumKreiranja).ToList();
@@ -24,20 +42,19 @@ public class KnjizicaController : Controller
 
     public IActionResult Details(int id)
     {
-        var podaci = Lab1PodaciFactory.Kreiraj();
-        var kn = podaci.Knjizice.FirstOrDefault(k => k.IdKnjizica == id);
+        var kn = _knjizicaRepository.GetById(id);
         if (kn == null) return NotFound();
 
-        var korisnik = podaci.Korisnici.FirstOrDefault(u => u.IdKorisnik == kn.IdKorisnik);
+        var korisnik = _korisnikRepository.GetById(kn.IdKorisnik);
         
-        var posjeti = podaci.Posjeti
+        var posjeti = _posjetRepository.GetAll()
             .Where(p => p.IdKnjizica == id)
             .OrderByDescending(p => p.DatumVrijemePosjeta)
             .Select(p => new KnjizicaPosjetViewModel
             {
                 IdPosjet = p.IdPosjet,
                 IdKontrolnaTocka = p.IdKontrolnaTocka,
-                NazivKontrolneTocke = podaci.KontrolneTocke.FirstOrDefault(kt => kt.IdKontrolnaTocka == p.IdKontrolnaTocka)?.Naziv ?? "Nepoznato",
+                NazivKontrolneTocke = _kontrolnaTockaRepository.GetById(p.IdKontrolnaTocka)?.Naziv ?? "Nepoznato",
                 DatumVrijemePosjeta = p.DatumVrijemePosjeta,
                 JeLiPotvrdenPosjet = p.JeLiPotvrdenPosjet
             }).ToList();

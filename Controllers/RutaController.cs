@@ -1,22 +1,32 @@
 using Microsoft.AspNetCore.Mvc;
 using planinarenje.Entiteti;
 using planinarenje.Models;
+using planinarenje.Repositories;
 
 namespace planinarenje.Controllers;
 
 public class RutaController : Controller
 {
+    private readonly IRutaMockRepository _rutaRepository;
+    private readonly IKontrolnaTockaMockRepository _kontrolnaTockaRepository;
+
+    public RutaController(IRutaMockRepository rutaRepository, IKontrolnaTockaMockRepository kontrolnaTockaRepository)
+    {
+        _rutaRepository = rutaRepository;
+        _kontrolnaTockaRepository = kontrolnaTockaRepository;
+    }
+
     public IActionResult Index()
     {
-        var podaci = Lab1PodaciFactory.Kreiraj();
+        var kontrolneTocke = _kontrolnaTockaRepository.GetAll();
 
-        var m = podaci.Rute
+        var m = _rutaRepository.GetAll()
             .OrderBy(r => r.Naziv)
             .Select(r => new RutaIndexCardViewModel
             {
                 IdRuta = r.IdRuta,
                 Naziv = r.Naziv,
-                PovezanaKontrolnaTocka = podaci.KontrolneTocke.FirstOrDefault(kt => kt.IdKontrolnaTocka == r.IdKontrolnaTocka)?.Naziv ?? "Nije prijavljena KT",
+                PovezanaKontrolnaTocka = kontrolneTocke.FirstOrDefault(kt => kt.IdKontrolnaTocka == r.IdKontrolnaTocka)?.Naziv ?? "Nije prijavljena KT",
                 Pocetak = r.Pocetak,
                 Kraj = r.Kraj,
                 Trajanje = FormatTrajanje(r.VrijemeHodaMin),
@@ -34,14 +44,13 @@ public class RutaController : Controller
 
     public IActionResult Details(int id)
     {
-        var podaci = Lab1PodaciFactory.Kreiraj();
-        var ruta = podaci.Rute.SingleOrDefault(r => r.IdRuta == id);
+        var ruta = _rutaRepository.GetById(id);
         
         if (ruta == null)
             return NotFound();
 
         // Pridruzimo ako nije
-        ruta.KontrolnaTocka = podaci.KontrolneTocke.SingleOrDefault(kt => kt.IdKontrolnaTocka == ruta.IdKontrolnaTocka);
+        ruta.KontrolnaTocka = _kontrolnaTockaRepository.GetById(ruta.IdKontrolnaTocka);
 
         ViewData["Title"] = ruta.Naziv;
         return View(ruta);
