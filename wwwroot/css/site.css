@@ -114,8 +114,8 @@ a:hover {
 
 .main-nav .nav-link {
     color: rgba(255, 255, 255, 0.85) !important;
-    font-weight: 500;
-    font-size: 0.95rem;
+    font-weight: 600;
+    font-size: 1.08rem;
     padding: 0.5rem 1rem !important;
     border-radius: var(--radius-sm);
     transition: all 0.2s ease;
@@ -299,6 +299,11 @@ a:hover {
     z-index: 2;
 }
 
+.hero-content h1 {
+    color: var(--text-inverse);
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
 .hero-actions {
     margin-top: 2rem;
     display: flex;
@@ -351,4 +356,8 @@ a:hover {
     .hero-content h1 { font-size: 2.5rem; }
     .stat-card { margin-bottom: 1rem; }
     .hero-actions { justify-content: center; }
+}
+
+.section-title.no-accent::after {
+    display: none;
 }
