@@ -1,0 +1,76 @@
+@model planinarenje.Entiteti.Ruta
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Ruta" asp-action="Index">Rute</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Naziv</li>
+        </ol>
+    </nav>
+}
+
+<section class="detail-panel">
+    <h1 class="section-title no-accent mb-4">@Model.Naziv</h1>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <strong>Povezana KT</strong>
+            <p class="mb-0 text-muted">
+                @if (Model.KontrolnaTocka != null)
+                {
+                    <a asp-controller="KontrolnaTocka" asp-action="Details" asp-route-id="@Model.KontrolnaTocka.IdKontrolnaTocka">@Model.KontrolnaTocka.Naziv</a>
+                }
+                else
+                {
+                    <span>Nije odabrano</span>
+                }
+            </p>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <strong>Pocetak rute</strong>
+            <p class="mb-0 text-muted">@Model.Pocetak</p>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <strong>Kraj rute</strong>
+            <p class="mb-0 text-muted">@Model.Kraj</p>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <strong>Tezina</strong>
+            <p class="mb-0 text-muted fw-bold">@Model.TezinaRute.ToString()</p>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <strong>Vrijeme hoda</strong>
+            <p class="mb-0 text-muted">@Model.VrijemeHodaMin min</p>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <strong>Duljina</strong>
+            <p class="mb-0 text-muted">@Model.DuljinaKm km</p>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <strong>Visinska razlika</strong>
+            <p class="mb-0 text-muted">@(Model.VisinskaRazlikaM?.ToString() ?? "Nepoznato") m n/v</p>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <strong>Godina obnove</strong>
+            <p class="mb-0 text-muted">@(Model.GodinaObnove?.ToString() ?? "Nije provedena nedavno")</p>
+        </div>
+        
+        <div class="col-12 mt-4 pt-3 border-top">
+            <strong>Opis</strong>
+            <p class="mb-0 mt-2 text-muted">@(string.IsNullOrWhiteSpace(Model.Opis) ? "Detaljan opis nije naveden." : Model.Opis)</p>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Napomena))
+        {
+            <div class="col-12">
+                <div class="alert alert-warning mt-2 mb-0">
+                    <strong>Napomena:</strong> @Model.Napomena
+                </div>
+            </div>
+        }
+    </div>
+
+    <a asp-controller="Ruta" asp-action="Index" class="btn btn-primary mt-3">Natrag na katalog ruta</a>
+</section>

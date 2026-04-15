@@ -1,0 +1,86 @@
+@model IReadOnlyList<planinarenje.Models.RutaIndexCardViewModel>
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Rute</li>
+        </ol>
+    </nav>
+}
+
+<section class="mb-4">
+    <h1 class="section-title mb-3">Planinarske rute</h1>
+    <p class="text-muted mb-0">
+        Katalog preporucenih pjesackih ruta. Istrazi tezine, trajanja i poveznice s glavnim kontrolnim tockama.
+    </p>
+</section>
+
+@if (!Model.Any())
+{
+    <div class="app-card">
+        <h2 class="h5 mb-2">Nema dostupnih ruta</h2>
+        <p class="text-muted mb-0">Trenutno nisu pronadeni podaci za prikaz ruta.</p>
+    </div>
+}
+else
+{
+    <section class="row g-4">
+        @foreach (var ruta in Model)
+        {
+            <article class="col-12 col-md-6 col-xl-4">
+                <div class="app-card h-100 d-flex flex-column">
+
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                        <h2 class="h5 mb-0">@ruta.Naziv</h2>
+                        <span class="app-badge badge-subtle">@ruta.PovezanaKontrolnaTocka</span>
+                    </div>
+
+                    <div class="mb-3 ps-2 border-start border-3" style="border-color: var(--color-grey-light) !important;">
+                        <div class="d-flex flex-column text-muted small ms-2 gap-1">
+                            <span><strong>Pocetak:</strong> @ruta.Pocetak</span>
+                            <span><strong>Kraj:</strong> @ruta.Kraj</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="app-badge badge-subtle text-uppercase" title="Tezina rute">
+                            TEZINA: @ruta.TezinaTekst
+                        </span>
+                        <span class="app-badge badge-subtle text-uppercase" title="Trajanje hodanja">
+                            VRIJEME: @ruta.Trajanje
+                        </span>
+                        <span class="app-badge badge-subtle text-uppercase" title="Duljina trase">
+                            DULJINA: @ruta.DuljinaKm KM
+                        </span>
+                        @if (ruta.VisinskaRazlikaM.HasValue)
+                        {
+                            <span class="app-badge badge-subtle text-uppercase" title="Visinska razlika">
+                                VISINA: @ruta.VisinskaRazlikaM M N/V
+                            </span>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(ruta.OpisPreview))
+                    {
+                        <p class="text-muted mb-4 flex-grow-1">@ruta.OpisPreview</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-4 flex-grow-1 fst-italic">Detaljan opis rute nije dostupan.</p>
+                    }
+
+                    <div class="mt-auto d-grid">
+                        <a asp-controller="Ruta"
+                           asp-action="Details"
+                           asp-route-id="@ruta.IdRuta"
+                           class="btn btn-primary">
+                            Detalji rute
+                        </a>
+                    </div>
+                    
+                </div>
+            </article>
+        }
+    </section>
+}

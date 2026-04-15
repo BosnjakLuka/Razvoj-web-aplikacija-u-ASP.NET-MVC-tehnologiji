@@ -36,10 +36,10 @@ else
                     </div>
 
                     <div class="d-flex flex-wrap gap-2 mb-3">
-                        <span class="app-badge badge-primary">
-                            @(item.NadmorskaVisina.HasValue ? $"{item.NadmorskaVisina.Value} m n/v" : "Nema visine")
+                        <span class="app-badge badge-subtle text-uppercase">
+                            @(item.NadmorskaVisina.HasValue ? $"{item.NadmorskaVisina.Value} M N/V" : "NEMA VISINE")
                         </span>
-                        <span class="app-badge badge-success">@item.PodrucjeNaziv</span>
+                        <span class="app-badge badge-subtle text-uppercase">@item.PodrucjeNaziv</span>
                     </div>
 
                     @if (!string.IsNullOrWhiteSpace(item.OpisPreview))
