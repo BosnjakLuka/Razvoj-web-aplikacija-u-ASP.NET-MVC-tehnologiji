@@ -97,6 +97,7 @@ namespace planinarenje.Controllers
                 .Where(f => f.IdPosjet == p.IdPosjet)
                 .Select(f => new FotografijaPosjetaViewModel
                 {
+                    IdFotografija = f.IdFotografija,
                     NazivDatoteke = f.NazivDatoteke,
                     PutanjaUrl = FormatirajSliku(f.PutanjaDatoteke),
                     Opis = f.Opis

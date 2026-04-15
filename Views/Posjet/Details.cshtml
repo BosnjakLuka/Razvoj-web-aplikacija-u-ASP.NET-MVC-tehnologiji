@@ -137,7 +137,7 @@
                     {
                         <div class="col-md-6 col-lg-4">
                             <div class="app-card h-100 p-2 shadow-sm rounded overflow-hidden border">
-                                <a href="@foto.PutanjaUrl" target="_blank" title="Otvori fotografiju @foto.NazivDatoteke">
+                                <a asp-controller="Fotografija" asp-action="Details" asp-route-id="@foto.IdFotografija" title="Otvori fotografiju @foto.NazivDatoteke">
                                      <img src="@foto.PutanjaUrl" class="img-fluid rounded border-bottom w-100 mb-2 mb-lg-0" style="object-fit: cover; aspect-ratio: 4/3;" alt="@foto.NazivDatoteke" />
                                 </a>
                                 @if (!string.IsNullOrEmpty(foto.Opis))

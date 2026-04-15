@@ -44,6 +44,7 @@ namespace planinarenje.Models
 
     public class FotografijaPosjetaViewModel
     {
+        public int IdFotografija { get; set; }
         public string NazivDatoteke { get; set; } = string.Empty;
         public string PutanjaUrl { get; set; } = string.Empty;
         public string? Opis { get; set; }

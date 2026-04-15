@@ -1,0 +1,61 @@
+@model IEnumerable<planinarenje.Models.FotografijaIndexViewModel>
+@{
+    ViewData["Title"] = "Fotografije";
+}
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Fotografije</li>
+        </ol>
+    </nav>
+}
+
+<div class="row align-items-center mt-3 mb-4">
+    <div class="col-md-6">
+        <h1 class="h3 mb-0 text-primary-dark">Fotografije</h1>
+    </div>
+</div>
+
+<div class="app-card table-responsive p-0">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th scope="col" class="ps-4">Naziv datoteke</th>
+                <th scope="col">Povezani posjet</th>
+                <th scope="col">Datum uploada</th>
+                <th scope="col">Tip</th>
+                <th scope="col" class="text-end pe-4">Akcije</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="ps-4 fw-medium">
+                        <i class="bi bi-file-image me-2 text-muted"></i>@item.NazivDatoteke
+                    </td>
+                    <td>
+                        <a asp-controller="Posjet" asp-action="Details" asp-route-id="@item.IdPosjet" class="text-decoration-none">
+                            @item.PosjetNaslov
+                        </a>
+                    </td>
+                    <td>@item.DatumUploada.ToString("dd.MM.yyyy.")</td>
+                    <td>
+                        <span class="badge bg-secondary">@item.TipSlike</span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <a asp-action="Details" asp-route-id="@item.IdFotografija" class="btn btn-sm btn-outline-primary">Detalji</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @if (!Model.Any())
+    {
+        <div class="p-4 text-center text-muted">
+            Nisu pronađene fotografije.
+        </div>
+    }
+</div>
