@@ -1,0 +1,68 @@
+@model IReadOnlyList<planinarenje.Models.MedaljaIndexCardViewModel>
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Medalje</li>
+        </ol>
+    </nav>
+}
+
+<section class="mb-4">
+    <h1 class="section-title mb-3">Priznanja i medalje</h1>
+    <p class="text-muted mb-0">
+        Sustav priznanja nagraduje obilazak kontrolnih tocaka i podrucja. Usporedi uvjete i odaberi svoj sljedeci planinarski cilj.
+    </p>
+</section>
+
+@if (!Model.Any())
+{
+    <div class="app-card">
+        <h2 class="h5 mb-2">Nema dostupnih medalja</h2>
+        <p class="text-muted mb-0">Trenutno nisu pronadeni podaci za prikaz planinarskih priznanja.</p>
+    </div>
+}
+else
+{
+    <section class="row g-4">
+        @foreach (var medalja in Model)
+        {
+            <article class="col-12 col-md-6 col-xl-4">
+                <div class="app-card h-100 d-flex flex-column">
+                    <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                        <h2 class="h5 mb-0">@medalja.Naziv</h2>
+                        <span class="app-badge badge-subtle text-uppercase">Priznanje</span>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="app-badge badge-subtle text-uppercase">
+                            MINIMALNO @medalja.MinimalanBrojKontrolnihTocaka KT
+                        </span>
+                        <span class="app-badge badge-subtle text-uppercase">
+                            MINIMALNO @medalja.MinimalanBrojPodrucja PODRUCJA
+                        </span>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(medalja.OpisPreview))
+                    {
+                        <p class="text-muted mb-4 flex-grow-1">@medalja.OpisPreview</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-4 flex-grow-1 fst-italic">Opis kriterija nije dostupan.</p>
+                    }
+
+                    <div class="mt-auto d-grid">
+                        <a asp-controller="Medalja"
+                           asp-action="Details"
+                           asp-route-id="@medalja.IdMedalja"
+                           class="btn btn-primary">
+                            Detalji priznanja
+                        </a>
+                    </div>
+                </div>
+            </article>
+        }
+    </section>
+}

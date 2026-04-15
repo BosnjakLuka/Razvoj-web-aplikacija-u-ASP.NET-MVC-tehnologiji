@@ -21,7 +21,7 @@
         <div class="col-md-6 col-lg-3">
             <strong>Područje</strong>
             <p class="mb-0 text-muted">
-                @if (Model.Područje != null)
+                @if (Model.Podrucje != null)
                 {
                     <a asp-controller="Podrucje" asp-action="Details" asp-route-id="@Model.Podrucje.IdPodrucje">@Model.Podrucje.Naziv</a>
                 }
@@ -86,7 +86,7 @@
             <p class="mb-0 text-muted mt-1">@(string.IsNullOrWhiteSpace(Model.Adresa) ? "Adresa nije unesena." : Model.Adresa)</p>
         </div>
         <div class="col-md-6 col-lg-3">
-            <strong>Održava udruga</strong>
+            <strong>Odrzava udruga</strong>
             <p class="mb-0 text-muted mt-1">
                 @if (Model.PlaninarskaUdruga != null)
                 {
