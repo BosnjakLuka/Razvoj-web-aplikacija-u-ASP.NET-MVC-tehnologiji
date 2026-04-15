@@ -1,0 +1,114 @@
+@model planinarenje.Entiteti.PlaninarskiObjekt
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item"><a asp-controller="PlaninarskiObjekt" asp-action="Index">Objekti</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Naziv</li>
+        </ol>
+    </nav>
+}
+
+<section class="detail-panel">
+    <h1 class="section-title no-accent mb-4">@Model.Naziv</h1>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <strong>Tip objekta</strong>
+            <p class="mb-0 text-muted text-uppercase fw-bold">@Model.TipObjekta.ToString()</p>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <strong>Područje</strong>
+            <p class="mb-0 text-muted">
+                @if (Model.Podrucje != null)
+                {
+                    <a asp-controller="Podrucje" asp-action="Details" asp-route-id="@Model.Podrucje.IdPodrucje">@Model.Podrucje.Naziv</a>
+                }
+                else
+                {
+                    <span>Nije odabrano</span>
+                }
+            </p>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <strong>Nadmorska visina</strong>
+            <p class="mb-0 text-muted">@(Model.NadmorskaVisina?.ToString() ?? "Nepoznato") m n/v</p>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <strong>Kapacitet</strong>
+            <p class="mb-0 text-muted">@(Model.Kapacitet?.ToString() ?? "Nije navedeno")</p>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <strong>Usluge</strong>
+            <ul class="list-unstyled mb-0 mt-1">
+                @if (Model.ImaNocenje)
+                {
+                    <li class="text-success"><i class="bi bi-check-circle"></i> Ima mogućnost noćenja</li>
+                }
+                else
+                {
+                    <li class="text-danger"><i class="bi bi-x-circle"></i> Nema noćenja</li>
+                }
+                @if (Model.ImaHranu)
+                {
+                    <li class="text-success mt-1"><i class="bi bi-check-circle"></i> Ima hranu i piće</li>
+                }
+                else
+                {
+                    <li class="text-danger mt-1"><i class="bi bi-x-circle"></i> Nema hrane</li>
+                }
+            </ul>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <strong>Kontakt / Odgovorna osoba</strong>
+            <p class="mb-0 text-muted mt-1">
+                @if (!string.IsNullOrWhiteSpace(Model.ImeOdgovorneOsobe))
+                {
+                    <span><i class="bi bi-person"></i> @Model.ImeOdgovorneOsobe<br /></span>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Telefon))
+                {
+                    <span><i class="bi bi-telephone"></i> @Model.Telefon<br /></span>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Email))
+                {
+                    <span><i class="bi bi-envelope"></i> @Model.Email</span>
+                }
+                @if (string.IsNullOrWhiteSpace(Model.ImeOdgovorneOsobe) && string.IsNullOrWhiteSpace(Model.Telefon) && string.IsNullOrWhiteSpace(Model.Email))
+                {
+                    <span>Informacije nisu dostupne.</span>
+                }
+            </p>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <strong>Adresa</strong>
+            <p class="mb-0 text-muted mt-1">@(string.IsNullOrWhiteSpace(Model.Adresa) ? "Adresa nije unesena." : Model.Adresa)</p>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <strong>Održava udruga</strong>
+            <p class="mb-0 text-muted mt-1">
+                @if (Model.PlaninarskaUdruga != null)
+                {
+                    @Model.PlaninarskaUdruga.Naziv
+                }
+                else
+                {
+                    <span>Nepoznata udruga</span>
+                }
+            </p>
+        </div>
+        
+        <div class="col-12 mt-4 pt-3 border-top">
+            <strong>Radno vrijeme</strong>
+            <p class="mb-0 mt-2 text-muted">@(string.IsNullOrWhiteSpace(Model.RadnoVrijemeOpis) ? "Radno vrijeme nije definirano." : Model.RadnoVrijemeOpis)</p>
+        </div>
+        
+        <div class="col-12 mt-4 pt-3 border-top">
+            <strong>Opis planinarskog objekta</strong>
+            <p class="mb-0 mt-2 text-muted">@(string.IsNullOrWhiteSpace(Model.Opis) ? "Detaljan opis nije naveden." : Model.Opis)</p>
+        </div>
+    </div>
+
+    <a asp-controller="PlaninarskiObjekt" asp-action="Index" class="btn btn-primary mt-3">Natrag na katalog objekata</a>
+</section>
