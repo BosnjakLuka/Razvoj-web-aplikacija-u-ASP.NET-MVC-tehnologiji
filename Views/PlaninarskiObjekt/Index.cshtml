@@ -1,0 +1,106 @@
+@model IReadOnlyList<planinarenje.Models.PlaninarskiObjektIndexCardViewModel>
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Objekti</li>
+        </ol>
+    </nav>
+}
+
+<section class="mb-4">
+    <h1 class="section-title mb-3">Planinarski objekti</h1>
+    <p class="text-muted mb-0">
+        Katalog domova, kuća i skloništa. Pregledajte dostupne kapacitete, visine i usluge na stazama.
+    </p>
+</section>
+
+@if (!Model.Any())
+{
+    <div class="app-card">
+        <h2 class="h5 mb-2">Nema dostupnih objekata</h2>
+        <p class="text-muted mb-0">Trenutno nisu pronađeni podatci za prikaz.</p>
+    </div>
+}
+else
+{
+    <section class="row g-4">
+        @foreach (var objekt in Model)
+        {
+            <article class="col-12 col-lg-6 col-xl-4">
+                <div class="app-card h-100 d-flex flex-column">
+
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                        <h2 class="h5 mb-0">@objekt.Naziv</h2>
+                        <span class="app-badge badge-subtle text-uppercase">@objekt.TipObjektaNaziv</span>
+                    </div>
+
+                    <div class="mb-3 ps-2 border-start border-3" style="border-color: var(--color-grey-light) !important;">
+                        <div class="d-flex flex-column text-muted small ms-2 gap-1">
+                            <span><strong>Područje:</strong> @objekt.PodrucjeNaziv</span>
+                            <span><strong>Održava:</strong> @(objekt.UdrugaNaziv ?? "Nepoznata udruga")</span>
+                            @if (!string.IsNullOrWhiteSpace(objekt.OdgovornaOsoba))
+                            {
+                                <span><strong>Kontakt osoba:</strong> @objekt.OdgovornaOsoba</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="app-badge badge-subtle text-uppercase" title="Nadmorska visina">
+                            VISINA: @objekt.NadmorskaVisinaTekst
+                        </span>
+                        <span class="app-badge badge-subtle text-uppercase" title="Kapacitet mjesta">
+                            KAPACITET: @objekt.KapacitetTekst
+                        </span>
+
+                        @if (objekt.ImaNocenje)
+                        {
+                            <span class="app-badge badge-subtle text-uppercase" title="Mogućnost noćenja">
+                                NOĆENJE ✔
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="app-badge badge-subtle text-uppercase" title="Bez noćenja">
+                                NOĆENJE ❌
+                            </span>
+                        }
+
+                        @if (objekt.ImaHranu)
+                        {
+                            <span class="app-badge badge-subtle text-uppercase" title="Dostupna hrana i piće">
+                                HRANA ✔
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="app-badge badge-subtle text-uppercase" title="Nema hrane u ponudi">
+                                HRANA ❌
+                            </span>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(objekt.OpisPreview))
+                    {
+                        <p class="text-muted mb-4 flex-grow-1">@objekt.OpisPreview</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-4 flex-grow-1 fst-italic">Detaljan opis objekta nije dostupan.</p>
+                    }
+
+                    <div class="mt-auto d-grid">
+                        <a asp-controller="PlaninarskiObjekt"
+                           asp-action="Details"
+                           asp-route-id="@objekt.IdPlaninarskiObjekt"
+                           class="btn btn-primary">
+                            Detalji objekta
+                        </a>
+                    </div>
+                </div>
+            </article>
+        }
+    </section>
+}

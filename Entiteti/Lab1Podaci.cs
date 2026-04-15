@@ -141,11 +141,11 @@ public static class Lab1PodaciFactory
 
         var fotografije = new List<Fotografija>
         {
-            new() { IdFotografija = 1, IdPosjet = 1, NazivDatoteke = "vis_luka_selfie.jpg", PutanjaDatoteke = @"C:\Slike\Posjeti\vis_luka_selfie.jpg", DatumUploada = DT("2026-04-05 12:05:00"), TipSlike = TipSlike.Selfie, Opis = "Selfie korisnika Luke na vrhu Vis." },
-            new() { IdFotografija = 2, IdPosjet = 2, NazivDatoteke = "okic_luka_selfie.jpg", PutanjaDatoteke = @"C:\Slike\Posjeti\okic_luka_selfie.jpg", DatumUploada = DT("2026-04-12 10:05:00"), TipSlike = TipSlike.Selfie, Opis = "Fotografija Luke kod oznake vrha Okic." },
-            new() { IdFotografija = 3, IdPosjet = 3, NazivDatoteke = "japetic_luka_selfie.jpg", PutanjaDatoteke = @"C:\Slike\Posjeti\japetic_luka_selfie.jpg", DatumUploada = DT("2026-04-19 11:15:00"), TipSlike = TipSlike.Selfie, Opis = "Selfie na vrhu Japetic uz piramidu." },
-            new() { IdFotografija = 4, IdPosjet = 4, NazivDatoteke = "vis_test_selfie.jpg", PutanjaDatoteke = @"C:\Slike\Posjeti\vis_test_selfie.jpg", DatumUploada = DT("2026-04-08 12:50:00"), TipSlike = TipSlike.Selfie, Opis = "Testni korisnik na vrhu Vis." },
-            new() { IdFotografija = 5, IdPosjet = 5, NazivDatoteke = "sljeme_test_selfie.jpg", PutanjaDatoteke = @"C:\Slike\Posjeti\sljeme_test_selfie.jpg", DatumUploada = DT("2026-04-26 10:45:00"), TipSlike = TipSlike.Selfie, Opis = "Testni korisnik na vrhu Sljeme kod oznake." }
+            new() { IdFotografija = 1, IdPosjet = 1, NazivDatoteke = "vis_luka_selfie.jpg", PutanjaDatoteke = @"C:\Users\lukab\Documents\Projekt\Razvoj-web-aplikacija-u-ASP.NET-MVC-tehnologiji\Slike\Fotografije\luka2.jpg", DatumUploada = DT("2026-04-05 12:05:00"), TipSlike = TipSlike.Selfie, Opis = "Selfie korisnika Luke na vrhu Vis." },
+            new() { IdFotografija = 2, IdPosjet = 2, NazivDatoteke = "okic_luka_selfie.jpg", PutanjaDatoteke = @"C:\Users\lukab\Documents\Projekt\Razvoj-web-aplikacija-u-ASP.NET-MVC-tehnologiji\Slike\Fotografije\luka1.jpg", DatumUploada = DT("2026-04-12 10:05:00"), TipSlike = TipSlike.Selfie, Opis = "Fotografija Luke kod oznake vrha Okic." },
+            new() { IdFotografija = 3, IdPosjet = 3, NazivDatoteke = "japetic_luka_selfie.jpg", PutanjaDatoteke = @"C:\Users\lukab\Documents\Projekt\Razvoj-web-aplikacija-u-ASP.NET-MVC-tehnologiji\Slike\Fotografije\luka3.jpg", DatumUploada = DT("2026-04-19 11:15:00"), TipSlike = TipSlike.Selfie, Opis = "Selfie na vrhu Japetic uz piramidu." },
+            new() { IdFotografija = 4, IdPosjet = 4, NazivDatoteke = "vis_test_selfie.jpg", PutanjaDatoteke = @"C:\Users\lukab\Documents\Projekt\Razvoj-web-aplikacija-u-ASP.NET-MVC-tehnologiji\Slike\Fotografije\test1.jpg", DatumUploada = DT("2026-04-08 12:50:00"), TipSlike = TipSlike.Selfie, Opis = "Testni korisnik na vrhu Vis." },
+            new() { IdFotografija = 5, IdPosjet = 5, NazivDatoteke = "sljeme_test_selfie.jpg", PutanjaDatoteke = @"C:\Users\lukab\Documents\Projekt\Razvoj-web-aplikacija-u-ASP.NET-MVC-tehnologiji\Slike\Fotografije\test2.jpg", DatumUploada = DT("2026-04-26 10:45:00"), TipSlike = TipSlike.Selfie, Opis = "Testni korisnik na vrhu Sljeme kod oznake." }
         };
 
         var korisnikMedalje = new List<KorisnikMedalja>

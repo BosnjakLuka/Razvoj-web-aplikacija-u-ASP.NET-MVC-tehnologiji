@@ -1,0 +1,51 @@
+@model planinarenje.Entiteti.Podrucje
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Podrucje" asp-action="Index">Područja</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Naziv</li>
+        </ol>
+    </nav>
+}
+
+<section class="detail-panel">
+    <h1 class="section-title no-accent mb-4">@Model.Naziv</h1>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <strong>Regija</strong>
+            <p class="mb-0 text-muted">@(string.IsNullOrWhiteSpace(Model.Regija) ? "Nije navedeno" : Model.Regija)</p>
+        </div>
+        <div class="col-md-4">
+            <strong>Minimalno KT za obilazak</strong>
+            <p class="mb-0 text-muted">@Model.MinimalanBrojKTZaObilazak</p>
+        </div>
+        <div class="col-md-4">
+            <strong>Ukupan broj KT</strong>
+            <p class="mb-0 text-muted">@Model.UkupanBrojKT</p>
+        </div>
+        <div class="col-12">
+            <strong>Opis</strong>
+            <p class="mb-0 text-muted">@(string.IsNullOrWhiteSpace(Model.Opis) ? "Opis područja nije dostupan." : Model.Opis)</p>
+        </div>
+    </div>
+
+    <h2 class="h5 mb-3">Kontrolne točke područja</h2>
+    @if (Model.KontrolneTocke.Any())
+    {
+        <ul class="mb-4">
+            @foreach (var kt in Model.KontrolneTocke)
+            {
+                <li class="mb-1"><a asp-controller="KontrolnaTocka" asp-action="Details" asp-route-id="@kt.IdKontrolnaTocka">@kt.Naziv</a></li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p class="text-muted mb-4">Nema povezanih kontrolnih tocaka za prikaz.</p>
+    }
+
+    <a asp-controller="Podrucje" asp-action="Index" class="btn btn-primary">Natrag na popis područja</a>
+</section>

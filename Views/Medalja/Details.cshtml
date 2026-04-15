@@ -1,0 +1,52 @@
+﻿@model planinarenje.Entiteti.Medalja
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Medalja" asp-action="Index">Medalje</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Naziv</li>
+        </ol>
+    </nav>
+}
+
+<section class="detail-panel">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <!-- ZadrÅ¾avamo tematski "nagradni" osjet i na detaljima -->
+        <i class="bi bi-award-fill text-warning" style="font-size: 2.5rem;"></i>
+        <h1 class="section-title no-accent mb-0">@Model.Naziv</h1>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-4">
+            <div class="app-card h-100 p-4 border-0" style="background-color: var(--color-cloud-white);">
+                <p class="text-uppercase text-muted small fw-bold mb-2">Potrebne kontrolne tocke</p>
+                <div class="d-flex align-items-baseline gap-2">
+                    <span class="h1 fw-bolder text-dark mb-0">@Model.MinimalanBrojKontrolnihTocaka</span>
+                    <span class="text-muted">ukupno</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="app-card h-100 p-4 border-0" style="background-color: var(--color-cloud-white);">
+                <p class="text-uppercase text-muted small fw-bold mb-2">Potrebna podrucja</p>
+                <div class="d-flex align-items-baseline gap-2">
+                    <span class="h1 fw-bolder text-dark mb-0">@Model.MinimalanBrojPodrucja</span>
+                    <span class="text-muted">minimum</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 mt-4 pt-4 border-top">
+            <h2 class="h5 fw-bold mb-3">Opis i kriteriji dodjele</h2>
+            <p class="mb-0 text-muted" style="line-height: 1.6;">
+                @(string.IsNullOrWhiteSpace(Model.Opis) ? "Detaljan opis kriterija dodjele trenutno nije dostupan." : Model.Opis)
+            </p>
+        </div>
+    </div>
+
+    <a asp-controller="Medalja" asp-action="Index" class="btn btn-primary mt-3">Natrag na katalog priznanja</a>
+</section>
+
+

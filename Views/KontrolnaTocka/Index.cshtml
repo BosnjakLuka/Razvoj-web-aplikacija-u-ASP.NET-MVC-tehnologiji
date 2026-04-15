@@ -1,0 +1,67 @@
+@model IReadOnlyList<planinarenje.Models.KontrolnaTockaIndexCardViewModel>
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Kontrolne točke</li>
+        </ol>
+    </nav>
+}
+
+<section class="mb-4">
+    <h1 class="section-title no-accent mb-3">Katalog kontrolnih točaka</h1>
+    <p class="text-muted mb-0">
+        Pregled svih planinarskih kontrolnih točaka u obliku kartica, s kljucnim informacijama o tipu, nadmorskoj visini i podrucju.
+    </p>
+</section>
+
+@if (!Model.Any())
+{
+    <div class="app-card">
+        <h2 class="h5 mb-2">Nema dostupnih kontrolnih točaka</h2>
+        <p class="text-muted mb-0">Trenutno nisu pronađeni podatci za prikaz.</p>
+    </div>
+}
+else
+{
+    <section class="row g-4">
+        @foreach (var item in Model)
+        {
+            <article class="col-12 col-md-6 col-xl-4">
+                <div class="app-card d-flex flex-column h-100">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                        <h2 class="h5 mb-0">@item.Naziv</h2>
+                        <span class="app-badge badge-subtle">@item.TipKontrolneTockeNaziv</span>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="app-badge badge-subtle text-uppercase">
+                            @(item.NadmorskaVisina.HasValue ? $"{item.NadmorskaVisina.Value} M N/V" : "NEMA VISINE")
+                        </span>
+                        <span class="app-badge badge-subtle text-uppercase">@item.PodrucjeNaziv</span>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(item.OpisPreview))
+                    {
+                        <p class="text-muted mb-3">@item.OpisPreview</p>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(item.GUIDOznaka))
+                    {
+                        <p class="text-muted small mb-4">GUID: <span class="font-monospace">@item.GUIDOznaka</span></p>
+                    }
+
+                    <div class="mt-auto">
+                        <a asp-controller="KontrolnaTocka"
+                           asp-action="Details"
+                           asp-route-id="@item.IdKontrolnaTocka"
+                           class="btn btn-primary w-100">
+                            Detalji kontrolne točke
+                        </a>
+                    </div>
+                </div>
+            </article>
+        }
+    </section>
+}

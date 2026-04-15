@@ -1,47 +1,93 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="hr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - planinarenje</title>
+    <title>@ViewData["Title"] - Planinarska Knjižica</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/planinarenje.styles.css" asp-append-version="true" />
+    <!-- Globalna tipografija -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="app-shell">
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">planinarenje</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+        <nav class="navbar navbar-expand-lg topbar">
+            <div class="container">
+                <a class="brand-mark" asp-area="" asp-controller="Home" asp-action="Index">
+                    <!-- Hiking ikona placeholder -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-geo-alt-fill" viewBox="0 0 16 16">
+                        <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/>
+                    </svg>
+                    <span>Planinarska Knjižica</span>
+                </a>
+                <button class="navbar-toggler outline-none" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation" style="border-color: rgba(255,255,255,0.3);">
+                    <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
+                <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1 ms-4 main-nav">
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="KontrolnaTocka" asp-action="Index">Kontrolne točke</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Ruta" asp-action="Index">Rute</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Podrucje" asp-action="Index">Područja</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="PlaninarskiObjekt" asp-action="Index">Objekti</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="PlaninarskaUdruga" asp-action="Index">Udruge</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Korisnik" asp-action="Index">Korisnici</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Posjet" asp-action="Index">Posjeti</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Medalja" asp-action="Index">Medalje</a></li>
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+
+    <!-- Meta-red / Breadcrumbs Placeholder -->
+    @if (ViewData["Title"]?.ToString() != "Naslovnica")
+    {
+        <div class="breadcrumb-wrap">
+            <div class="container">
+                @if (IsSectionDefined("Breadcrumbs"))
+                {
+                    @RenderSection("Breadcrumbs", required: false)
+                }
+                else
+                {
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+                        </ol>
+                    </nav>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Main Content Wrapper -->
+    @if (ViewData["Title"]?.ToString() == "Naslovnica")
+    {
+        <main role="main" class="flex-grow-1">
             @RenderBody()
         </main>
-    </div>
+    }
+    else
+    {
+        <div class="container page-container">
+            <main role="main">
+                @RenderBody()
+            </main>
+        </div>
+    }
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - planinarenje - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="footer-shell">
+        <div class="container text-center">
+            <p class="mb-1"><strong>Osobna digitalna planinarska evidencija</strong></p>
+            <p class="small mb-0 opacity-75">&copy; 2026 - Razvoj web aplikacija</p>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
