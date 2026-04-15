@@ -4,23 +4,23 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Podrucja</li>
+            <li class="breadcrumb-item active" aria-current="page">Područja</li>
         </ol>
     </nav>
 }
 
 <section class="mb-4">
-    <h1 class="section-title no-accent mb-3">Planinarska podrucja Hrvatske</h1>
+    <h1 class="section-title no-accent mb-3">Planinarska područja Hrvatske</h1>
     <p class="text-muted mb-0">
-        Vizualni pregled svih podrucja obilaznice, s fokusom na broj kontrolnih tocaka i minimalne uvjete za obilazak.
+        Vizualni pregled svih područja obilaznice, s fokusom na broj kontrolnih točaka i minimalne uvjete za obilazak.
     </p>
 </section>
 
 @if (!Model.Any())
 {
     <div class="app-card">
-        <h2 class="h5 mb-2">Nema dostupnih podrucja</h2>
-        <p class="text-muted mb-0">Trenutno nisu pronadeni podaci za prikaz.</p>
+        <h2 class="h5 mb-2">Nema dostupnih područja</h2>
+        <p class="text-muted mb-0">Trenutno nisu pronađeni podatci za prikaz.</p>
     </div>
 }
 else
@@ -46,7 +46,7 @@ else
                     }
                     else
                     {
-                        <p class="text-muted mb-4">Opis podrucja trenutno nije dostupan.</p>
+                        <p class="text-muted mb-4">Opis područja trenutno nije dostupan.</p>
                     }
 
                     <div class="mt-auto d-grid">
@@ -54,7 +54,7 @@ else
                            asp-action="Details"
                            asp-route-id="@item.IdPodrucje"
                            class="btn btn-primary">
-                            Detalji podrucja
+                            Detalji područja
                         </a>
                     </div>
                 </div>

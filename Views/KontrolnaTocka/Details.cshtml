@@ -4,7 +4,7 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
-            <li class="breadcrumb-item"><a asp-controller="KontrolnaTocka" asp-action="Index">Kontrolne tocke</a></li>
+            <li class="breadcrumb-item"><a asp-controller="KontrolnaTocka" asp-action="Index">Kontrolne točke</a></li>
             <li class="breadcrumb-item active" aria-current="page">@Model.Naziv</li>
         </ol>
     </nav>
@@ -15,7 +15,7 @@
 
     <div class="row g-3">
         <div class="col-md-6">
-            <strong>Tip kontrolne tocke</strong>
+            <strong>Tip kontrolne točke</strong>
             <p class="mb-0 text-muted">@Model.TipKontrolneTocke</p>
         </div>
         <div class="col-md-6">
@@ -23,8 +23,8 @@
             <p class="mb-0 text-muted">@(Model.NadmorskaVisina.HasValue ? $"{Model.NadmorskaVisina.Value} m n/v" : "Nije navedeno")</p>
         </div>
         <div class="col-md-6">
-            <strong>Podrucje</strong>
-            <p class="mb-0 text-muted">@(Model.Podrucje?.Naziv ?? "Nije navedeno")</p>
+            <strong>Područje</strong>
+            <p class="mb-0 text-muted">@(Model.Područje?.Naziv ?? "Nije navedeno")</p>
         </div>
         <div class="col-md-6">
             <strong>GUID oznaka</strong>

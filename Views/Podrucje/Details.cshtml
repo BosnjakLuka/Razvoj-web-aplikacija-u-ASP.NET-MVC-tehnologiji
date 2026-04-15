@@ -1,10 +1,10 @@
-@model planinarenje.Entiteti.Podrucje
+@model planinarenje.Entiteti.Područje
 
 @section Breadcrumbs {
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
-            <li class="breadcrumb-item"><a asp-controller="Podrucje" asp-action="Index">Podrucja</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Podrucje" asp-action="Index">Područja</a></li>
             <li class="breadcrumb-item active" aria-current="page">@Model.Naziv</li>
         </ol>
     </nav>
@@ -28,11 +28,11 @@
         </div>
         <div class="col-12">
             <strong>Opis</strong>
-            <p class="mb-0 text-muted">@(string.IsNullOrWhiteSpace(Model.Opis) ? "Opis podrucja nije dostupan." : Model.Opis)</p>
+            <p class="mb-0 text-muted">@(string.IsNullOrWhiteSpace(Model.Opis) ? "Opis područja nije dostupan." : Model.Opis)</p>
         </div>
     </div>
 
-    <h2 class="h5 mb-3">Kontrolne tocke podrucja</h2>
+    <h2 class="h5 mb-3">Kontrolne točke područja</h2>
     @if (Model.KontrolneTocke.Any())
     {
         <ul class="mb-4">
@@ -44,8 +44,8 @@
     }
     else
     {
-        <p class="text-muted mb-4">Nema povezanih kontrolnih tocaka za prikaz.</p>
+        <p class="text-muted mb-4">Nema povezanih kontrolnih točaka za prikaz.</p>
     }
 
-    <a asp-controller="Podrucje" asp-action="Index" class="btn btn-primary">Natrag na popis podrucja</a>
+    <a asp-controller="Podrucje" asp-action="Index" class="btn btn-primary">Natrag na popis područja</a>
 </section>
