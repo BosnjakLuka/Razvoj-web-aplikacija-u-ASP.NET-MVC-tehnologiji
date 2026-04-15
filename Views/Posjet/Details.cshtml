@@ -1,0 +1,154 @@
+@model planinarenje.Models.PosjetDetailsViewModel
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Posjet" asp-action="Index">Posjeti</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Evidencija #@Model.IdPosjet</li>
+        </ol>
+    </nav>
+}
+
+<section class="detail-panel">
+    <div class="row g-4">
+        <!-- Lijevi stupac: Opće informacije o posjeti -->
+        <div class="col-lg-4">
+            <div class="app-card h-auto text-center mb-4 border-top border-5 border-success">
+                <i class="bi bi-geo-alt-fill text-success fs-1 mb-2"></i>
+                <h2 class="h5 mb-1">Zapisnica o posjetu</h2>
+                <h3 class="h4 fw-bold text-dark mb-3">@Model.NazivKontrolneTocke</h3>
+                
+                <p class="text-muted mb-2">
+                    <i class="bi bi-calendar-event me-2"></i>@Model.DatumVrijemePosjeta.ToString("dd. MMMM yyyy. HH:mm")
+                </p>
+                <div class="mb-3">
+                    @if (Model.JeLiPotvrdenPosjet)
+                    {
+                        <span class="badge bg-success-subtle text-success fs-6"><i class="bi bi-shield-check me-2"></i>Službeno potvrđeno</span>
+                    }
+                    else
+                    {
+                         <span class="badge bg-warning-subtle text-warning fs-6"><i class="bi bi-shield-exclamation me-2"></i>Čeka potvrdu</span>
+                    }
+                </div>
+
+                <hr class="text-secondary" />
+
+                <div class="text-start mt-3">
+                    <p class="mb-1 text-muted small text-uppercase fw-bold">Planinar</p>
+                    <p class="mb-3">
+                        <a asp-controller="Korisnik" asp-action="Details" asp-route-id="@Model.IdKorisnik" class="fw-medium text-decoration-none">
+                            <i class="bi bi-person-badge me-2"></i>@Model.ImePrezimeKorisnika
+                        </a>
+                    </p>
+
+                    <p class="mb-1 text-muted small text-uppercase fw-bold">Evidencija izdavanja</p>
+                    <p class="mb-3 fw-medium">
+                        <i class="bi bi-journal-bookmark me-2"></i>@Model.NazivKnjizice <span class="text-muted small ms-1">(#@Model.IdKnjizica)</span>
+                    </p>
+
+                    <p class="mb-1 text-muted small text-uppercase fw-bold">Ostvareno putem rute</p>
+                    <p class="mb-3 fw-medium">
+                        <a asp-controller="Ruta" asp-action="Details" asp-route-id="@Model.IdRuta" class="text-decoration-none text-dark d-block">
+                            <i class="bi bi-signpost-2 me-2"></i>@Model.NazivRute
+                        </a>
+                    </p>
+
+                    <p class="mb-1 text-muted small text-uppercase fw-bold">Kontrolna točka</p>
+                    <p class="mb-0 fw-medium">
+                        <a asp-controller="KontrolnaTocka" asp-action="Details" asp-route-id="@Model.IdKontrolnaTocka" class="text-decoration-none text-dark d-block">
+                            <i class="bi bi-geo-alt-fill me-2"></i>@Model.NazivKontrolneTocke
+                        </a>
+                    </p>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Povratak na sve posjete
+                </a>
+            </div>
+        </div>
+
+        <!-- Desni stupac: Ostali tehnički i doživljajni detalji -->
+        <div class="col-lg-8">
+            <div class="app-card h-auto mb-4 border-top border-4 border-primary pb-3">
+                <h3 class="h5 border-bottom pb-2 mb-3">Informacije o usponu</h3>
+                <div class="row g-3">
+                    <div class="col-sm-6 col-md-4">
+                        <label class="text-muted small">Trajanje uspona</label>
+                        <div class="fw-medium fs-5 text-primary">
+                            @if (Model.VrijemeUsponaMin.HasValue)
+                            {
+                                <span><i class="bi bi-stopwatch me-1"></i>@Model.VrijemeUsponaMin min</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted fs-6">Nije zabilježeno</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <label class="text-muted small">Ocjena doživljaja</label>
+                        <div class="fw-medium fs-6 mt-1">
+                            <span class="badge bg-secondary-subtle text-secondary py-2 border">@Model.Dozivljaj</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <label class="text-muted small">Datum prijave u sustav</label>
+                        <div class="fw-medium text-muted">@Model.DatumKreiranjaZapisa.ToString("dd.MM.yyyy.")</div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top">
+                    <h4 class="h6 mb-2 text-muted fw-bold">Uneseni zapis (Iskustvo s izleta)</h4>
+                    @if (!string.IsNullOrWhiteSpace(Model.OpisIskustva))
+                    {
+                        <div class="p-3 bg-light rounded text-dark fs-6" style="border-left: 4px solid var(--color-olive-sage);">
+                            <em>"@Model.OpisIskustva"</em>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted fst-italic">Korisnik nije upisao detaljniji doživljaj posjete.</p>
+                    }
+                </div>
+
+                <div class="mt-3">
+                     <p class="mb-0 text-muted small"><i class="bi bi-hash me-1"></i>Dnevnički identifikator: <span class="user-select-all fw-medium">@Model.UneseniGUID</span></p>
+                </div>
+            </div>
+
+            <!-- Fotografije izleta -->
+            <h3 class="h5 mb-3 mt-4 pt-2"><i class="bi bi-camera me-2 text-primary"></i>Fotografije s posjeta (@Model.Fotografije.Count)</h3>
+            
+            @if (!Model.Fotografije.Any())
+            {
+                <div class="app-card h-auto bg-light text-center py-4 text-muted">
+                    <i class="bi bi-image fs-1 d-block mb-3 opacity-50"></i>
+                    <p class="mb-0">Aplikacija ne bilježi ni jednu fotografiju za ovaj posjet.</p>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (var foto in Model.Fotografije)
+                    {
+                        <div class="col-md-6 col-lg-4">
+                            <div class="app-card h-100 p-2 shadow-sm rounded overflow-hidden border">
+                                <a href="@foto.PutanjaUrl" target="_blank" title="Otvori fotografiju @foto.NazivDatoteke">
+                                     <img src="@foto.PutanjaUrl" class="img-fluid rounded border-bottom w-100 mb-2 mb-lg-0" style="object-fit: cover; aspect-ratio: 4/3;" alt="@foto.NazivDatoteke" />
+                                </a>
+                                @if (!string.IsNullOrEmpty(foto.Opis))
+                                {
+                                    <p class="text-muted small mb-0 mt-2 text-truncate px-1" title="@foto.Opis">@foto.Opis</p>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</section>

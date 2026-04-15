@@ -14,7 +14,20 @@ namespace planinarenje.Controllers
             var idx = absolutePath.IndexOf("Slike", StringComparison.OrdinalIgnoreCase);
             if (idx >= 0)
             {
-                return "/" + absolutePath.Substring(idx).Replace("\\", "/");
+                var relPath = "/" + absolutePath.Substring(idx).Replace("\\", "/");
+                if (!System.IO.File.Exists(absolutePath))
+                {
+                    if (absolutePath.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var altPath = absolutePath.Substring(0, absolutePath.Length - 4) + ".jpeg";
+                        if (System.IO.File.Exists(altPath))
+                        {
+                            return relPath.Substring(0, relPath.Length - 4) + ".jpeg";
+                        }
+                    }
+                    return null; 
+                }
+                return relPath;
             }
             return absolutePath;
         }
