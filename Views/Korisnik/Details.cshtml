@@ -49,13 +49,19 @@
 
         @if (Model.Knjizica != null)
         {
-            <div class="app-card h-auto bg-primary-subtle text-primary border-primary-subtle mb-4">
-                <h3 class="h5 border-bottom border-primary pb-2 mb-3"><i class="bi bi-journal-bookmark me-2"></i>Aktivna knjižica</h3>
-                <ul class="list-unstyled mb-0">
-                    <li class="mb-2"><strong>Aplikacija:</strong> @Model.Knjizica.NazivAplikacije</li>
-                    <li><strong>Izdana:</strong> @Model.Knjizica.DatumIzdavanja.ToString("dd.MM.yyyy.")</li>
-                </ul>
-            </div>
+            <a asp-controller="Knjizica" asp-action="Details" asp-route-id="@Model.Knjizica.IdKnjizica" class="text-decoration-none">
+                <div class="app-card h-auto bg-primary-subtle text-primary border-primary-subtle mb-4 shadow-sm hover-shadow" style="transition: transform 0.2s, box-shadow 0.2s;">
+                    <h3 class="h5 border-bottom border-primary pb-2 mb-3"><i class="bi bi-journal-bookmark me-2"></i>Aktivna knjižica</h3>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><strong>Knjižica ID:</strong> #@Model.Knjizica.IdKnjizica</li>
+                        <li class="mb-2"><strong>Aplikacija:</strong> @Model.Knjizica.NazivAplikacije</li>
+                        <li><strong>Izdana:</strong> @Model.Knjizica.DatumIzdavanja.ToString("dd.MM.yyyy.")</li>
+                    </ul>
+                    <div class="text-end mt-2">
+                        <span class="small fw-bold">Otvori E-Knjižicu <i class="bi bi-arrow-right"></i></span>
+                    </div>
+                </div>
+            </a>
         }
         else
         {

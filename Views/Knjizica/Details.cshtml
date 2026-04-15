@@ -1,0 +1,151 @@
+@model planinarenje.Models.KnjizicaDetailsViewModel
+@{
+    ViewData["Title"] = "Planinarska Knjižica - " + Model.ImePrezimeKorisnika;
+}
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Planinarske knjižice</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Knjižica #@Model.IdKnjizica</li>
+        </ol>
+    </nav>
+}
+
+<div class="row align-items-center mt-3 mb-4">
+    <div class="col-md-8">
+        <h1 class="h3 text-primary-dark mb-1">
+            <i class="bi bi-journal-richtext text-primary me-2 opacity-75"></i>Službena planinarska knjižica
+        </h1>
+        <p class="text-muted mb-0"><i class="bi bi-person-lines-fill me-1"></i>Vlasnik: <span class="fw-bold">@Model.ImePrezimeKorisnika</span></p>
+    </div>
+</div>
+
+<div class="row g-4 mb-5 pb-4">
+    <div class="col-lg-4">
+        <!-- Passport-style Card -->
+        <div class="app-card shadow-sm border-0 border-top border-4 border-primary position-relative overflow-hidden mb-4">
+            <div class="card-body p-4 text-center">
+                <i class="bi bi-shield-lock-fill position-absolute text-primary opacity-10" style="font-size: 8rem; top: -1.5rem; left: -1.5rem;"></i>
+                
+                <div class="mb-3 position-relative z-1 mt-2">
+                    <div class="bg-light rounded-circle shadow-sm p-0 d-inline-flex border border-primary align-items-center justify-content-center overflow-hidden" style="border-width: 3px !important; width: 100px; height: 100px;">
+                        @if (!string.IsNullOrEmpty(Model.ProfilnaSlikaUrl))
+                        {
+                            <img src="@Model.ProfilnaSlikaUrl" alt="@Model.ImePrezimeKorisnika" class="img-fluid" style="width: 100%; height: 100%; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <i class="bi bi-person-fill text-primary opacity-75" style="font-size: 3.5rem;"></i>
+                        }
+                    </div>
+                </div>
+
+                <div class="position-relative z-1 mb-2">
+                    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-1 rounded-pill fw-medium border border-primary border-opacity-25" style="font-size: 0.85rem;"><i class="bi bi-at"></i>@Model.KorisnickoIme</span>
+                </div>
+
+                <h2 class="h5 fw-bold text-dark mt-2 mb-0 position-relative z-1">
+                    @Model.ImePrezimeKorisnika
+                </h2>
+                
+                <div class="mt-4 mb-3 position-relative z-1 text-start">
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom text-muted">
+                        <span class="small text-uppercase fw-bold"><i class="bi bi-hash"></i> Serijski Broj</span>
+                        <span class="font-monospace text-dark fs-5 fw-medium">#@Model.IdKnjizica</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom text-muted">
+                        <span class="small text-uppercase fw-bold"><i class="bi bi-calendar-event"></i> Datum Izdavanja</span>
+                        <span class="text-dark fw-medium">@Model.DatumKreiranja.ToString("dd.MM.yyyy.")</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center text-muted">
+                        <span class="small text-uppercase fw-bold"><i class="bi bi-info-circle"></i> Status</span>
+                        @if (Model.StatusAktivna)
+                        {
+                            <span class="badge bg-success d-inline-flex px-3 py-2 align-items-center fw-medium rounded-pill shadow-sm"><i class="bi bi-check-circle me-1"></i>Aktivna</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary d-inline-flex px-3 py-2 align-items-center fw-medium rounded-pill shadow-sm"><i class="bi bi-archive me-1"></i>Zatvorena</span>
+                        }
+                    </div>
+                </div>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.Napomena))
+            {
+                <div class="card-footer bg-light border-top-0 px-4 py-3">
+                    <p class="small text-muted fw-bold text-uppercase mb-1"><i class="bi bi-journal-text me-1"></i> Službena Napomena</p>
+                    <p class="text-dark mb-0 fst-italic">"@Model.Napomena"</p>
+                </div>
+            }
+        </div>
+
+        <div class="d-grid mb-4">
+            <a asp-controller="Korisnik" asp-action="Details" asp-route-id="@Model.IdKorisnik" class="btn btn-outline-primary mb-2 shadow-sm rounded-3">
+                <i class="bi bi-person-badge-fill me-2"></i>Otvori profil korisnika
+            </a>
+            <a asp-action="Index" class="btn btn-light border text-muted shadow-sm rounded-3">
+                <i class="bi bi-arrow-left me-2"></i>Natrag na knjižice
+            </a>
+        </div>
+    </div>
+
+    <!-- Timeline/Logbook history -->
+    <div class="col-lg-8">
+        <div class="detail-panel bg-white rounded-3 shadow-sm border-0 h-100 px-4 py-4 p-md-5">
+            <h3 class="h5 fw-bold text-dark border-bottom pb-3 mb-4">
+                <i class="bi bi-signpost-split-fill text-primary opacity-50 me-2"></i>Evidentirani posjeti
+                <span class="badge bg-primary rounded-pill small float-end mt-1">@Model.Posjeti.Count() zapisa</span>
+            </h3>
+
+            @if (Model.Posjeti.Any())
+            {
+                <div class="timeline position-relative ps-4 ms-2 border-start border-2 border-light py-2">
+                    @foreach (var posjet in Model.Posjeti)
+                    {
+                        <div class="position-relative mb-4">
+                            <!-- Timeline marker -->
+                            <div class="position-absolute top-0 start-0 translate-middle rounded-circle border border-2 border-white 
+                                @(posjet.JeLiPotvrdenPosjet ? "bg-success" : "bg-warning text-dark")" 
+                                style="width: 1rem; height: 1rem; margin-left: -0.05rem;">
+                            </div>
+
+                            <div class="ps-3 text-muted small">
+                                <i class="bi bi-clock-history me-1"></i>@posjet.DatumVrijemePosjeta.ToString("dd.MM.yyyy. u HH:mm")
+                                
+                                @if (posjet.JeLiPotvrdenPosjet)
+                                {
+                                    <span class="badge badge-success bg-opacity-10 text-success ms-2 border border-success border-opacity-25 px-2 px-1">Potvrđen pecat</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-warning bg-opacity-10 text-warning ms-2 border border-warning border-opacity-25 px-2 px-1">Nije potvrđen</span>
+                                }
+                            </div>
+                            
+                            <div class="ps-3 mt-1">
+                                <a asp-controller="Posjet" asp-action="Details" asp-route-id="@posjet.IdPosjet" class="h6 text-primary fw-bold text-decoration-none">
+                                    <i class="bi bi-geo-alt-fill me-1 text-primary opacity-50"></i>@posjet.NazivKontrolneTocke
+                                </a>
+                                <p class="text-dark small mt-2 mb-0">Zapis o obilasku kontrolne točke (#@posjet.IdPosjet)</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <div class="bg-light d-inline-flex rounded-circle p-4 mb-3 mb-3">
+                        <i class="bi bi-geo-alt text-muted opacity-50" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h4 class="h5 fw-medium text-dark">Nema zapiskih evidencija</h4>
+                    <p class="text-muted small">Logbook (knjižica) ovog korisnika je trenutno prazan jer nema evidentiranih posjeta.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
