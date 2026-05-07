@@ -36,6 +36,8 @@ namespace planinarenje.Controllers
             return View(model);
         }
 
+        [Route("vrh/{id:int}")]
+        [Route("[controller]/[action]/{id:int}")]
         public IActionResult Details(int id)
         {
             var kontrolnaTocka = _dbContext.KontrolneTocke

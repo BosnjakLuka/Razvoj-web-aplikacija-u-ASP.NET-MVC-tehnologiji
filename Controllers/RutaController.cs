@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
+using System;
 
 namespace planinarenje.Controllers;
 
@@ -52,6 +53,21 @@ public class RutaController : Controller
 
         ViewData["Title"] = ruta.Naziv;
         return View(ruta);
+    }
+
+    [Route("rute/tezina/{tezina}")]
+    public IActionResult PoTezini(string tezina)
+    {
+        if (!Enum.TryParse<TezinaRute>(tezina, true, out var tezinaEnum))
+            return NotFound();
+
+        var filtrirane = _dbContext.Rute
+            .Include(r => r.KontrolnaTocka)
+            .Where(r => r.TezinaRute == tezinaEnum)
+            .ToList();
+
+        ViewBag.Tezina = tezina;
+        return View(filtrirane);
     }
 
     private static string FormatTrajanje(int minute)

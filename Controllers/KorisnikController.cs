@@ -55,6 +55,8 @@ namespace planinarenje.Controllers
             return View(model);
         }
 
+        [Route("planinar/{id:int}")]
+        [Route("[controller]/[action]/{id:int}")]
         public IActionResult Details(int id)
         {
             var korisnik = _dbContext.Korisnici

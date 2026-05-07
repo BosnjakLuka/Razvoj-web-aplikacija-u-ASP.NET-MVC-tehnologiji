@@ -62,6 +62,22 @@ namespace planinarenje.Controllers
             return View(podrucje);
         }
 
+        [Route("podrucje/{id:int}/tocke")]
+        public IActionResult KontrolneTockePodrucja(int id)
+        {
+            var podrucje = _dbContext.Podrucja.Find(id);
+            if (podrucje == null) return NotFound();
+
+            var tocke = _dbContext.KontrolneTocke
+                .Include(kt => kt.Podrucje)
+                .Where(kt => kt.IdPodrucje == id)
+                .OrderBy(kt => kt.Naziv)
+                .ToList();
+
+            ViewBag.Podrucje = podrucje;
+            return View(tocke);
+        }
+
         private static string? TrimOpis(string? opis, int maxLength)
         {
             if (string.IsNullOrWhiteSpace(opis))
