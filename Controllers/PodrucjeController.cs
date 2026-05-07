@@ -18,6 +18,7 @@ namespace planinarenje.Controllers
 
         public IActionResult Index()
         {
+            var kontrolneTocke = _kontrolnaTockaRepository.GetAll();
             var model = _podrucjeRepository.GetAll()
                 .OrderBy(p => p.IdPodrucje)
                 .Select(p => new PodrucjeIndexCardViewModel
@@ -27,7 +28,7 @@ namespace planinarenje.Controllers
                     Regija = string.IsNullOrWhiteSpace(p.Regija) ? "Regija nije navedena" : p.Regija,
                     OpisPreview = TrimOpis(p.Opis, 170),
                     MinimalanBrojKTZaObilazak = p.MinimalanBrojKTZaObilazak,
-                    UkupanBrojKT = p.UkupanBrojKT
+                    UkupanBrojKT = kontrolneTocke.Count(kt => kt.IdPodrucje == p.IdPodrucje)
                 })
                 .ToList();
 
