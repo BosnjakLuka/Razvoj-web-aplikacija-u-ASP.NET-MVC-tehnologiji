@@ -1,4 +1,6 @@
+using planinarenje.Data;
 using planinarenje.Entiteti;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using planinarenje.Repositories;
 
@@ -142,6 +144,11 @@ var _ = knjizice.Count + medalje.Count;
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddDbContext<PlaninarstvoDbContext>(options =>
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("PlaninarstvoDbContext"),
+        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("PlaninarstvoDbContext"))
+    ));
 builder.Services.AddSingleton<ILab1DataStore, Lab1DataStore>();
 builder.Services.AddSingleton<IPodrucjeMockRepository, PodrucjeMockRepository>();
 builder.Services.AddSingleton<IKorisnikMockRepository, KorisnikMockRepository>();
