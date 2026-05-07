@@ -1,91 +1,79 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
-using planinarenje.Repositories;
+using System.IO;
 using System.Linq;
 
 namespace planinarenje.Controllers;
 
 public class KorisnikMedaljaController : Controller
 {
-    private readonly IKorisnikMedaljaMockRepository _korisnikMedaljaRepository;
-    private readonly IKorisnikMockRepository _korisnikRepository;
-    private readonly IMedaljaMockRepository _medaljaRepository;
+    private readonly PlaninarstvoDbContext _dbContext;
 
-    public KorisnikMedaljaController(
-        IKorisnikMedaljaMockRepository korisnikMedaljaRepository,
-        IKorisnikMockRepository korisnikRepository,
-        IMedaljaMockRepository medaljaRepository)
+    public KorisnikMedaljaController(PlaninarstvoDbContext dbContext)
     {
-        _korisnikMedaljaRepository = korisnikMedaljaRepository;
-        _korisnikRepository = korisnikRepository;
-        _medaljaRepository = medaljaRepository;
+        _dbContext = dbContext;
     }
 
     private string? FormatProfileSlika(string? absolutePath)
     {
-        if (string.IsNullOrEmpty(absolutePath)) return null;
-        var idx = absolutePath.IndexOf("Slike", StringComparison.OrdinalIgnoreCase);
-        if (idx >= 0)
+        if (string.IsNullOrWhiteSpace(absolutePath)) return null;
+
+        if (absolutePath.StartsWith("/Slike/Profil/", StringComparison.OrdinalIgnoreCase))
         {
-            var relPath = "/" + absolutePath.Substring(idx).Replace("\\", "/");
-            if (!System.IO.File.Exists(absolutePath))
-            {
-                if (absolutePath.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase))
-                {
-                    var altPath = absolutePath.Substring(0, absolutePath.Length - 4) + ".jpeg";
-                    if (System.IO.File.Exists(altPath))
-                    {
-                        return relPath.Substring(0, relPath.Length - 4) + ".jpeg";
-                    }
-                }
-                return null; 
-            }
-            return relPath;
+            return absolutePath;
         }
-        return null;
+
+        if (absolutePath.Contains("\\Slike\\Profil\\", StringComparison.OrdinalIgnoreCase) ||
+            absolutePath.Contains("/Slike/Profil/", StringComparison.OrdinalIgnoreCase))
+        {
+            return "/Slike/Profil/" + Path.GetFileName(absolutePath);
+        }
+
+        return absolutePath;
     }
 
     public IActionResult Index()
     {
-        var model = _korisnikMedaljaRepository.GetAll()
+        var model = _dbContext.KorisnikMedalje
+            .Include(km => km.Korisnik)
+            .Include(km => km.Medalja)
             .OrderByDescending(km => km.DatumDodjele)
-            .Select(km => {
-                var korisnik = _korisnikRepository.GetById(km.IdKorisnik);
-                var medalja = _medaljaRepository.GetById(km.IdMedalja);
-
-                return new KorisnikMedaljaIndexViewModel
-                {
-                    IdKorisnikMedalja = km.IdKorisnikMedalja,
-                    IdKorisnik = km.IdKorisnik,
-                    ImePrezimeKorisnika = korisnik != null ? $"{korisnik.Ime} {korisnik.Prezime}" : "Nepoznati korisnik",
-                    IdMedalja = km.IdMedalja,
-                    NazivMedalje = medalja?.Naziv ?? "Nepoznata medalja",
-                    DatumDodjele = km.DatumDodjele,
-                    Napomena = km.Napomena
-                };
-            }).ToList();
+            .AsEnumerable()
+            .Select(km => new KorisnikMedaljaIndexViewModel
+            {
+                IdKorisnikMedalja = km.IdKorisnikMedalja,
+                IdKorisnik = km.IdKorisnik,
+                ImePrezimeKorisnika = km.Korisnik != null ? $"{km.Korisnik.Ime} {km.Korisnik.Prezime}" : "Nepoznati korisnik",
+                IdMedalja = km.IdMedalja,
+                NazivMedalje = km.Medalja?.Naziv ?? "Nepoznata medalja",
+                DatumDodjele = km.DatumDodjele,
+                Napomena = km.Napomena
+            })
+            .ToList();
 
         return View(model);
     }
 
     public IActionResult Details(int id)
     {
-        var km = _korisnikMedaljaRepository.GetById(id);
+        var km = _dbContext.KorisnikMedalje
+            .Include(x => x.Korisnik)
+            .Include(x => x.Medalja)
+            .FirstOrDefault(x => x.IdKorisnikMedalja == id);
 
         if (km == null) return NotFound();
-
-        var korisnik = _korisnikRepository.GetById(km.IdKorisnik);
-        var medalja = _medaljaRepository.GetById(km.IdMedalja);
 
         var model = new KorisnikMedaljaDetailsViewModel
         {
             IdKorisnikMedalja = km.IdKorisnikMedalja,
             IdKorisnik = km.IdKorisnik,
-            ImePrezimeKorisnika = korisnik != null ? $"{korisnik.Ime} {korisnik.Prezime}" : "Nepoznati korisnik",
-            ProfilnaSlikaUrl = FormatProfileSlika(korisnik?.ProfilnaSlika),
+            ImePrezimeKorisnika = km.Korisnik != null ? $"{km.Korisnik.Ime} {km.Korisnik.Prezime}" : "Nepoznati korisnik",
+            ProfilnaSlikaUrl = FormatProfileSlika(km.Korisnik?.ProfilnaSlika),
             IdMedalja = km.IdMedalja,
-            NazivMedalje = medalja?.Naziv ?? "Nepoznata medalja",
+            NazivMedalje = km.Medalja?.Naziv ?? "Nepoznata medalja",
             DatumDodjele = km.DatumDodjele,
             Napomena = km.Napomena
         };

@@ -1,40 +1,34 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
-using planinarenje.Repositories;
 
 namespace planinarenje.Controllers;
 
 public class PlaninarskiObjektController : Controller
 {
-    private readonly IPlaninarskiObjektMockRepository _planinarskiObjektRepository;
-    private readonly IPodrucjeMockRepository _podrucjeRepository;
-    private readonly IPlaninarskaUdrugaMockRepository _udrugaRepository;
+    private readonly PlaninarstvoDbContext _dbContext;
 
-    public PlaninarskiObjektController(
-        IPlaninarskiObjektMockRepository planinarskiObjektRepository,
-        IPodrucjeMockRepository podrucjeRepository,
-        IPlaninarskaUdrugaMockRepository udrugaRepository)
+    public PlaninarskiObjektController(PlaninarstvoDbContext dbContext)
     {
-        _planinarskiObjektRepository = planinarskiObjektRepository;
-        _podrucjeRepository = podrucjeRepository;
-        _udrugaRepository = udrugaRepository;
+        _dbContext = dbContext;
     }
 
     public IActionResult Index()
     {
-        var podrucja = _podrucjeRepository.GetAll();
-        var udruge = _udrugaRepository.GetAll();
-
-        var model = _planinarskiObjektRepository.GetAll()
+        var model = _dbContext.PlaninarskiObjekti
+            .Include(po => po.Podrucje)
+            .Include(po => po.PlaninarskaUdruga)
             .OrderBy(po => po.Naziv)
+            .AsEnumerable()
             .Select(po => new PlaninarskiObjektIndexCardViewModel
             {
                 IdPlaninarskiObjekt = po.IdPlaninarskiObjekt,
                 Naziv = po.Naziv,
                 TipObjektaNaziv = DajNazivTipa(po.TipObjekta).ToUpper(), // uppercase per design
-                PodrucjeNaziv = podrucja.FirstOrDefault(p => p.IdPodrucje == po.IdPodrucje)?.Naziv ?? "NOVO PODRUCJE",
-                UdrugaNaziv = udruge.FirstOrDefault(u => u.IdPlaninarskaUdruga == po.IdPlaninarskaUdruga)?.Naziv,
+                PodrucjeNaziv = po.Podrucje?.Naziv ?? "NOVO PODRUCJE",
+                UdrugaNaziv = po.PlaninarskaUdruga?.Naziv,
                 NadmorskaVisinaTekst = po.NadmorskaVisina.HasValue ? $"{po.NadmorskaVisina.Value} M N/V" : "NEMA VISINE",
                 KapacitetTekst = po.Kapacitet.HasValue ? $"{po.Kapacitet.Value} mjesta" : "Kapacitet nepoznat",
                 OdgovornaOsoba = po.ImeOdgovorneOsobe,
@@ -50,14 +44,13 @@ public class PlaninarskiObjektController : Controller
 
     public IActionResult Details(int id)
     {
-        var objekt = _planinarskiObjektRepository.GetById(id);
+        var objekt = _dbContext.PlaninarskiObjekti
+            .Include(po => po.Podrucje)
+            .Include(po => po.PlaninarskaUdruga)
+            .FirstOrDefault(po => po.IdPlaninarskiObjekt == id);
 
         if (objekt == null)
             return NotFound();
-
-        // Bind related entities for details view
-        objekt.Podrucje = _podrucjeRepository.GetById(objekt.IdPodrucje);
-        objekt.PlaninarskaUdruga = _udrugaRepository.GetById(objekt.IdPlaninarskaUdruga);
 
         ViewData["Title"] = objekt.Naziv;
         return View(objekt);

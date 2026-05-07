@@ -1,22 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
+using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
-using planinarenje.Repositories;
 
 namespace planinarenje.Controllers;
 
 public class MedaljaController : Controller
 {
-    private readonly IMedaljaMockRepository _medaljaRepository;
+    private readonly PlaninarstvoDbContext _dbContext;
 
-    public MedaljaController(IMedaljaMockRepository medaljaRepository)
+    public MedaljaController(PlaninarstvoDbContext dbContext)
     {
-        _medaljaRepository = medaljaRepository;
+        _dbContext = dbContext;
     }
 
     public IActionResult Index()
     {
-        var model = _medaljaRepository.GetAll()
+        var model = _dbContext.Medalje
             .OrderBy(m => m.MinimalanBrojKontrolnihTocaka) // Order by difficulty
             .Select(m => new MedaljaIndexCardViewModel
             {
@@ -36,7 +36,7 @@ public class MedaljaController : Controller
 
     public IActionResult Details(int id)
     {
-        var medalja = _medaljaRepository.GetById(id);
+        var medalja = _dbContext.Medalje.FirstOrDefault(m => m.IdMedalja == id);
 
         if (medalja == null)
             return NotFound();

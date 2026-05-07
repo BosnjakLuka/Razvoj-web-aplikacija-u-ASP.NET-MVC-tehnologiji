@@ -97,12 +97,13 @@
     <div class="col-lg-8">
         <div class="app-card h-auto detail-panel border">
             <div class="card-header bg-white p-4 border-bottom d-flex align-items-center justify-content-between">
+                @{ var objektCount = Model.PlaninarskiObjekti?.Count ?? 0; }
                 <h4 class="h5 mb-0 text-primary-dark">
-                    <i class="bi bi-house-door me-2 text-primary"></i>Planinarski objekti pod upravljanjem (@Model.PlaninarskiObjekti.Count)
+                    <i class="bi bi-house-door me-2 text-primary"></i>Planinarski objekti pod upravljanjem (@objektCount)
                 </h4>
             </div>
 
-            @if (Model.PlaninarskiObjekti.Any())
+            @if (Model.PlaninarskiObjekti != null && Model.PlaninarskiObjekti.Any())
             {
                 <div class="p-0">
                     <div class="table-responsive mb-0 p-0 m-0">

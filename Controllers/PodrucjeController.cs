@@ -1,26 +1,30 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
-using planinarenje.Repositories;
 
 namespace planinarenje.Controllers
 {
     public class PodrucjeController : Controller
     {
-        private readonly IPodrucjeMockRepository _podrucjeRepository;
-        private readonly IKontrolnaTockaMockRepository _kontrolnaTockaRepository;
+        private readonly PlaninarstvoDbContext _dbContext;
 
-        public PodrucjeController(IPodrucjeMockRepository podrucjeRepository, IKontrolnaTockaMockRepository kontrolnaTockaRepository)
+        public PodrucjeController(PlaninarstvoDbContext dbContext)
         {
-            _podrucjeRepository = podrucjeRepository;
-            _kontrolnaTockaRepository = kontrolnaTockaRepository;
+            _dbContext = dbContext;
         }
 
         public IActionResult Index()
         {
-            var kontrolneTocke = _kontrolnaTockaRepository.GetAll();
-            var model = _podrucjeRepository.GetAll()
+            var ktCountByPodrucje = _dbContext.KontrolneTocke
+                .GroupBy(kt => kt.IdPodrucje)
+                .Select(g => new { g.Key, Count = g.Count() })
+                .ToDictionary(x => x.Key, x => x.Count);
+
+            var model = _dbContext.Podrucja
                 .OrderBy(p => p.IdPodrucje)
+                .AsEnumerable()
                 .Select(p => new PodrucjeIndexCardViewModel
                 {
                     IdPodrucje = p.IdPodrucje,
@@ -28,7 +32,7 @@ namespace planinarenje.Controllers
                     Regija = string.IsNullOrWhiteSpace(p.Regija) ? "Regija nije navedena" : p.Regija,
                     OpisPreview = TrimOpis(p.Opis, 170),
                     MinimalanBrojKTZaObilazak = p.MinimalanBrojKTZaObilazak,
-                    UkupanBrojKT = kontrolneTocke.Count(kt => kt.IdPodrucje == p.IdPodrucje)
+                    UkupanBrojKT = ktCountByPodrucje.TryGetValue(p.IdPodrucje, out var count) ? count : 0
                 })
                 .ToList();
 
@@ -38,16 +42,21 @@ namespace planinarenje.Controllers
 
         public IActionResult Details(int id)
         {
-            var podrucje = _podrucjeRepository.GetById(id);
+            var podrucje = _dbContext.Podrucja
+                .Include(p => p.KontrolneTocke)
+                .Include(p => p.PlaninarskiObjekti)
+                .FirstOrDefault(p => p.IdPodrucje == id);
             if (podrucje is null)
             {
                 return NotFound();
             }
 
-            podrucje.KontrolneTocke = _kontrolnaTockaRepository.GetAll()
-                .Where(kt => kt.IdPodrucje == podrucje.IdPodrucje)
-                .OrderBy(kt => kt.Naziv)
-                .ToList();
+            if (podrucje.KontrolneTocke != null)
+            {
+                podrucje.KontrolneTocke = podrucje.KontrolneTocke
+                    .OrderBy(kt => kt.Naziv)
+                    .ToList();
+            }
 
             ViewData["Title"] = podrucje.Naziv;
             return View(podrucje);

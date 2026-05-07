@@ -1,28 +1,24 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
-using planinarenje.Repositories;
 
 namespace planinarenje.Controllers
 {
     public class KontrolnaTockaController : Controller
     {
-        private readonly IKontrolnaTockaMockRepository _kontrolnaTockaRepository;
-        private readonly IPodrucjeMockRepository _podrucjeRepository;
+        private readonly PlaninarstvoDbContext _dbContext;
 
-        public KontrolnaTockaController(
-            IKontrolnaTockaMockRepository kontrolnaTockaRepository,
-            IPodrucjeMockRepository podrucjeRepository)
+        public KontrolnaTockaController(PlaninarstvoDbContext dbContext)
         {
-            _kontrolnaTockaRepository = kontrolnaTockaRepository;
-            _podrucjeRepository = podrucjeRepository;
+            _dbContext = dbContext;
         }
 
         public IActionResult Index()
         {
-            var podrucjaById = _podrucjeRepository.GetAll().ToDictionary(p => p.IdPodrucje, p => p.Naziv);
-
-            var model = _kontrolnaTockaRepository.GetAll()
+            var model = _dbContext.KontrolneTocke
+                .Include(k => k.Podrucje)
                 .OrderBy(k => k.Naziv)
                 .Select(k => new KontrolnaTockaIndexCardViewModel
                 {
@@ -30,7 +26,7 @@ namespace planinarenje.Controllers
                     Naziv = k.Naziv,
                     TipKontrolneTockeNaziv = MapTip(k.TipKontrolneTocke),
                     NadmorskaVisina = k.NadmorskaVisina,
-                    PodrucjeNaziv = podrucjaById.TryGetValue(k.IdPodrucje, out var nazivPodrucja) ? nazivPodrucja : "Nepoznato podrucje",
+                    PodrucjeNaziv = k.Podrucje != null ? k.Podrucje.Naziv : "Nepoznato podrucje",
                     OpisPreview = TrimOpis(k.Opis, 140),
                     GUIDOznaka = k.GUIDOznaka
                 })
@@ -42,13 +38,13 @@ namespace planinarenje.Controllers
 
         public IActionResult Details(int id)
         {
-            var kontrolnaTocka = _kontrolnaTockaRepository.GetById(id);
+            var kontrolnaTocka = _dbContext.KontrolneTocke
+                .Include(k => k.Podrucje)
+                .FirstOrDefault(k => k.IdKontrolnaTocka == id);
             if (kontrolnaTocka is null)
             {
                 return NotFound();
             }
-
-            kontrolnaTocka.Podrucje = _podrucjeRepository.GetById(kontrolnaTocka.IdPodrucje);
             ViewData["Title"] = kontrolnaTocka.Naziv;
             return View(kontrolnaTocka);
         }

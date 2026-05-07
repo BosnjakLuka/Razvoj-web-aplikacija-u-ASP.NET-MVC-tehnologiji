@@ -2,7 +2,6 @@ using planinarenje.Data;
 using planinarenje.Entiteti;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
-using planinarenje.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -149,18 +148,6 @@ builder.Services.AddDbContext<PlaninarstvoDbContext>(options =>
         builder.Configuration.GetConnectionString("PlaninarstvoDbContext"),
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("PlaninarstvoDbContext"))
     ));
-builder.Services.AddSingleton<ILab1DataStore, Lab1DataStore>();
-builder.Services.AddSingleton<IPodrucjeMockRepository, PodrucjeMockRepository>();
-builder.Services.AddSingleton<IKorisnikMockRepository, KorisnikMockRepository>();
-builder.Services.AddSingleton<IKnjizicaMockRepository, KnjizicaMockRepository>();
-builder.Services.AddSingleton<IMedaljaMockRepository, MedaljaMockRepository>();
-builder.Services.AddSingleton<IPlaninarskaUdrugaMockRepository, PlaninarskaUdrugaMockRepository>();
-builder.Services.AddSingleton<IPlaninarskiObjektMockRepository, PlaninarskiObjektMockRepository>();
-builder.Services.AddSingleton<IKontrolnaTockaMockRepository, KontrolnaTockaMockRepository>();
-builder.Services.AddSingleton<IRutaMockRepository, RutaMockRepository>();
-builder.Services.AddSingleton<IPosjetMockRepository, PosjetMockRepository>();
-builder.Services.AddSingleton<IFotografijaMockRepository, FotografijaMockRepository>();
-builder.Services.AddSingleton<IKorisnikMedaljaMockRepository, KorisnikMedaljaMockRepository>();
 
 var app = builder.Build();
 

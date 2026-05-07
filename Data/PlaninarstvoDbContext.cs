@@ -25,6 +25,10 @@ public class PlaninarstvoDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<Ruta>()
+            .Property(r => r.DuljinaKm)
+            .HasPrecision(5, 2);
+
         modelBuilder.Entity<Knjizica>()
             .HasIndex(k => k.IdKorisnik)
             .IsUnique();

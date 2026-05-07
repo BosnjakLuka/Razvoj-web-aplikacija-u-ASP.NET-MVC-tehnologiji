@@ -51,7 +51,7 @@ else
                             VRIJEME: @ruta.Trajanje
                         </span>
                         <span class="app-badge badge-subtle text-uppercase" title="Duljina trase">
-                            DULJINA: @ruta.DuljinaKm KM
+                            DULJINA: @ruta.DuljinaKm.ToString("F1") KM
                         </span>
                         @if (ruta.VisinskaRazlikaM.HasValue)
                         {
