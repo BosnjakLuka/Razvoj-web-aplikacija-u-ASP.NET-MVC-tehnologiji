@@ -1,25 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
-using planinarenje.Repositories;
 using System.IO;
 
 namespace planinarenje.Controllers;
 
 public class FotografijaController : Controller
 {
-    private readonly IFotografijaMockRepository _fotografijaRepository;
-    private readonly IPosjetMockRepository _posjetRepository;
-    private readonly IKontrolnaTockaMockRepository _kontrolnaTockaRepository;
+    private readonly PlaninarstvoDbContext _dbContext;
 
-    public FotografijaController(
-        IFotografijaMockRepository fotografijaRepository,
-        IPosjetMockRepository posjetRepository,
-        IKontrolnaTockaMockRepository kontrolnaTockaRepository)
+    public FotografijaController(PlaninarstvoDbContext dbContext)
     {
-        _fotografijaRepository = fotografijaRepository;
-        _posjetRepository = posjetRepository;
-        _kontrolnaTockaRepository = kontrolnaTockaRepository;
+        _dbContext = dbContext;
     }
 
     private string FormatirajTipSlike(TipSlike tip)
@@ -38,27 +32,17 @@ public class FotografijaController : Controller
     // Helper za Dohvaćanje slika
     private string FormatirajSliku(string? apsolutnaPutanja)
     {
-        if (string.IsNullOrEmpty(apsolutnaPutanja)) return "/Slike/Dizajn/hpo.jpg";
-        
-        var idx = apsolutnaPutanja.IndexOf("Slike", StringComparison.OrdinalIgnoreCase);
-        if (idx >= 0)
+        if (string.IsNullOrWhiteSpace(apsolutnaPutanja)) return "/Slike/Dizajn/hpo.jpg";
+
+        if (apsolutnaPutanja.StartsWith("/Slike/Fotografije/", StringComparison.OrdinalIgnoreCase))
         {
-            // Ekstrahiraj relativnu putanju
-            var relPath = "/" + apsolutnaPutanja.Substring(idx).Replace("\\", "/");
-            
-            // Popravi grešku u podacima gdje piše .jpg a datoteka je .jpeg na disku
-            if (!System.IO.File.Exists(apsolutnaPutanja))
-            {
-                if (apsolutnaPutanja.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase))
-                {
-                    var altPath = apsolutnaPutanja.Substring(0, apsolutnaPutanja.Length - 4) + ".jpeg";
-                    if (System.IO.File.Exists(altPath))
-                    {
-                        return relPath.Substring(0, relPath.Length - 4) + ".jpeg";
-                    }
-                }
-            }
-            return relPath;
+            return apsolutnaPutanja;
+        }
+
+        if (apsolutnaPutanja.Contains("\\Slike\\Fotografije\\", StringComparison.OrdinalIgnoreCase) ||
+            apsolutnaPutanja.Contains("/Slike/Fotografije/", StringComparison.OrdinalIgnoreCase))
+        {
+            return "/Slike/Fotografije/" + Path.GetFileName(apsolutnaPutanja);
         }
 
         return "/Slike/Dizajn/hpo.jpg";
@@ -66,12 +50,13 @@ public class FotografijaController : Controller
 
     public IActionResult Index()
     {
-        var model = _fotografijaRepository.GetAll()
+        var model = _dbContext.Fotografije
+            .Include(f => f.Posjet)
+                .ThenInclude(p => p.KontrolnaTocka)
             .OrderByDescending(f => f.DatumUploada)
+            .AsEnumerable()
             .Select(f => {
-                var posjet = _posjetRepository.GetById(f.IdPosjet);
-                var kt = posjet != null ? _kontrolnaTockaRepository.GetById(posjet.IdKontrolnaTocka) : null;
-                
+                var kt = f.Posjet?.KontrolnaTocka;
                 return new FotografijaIndexViewModel
                 {
                     IdFotografija = f.IdFotografija,
@@ -88,12 +73,14 @@ public class FotografijaController : Controller
 
     public IActionResult Details(int id)
     {
-        var f = _fotografijaRepository.GetById(id);
+        var f = _dbContext.Fotografije
+            .Include(x => x.Posjet)
+                .ThenInclude(p => p.KontrolnaTocka)
+            .FirstOrDefault(x => x.IdFotografija == id);
 
         if (f == null) return NotFound();
 
-        var posjet = _posjetRepository.GetById(f.IdPosjet);
-        var kt = posjet != null ? _kontrolnaTockaRepository.GetById(posjet.IdKontrolnaTocka) : null;
+        var kt = f.Posjet?.KontrolnaTocka;
 
         var model = new FotografijaDetailsViewModel
         {

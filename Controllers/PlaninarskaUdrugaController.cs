@@ -1,20 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
-using planinarenje.Repositories;
 using System.Linq;
 
 namespace planinarenje.Controllers;
 
 public class PlaninarskaUdrugaController : Controller
 {
-    private readonly IPlaninarskaUdrugaMockRepository _udrugaRepository;
-    private readonly IPlaninarskiObjektMockRepository _objektRepository;
+    private readonly PlaninarstvoDbContext _dbContext;
 
-    public PlaninarskaUdrugaController(IPlaninarskaUdrugaMockRepository udrugaRepository, IPlaninarskiObjektMockRepository objektRepository)
+    public PlaninarskaUdrugaController(PlaninarstvoDbContext dbContext)
     {
-        _udrugaRepository = udrugaRepository;
-        _objektRepository = objektRepository;
+        _dbContext = dbContext;
     }
 
     private string FormatirajTipObjekta(TipObjekta tip)
@@ -30,7 +29,7 @@ public class PlaninarskaUdrugaController : Controller
 
     public IActionResult Index()
     {
-        var model = _udrugaRepository.GetAll()
+        var model = _dbContext.PlaninarskeUdruge
             .OrderBy(u => u.Naziv)
             .Select(u => new PlaninarskaUdrugaIndexViewModel
             {
@@ -47,12 +46,13 @@ public class PlaninarskaUdrugaController : Controller
 
     public IActionResult Details(int id)
     {
-        var u = _udrugaRepository.GetById(id);
+        var u = _dbContext.PlaninarskeUdruge
+            .Include(x => x.PlaninarskiObjekti)
+            .FirstOrDefault(x => x.IdPlaninarskaUdruga == id);
 
         if (u == null) return NotFound();
 
-        var objekti = _objektRepository.GetAll()
-            .Where(o => o.IdPlaninarskaUdruga == id)
+        var objekti = u.PlaninarskiObjekti
             .Select(o => new ObjektUdrugeViewModel
             {
                 IdPlaninarskiObjekt = o.IdPlaninarskiObjekt,
@@ -60,7 +60,8 @@ public class PlaninarskaUdrugaController : Controller
                 TipObjekta = FormatirajTipObjekta(o.TipObjekta),
                 NadmorskaVisina = o.NadmorskaVisina,
                 ImaNocenje = o.ImaNocenje
-            }).ToList();
+            })
+            .ToList();
 
         var model = new PlaninarskaUdrugaDetailsViewModel
         {

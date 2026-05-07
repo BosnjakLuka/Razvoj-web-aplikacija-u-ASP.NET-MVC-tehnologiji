@@ -1,67 +1,44 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
-using planinarenje.Repositories;
+using System.IO;
 using System.Linq;
 
 namespace planinarenje.Controllers
 {
     public class KorisnikController : Controller
     {
-        private readonly IKorisnikMockRepository _korisnikRepository;
-        private readonly IPosjetMockRepository _posjetRepository;
-        private readonly IKontrolnaTockaMockRepository _kontrolnaTockaRepository;
-        private readonly IFotografijaMockRepository _fotografijaRepository;
-        private readonly IRutaMockRepository _rutaRepository;
-        private readonly IKorisnikMedaljaMockRepository _korisnikMedaljaRepository;
-        private readonly IMedaljaMockRepository _medaljaRepository;
+        private readonly PlaninarstvoDbContext _dbContext;
 
-        public KorisnikController(
-            IKorisnikMockRepository korisnikRepository,
-            IPosjetMockRepository posjetRepository,
-            IKontrolnaTockaMockRepository kontrolnaTockaRepository,
-            IFotografijaMockRepository fotografijaRepository,
-            IRutaMockRepository rutaRepository,
-            IKorisnikMedaljaMockRepository korisnikMedaljaRepository,
-            IMedaljaMockRepository medaljaRepository)
+        public KorisnikController(PlaninarstvoDbContext dbContext)
         {
-            _korisnikRepository = korisnikRepository;
-            _posjetRepository = posjetRepository;
-            _kontrolnaTockaRepository = kontrolnaTockaRepository;
-            _fotografijaRepository = fotografijaRepository;
-            _rutaRepository = rutaRepository;
-            _korisnikMedaljaRepository = korisnikMedaljaRepository;
-            _medaljaRepository = medaljaRepository;
+            _dbContext = dbContext;
         }
 
         // Helpar za dohvacanje puta slike ako je string pun
         private string? FormatProfileSlika(string? absolutePath)
         {
-            if (string.IsNullOrEmpty(absolutePath)) return null;
-            var idx = absolutePath.IndexOf("Slike", StringComparison.OrdinalIgnoreCase);
-            if (idx >= 0)
+            if (string.IsNullOrWhiteSpace(absolutePath)) return null;
+
+            if (absolutePath.StartsWith("/Slike/Profil/", StringComparison.OrdinalIgnoreCase))
             {
-                var relPath = "/" + absolutePath.Substring(idx).Replace("\\", "/");
-                if (!System.IO.File.Exists(absolutePath))
-                {
-                    if (absolutePath.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var altPath = absolutePath.Substring(0, absolutePath.Length - 4) + ".jpeg";
-                        if (System.IO.File.Exists(altPath))
-                        {
-                            return relPath.Substring(0, relPath.Length - 4) + ".jpeg";
-                        }
-                    }
-                    return null; 
-                }
-                return relPath;
+                return absolutePath;
             }
+
+            if (absolutePath.Contains("\\Slike\\Profil\\", StringComparison.OrdinalIgnoreCase) ||
+                absolutePath.Contains("/Slike/Profil/", StringComparison.OrdinalIgnoreCase))
+            {
+                return "/Slike/Profil/" + Path.GetFileName(absolutePath);
+            }
+
             return absolutePath;
         }
 
         public IActionResult Index()
         {
-            var model = _korisnikRepository.GetAll()
+            var model = _dbContext.Korisnici
                 .OrderBy(k => k.Prezime)
                 .ThenBy(k => k.Ime)
                 .Select(k => new KorisnikIndexCardViewModel
@@ -78,9 +55,13 @@ namespace planinarenje.Controllers
             return View(model);
         }
 
+        [Route("planinar/{id:int}")]
+        [Route("[controller]/[action]/{id:int}")]
         public IActionResult Details(int id)
         {
-            var korisnik = _korisnikRepository.GetById(id);
+            var korisnik = _dbContext.Korisnici
+                .Include(k => k.Knjizica)
+                .FirstOrDefault(k => k.IdKorisnik == id);
 
             if (korisnik == null)
             {
@@ -108,35 +89,35 @@ namespace planinarenje.Controllers
                 Posjeti = new List<PosjetViewModel>()
             };
             
-            // To properly mock relations:
-            model.Posjeti = _posjetRepository.GetAll()
+            model.Posjeti = _dbContext.Posjeti
                 .Where(p => p.IdKorisnik == id)
+                .Include(p => p.KontrolnaTocka)
+                .Include(p => p.Ruta)
+                .Include(p => p.Fotografije)
                 .OrderByDescending(p => p.DatumVrijemePosjeta)
-                .Select(p => {
-                    var kt = _kontrolnaTockaRepository.GetById(p.IdKontrolnaTocka);
-                    var fotografija = _fotografijaRepository.GetAll().FirstOrDefault(f => f.IdPosjet == p.IdPosjet);
-                    return new PosjetViewModel
-                    {
-                        IdPosjet = p.IdPosjet,
-                        DatumPosjeta = p.DatumVrijemePosjeta,
-                        NazivKontrolneTocke = kt?.Naziv ?? "Nepoznato",
-                        SlikaUrl = fotografija?.PutanjaDatoteke ?? "/Slike/Dizajn/AppThemeBase.jpg",
-                        NazivRute = _rutaRepository.GetById(p.IdRuta)?.Naziv ?? "Samostalni posjet"
-                    };
-                }).ToList();
+                .AsEnumerable()
+                .Select(p => new PosjetViewModel
+                {
+                    IdPosjet = p.IdPosjet,
+                    DatumPosjeta = p.DatumVrijemePosjeta,
+                    NazivKontrolneTocke = p.KontrolnaTocka != null ? p.KontrolnaTocka.Naziv : "Nepoznato",
+                    SlikaUrl = p.Fotografije.Select(f => f.PutanjaDatoteke).FirstOrDefault() ?? "/Slike/Dizajn/AppThemeBase.jpg",
+                    NazivRute = p.Ruta != null ? p.Ruta.Naziv : "Samostalni posjet"
+                })
+                .ToList();
 
-            model.Medalje = _korisnikMedaljaRepository.GetAll()
+            model.Medalje = _dbContext.KorisnikMedalje
                 .Where(km => km.IdKorisnik == id)
+                .Include(km => km.Medalja)
                 .OrderByDescending(km => km.DatumDodjele)
-                .Select(km => {
-                    var medalja = _medaljaRepository.GetById(km.IdMedalja);
-                    return new KorisnikMedaljaViewModel
-                    {
-                        NazivMedalje = medalja?.Naziv ?? "Nepoznato",
-                        DatumOsvajanja = km.DatumDodjele,
-                        Opis = medalja?.Opis ?? "N/A"
-                    };
-                }).ToList();
+                .AsEnumerable()
+                .Select(km => new KorisnikMedaljaViewModel
+                {
+                    NazivMedalje = km.Medalja != null ? km.Medalja.Naziv : "Nepoznato",
+                    DatumOsvajanja = km.DatumDodjele,
+                    Opis = km.Medalja?.Opis ?? "N/A"
+                })
+                .ToList();
 
             return View(model);
         }

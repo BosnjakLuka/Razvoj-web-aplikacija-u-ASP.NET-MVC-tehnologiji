@@ -231,6 +231,19 @@ a:hover {
 .app-badge.badge-success { background-color: var(--color-hiking-green); color: var(--text-inverse); }
 .app-badge.badge-subtle { background-color: var(--bg-surface-muted); color: var(--text-main); border: 1px solid var(--border-subtle); }
 
+.profile-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #666;
+}
+
 .section-title {
     font-size: 1.75rem;
     margin-bottom: 1.5rem;

@@ -1,0 +1,110 @@
+@model IReadOnlyList<planinarenje.Entiteti.KontrolnaTocka>
+@using planinarenje.Entiteti
+
+@{
+    var podrucje = ViewBag.Podrucje as Podrucje;
+    var nazivPodrucja = podrucje?.Naziv ?? "Podrucje";
+}
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Podrucje" asp-action="Index">Podrucja</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Podrucje" asp-action="Details" asp-route-id="@podrucje?.IdPodrucje">@nazivPodrucja</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Kontrolne tocke</li>
+        </ol>
+    </nav>
+}
+
+<section class="mb-4">
+    <h1 class="section-title no-accent mb-3">Kontrolne tocke — @nazivPodrucja</h1>
+    <p class="text-muted mb-0">
+        Pregled kontrolnih tocaka unutar odabranog podrucja.
+    </p>
+</section>
+
+@if (!Model.Any())
+{
+    <div class="app-card">
+        <h2 class="h5 mb-2">Nema dostupnih kontrolnih tocaka</h2>
+        <p class="text-muted mb-0">Trenutno nisu pronađeni podatci za prikaz.</p>
+    </div>
+}
+else
+{
+    <section class="row g-4">
+        @foreach (var item in Model)
+        {
+            <article class="col-12 col-md-6 col-xl-4">
+                <div class="app-card d-flex flex-column h-100">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                        <h2 class="h5 mb-0">@item.Naziv</h2>
+                        <span class="app-badge badge-subtle">@MapTip(item.TipKontrolneTocke)</span>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="app-badge badge-subtle text-uppercase">
+                            @(item.NadmorskaVisina.HasValue ? $"{item.NadmorskaVisina.Value} M N/V" : "NEMA VISINE")
+                        </span>
+                        <span class="app-badge badge-subtle text-uppercase">@item.Podrucje?.Naziv</span>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(item.Opis))
+                    {
+                        <p class="text-muted mb-3">@TrimOpis(item.Opis, 140)</p>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(item.GUIDOznaka))
+                    {
+                        <p class="text-muted small mb-4">GUID: <span class="font-monospace">@item.GUIDOznaka</span></p>
+                    }
+
+                    <div class="mt-auto">
+                        <a asp-controller="KontrolnaTocka"
+                           asp-action="Details"
+                           asp-route-id="@item.IdKontrolnaTocka"
+                           class="btn btn-primary w-100">
+                            Detalji kontrolne tocke
+                        </a>
+                    </div>
+                </div>
+            </article>
+        }
+    </section>
+}
+
+<div class="mt-4">
+    <a asp-controller="Podrucje" asp-action="Details" asp-route-id="@podrucje?.IdPodrucje" class="btn btn-outline-secondary">
+        Natrag na podrucje
+    </a>
+</div>
+
+@functions {
+    private static string MapTip(TipKontrolneTocke tip)
+    {
+        return tip switch
+        {
+            TipKontrolneTocke.Vrh => "Vrh",
+            TipKontrolneTocke.Vidikovac => "Vidikovac",
+            TipKontrolneTocke.KontrolnaTocka => "Kontrolna tocka",
+            _ => "Tip nije definiran"
+        };
+    }
+
+    private static string? TrimOpis(string? opis, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(opis))
+        {
+            return null;
+        }
+
+        var normalized = opis.Trim();
+        if (normalized.Length <= maxLength)
+        {
+            return normalized;
+        }
+
+        return normalized[..maxLength].TrimEnd() + "...";
+    }
+}

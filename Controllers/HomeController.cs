@@ -6,6 +6,9 @@ namespace planinarenje.Controllers
 {
     public class HomeController : Controller
     {
+        [Route("/")]
+        [Route("naslovnica")]
+        [Route("[controller]/[action]")]
         public IActionResult Index()
         {
             return View();

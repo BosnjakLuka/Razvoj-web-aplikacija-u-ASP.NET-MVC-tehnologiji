@@ -1,71 +1,68 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
-using planinarenje.Repositories;
+using System.IO;
 using System.Linq;
 
 namespace planinarenje.Controllers;
 
 public class KnjizicaController : Controller
 {
-    private readonly IKnjizicaMockRepository _knjizicaRepository;
-    private readonly IKorisnikMockRepository _korisnikRepository;
-    private readonly IPosjetMockRepository _posjetRepository;
-    private readonly IKontrolnaTockaMockRepository _kontrolnaTockaRepository;
+    private readonly PlaninarstvoDbContext _dbContext;
 
-    public KnjizicaController(
-        IKnjizicaMockRepository knjizicaRepository,
-        IKorisnikMockRepository korisnikRepository,
-        IPosjetMockRepository posjetRepository,
-        IKontrolnaTockaMockRepository kontrolnaTockaRepository)
+    public KnjizicaController(PlaninarstvoDbContext dbContext)
     {
-        _knjizicaRepository = knjizicaRepository;
-        _korisnikRepository = korisnikRepository;
-        _posjetRepository = posjetRepository;
-        _kontrolnaTockaRepository = kontrolnaTockaRepository;
+        _dbContext = dbContext;
     }
 
     public IActionResult Index()
     {
-        var korisnici = _korisnikRepository.GetAll();
-        var model = _knjizicaRepository.GetAll().Select(k => new KnjizicaIndexViewModel
-        {
-            IdKnjizica = k.IdKnjizica,
-            IdKorisnik = k.IdKorisnik,
-            ImePrezimeKorisnika = korisnici.FirstOrDefault(u => u.IdKorisnik == k.IdKorisnik)?.Ime + " " + korisnici.FirstOrDefault(u => u.IdKorisnik == k.IdKorisnik)?.Prezime ?? "Nepoznat planer",
-            DatumKreiranja = k.DatumKreiranja,
-            StatusAktivna = k.StatusAktivna
-        }).OrderByDescending(k => k.DatumKreiranja).ToList();
+        var model = _dbContext.Knjizice
+            .Include(k => k.Korisnik)
+            .Select(k => new KnjizicaIndexViewModel
+            {
+                IdKnjizica = k.IdKnjizica,
+                IdKorisnik = k.IdKorisnik,
+                ImePrezimeKorisnika = k.Korisnik != null ? k.Korisnik.Ime + " " + k.Korisnik.Prezime : "Nepoznat planer",
+                DatumKreiranja = k.DatumKreiranja,
+                StatusAktivna = k.StatusAktivna
+            })
+            .OrderByDescending(k => k.DatumKreiranja)
+            .ToList();
 
         return View(model);
     }
 
     public IActionResult Details(int id)
     {
-        var kn = _knjizicaRepository.GetById(id);
+        var kn = _dbContext.Knjizice
+            .Include(k => k.Korisnik)
+            .FirstOrDefault(k => k.IdKnjizica == id);
         if (kn == null) return NotFound();
 
-        var korisnik = _korisnikRepository.GetById(kn.IdKorisnik);
-        
-        var posjeti = _posjetRepository.GetAll()
+        var posjeti = _dbContext.Posjeti
             .Where(p => p.IdKnjizica == id)
+            .Include(p => p.KontrolnaTocka)
             .OrderByDescending(p => p.DatumVrijemePosjeta)
             .Select(p => new KnjizicaPosjetViewModel
             {
                 IdPosjet = p.IdPosjet,
                 IdKontrolnaTocka = p.IdKontrolnaTocka,
-                NazivKontrolneTocke = _kontrolnaTockaRepository.GetById(p.IdKontrolnaTocka)?.Naziv ?? "Nepoznato",
+                NazivKontrolneTocke = p.KontrolnaTocka != null ? p.KontrolnaTocka.Naziv : "Nepoznato",
                 DatumVrijemePosjeta = p.DatumVrijemePosjeta,
                 JeLiPotvrdenPosjet = p.JeLiPotvrdenPosjet
-            }).ToList();
+            })
+            .ToList();
 
         var model = new KnjizicaDetailsViewModel
         {
             IdKnjizica = kn.IdKnjizica,
             IdKorisnik = kn.IdKorisnik,
-            ImePrezimeKorisnika = korisnik != null ? (korisnik.Ime + " " + korisnik.Prezime) : "Nepoznato",
-            KorisnickoIme = korisnik?.KorisnickoIme ?? "nepoznato_ime",
-            ProfilnaSlikaUrl = FormatProfileSlika(korisnik?.ProfilnaSlika),
+            ImePrezimeKorisnika = kn.Korisnik != null ? kn.Korisnik.Ime + " " + kn.Korisnik.Prezime : "Nepoznato",
+            KorisnickoIme = kn.Korisnik?.KorisnickoIme ?? "nepoznato_ime",
+            ProfilnaSlikaUrl = FormatProfileSlika(kn.Korisnik?.ProfilnaSlika),
             DatumKreiranja = kn.DatumKreiranja,
             StatusAktivna = kn.StatusAktivna,
             Napomena = kn.Napomena,
@@ -77,24 +74,19 @@ public class KnjizicaController : Controller
 
     private string? FormatProfileSlika(string? absolutePath)
     {
-        if (string.IsNullOrEmpty(absolutePath)) return null;
-        var idx = absolutePath.IndexOf("Slike", StringComparison.OrdinalIgnoreCase);
-        if (idx >= 0)
+        if (string.IsNullOrWhiteSpace(absolutePath)) return null;
+
+        if (absolutePath.StartsWith("/Slike/Profil/", StringComparison.OrdinalIgnoreCase))
         {
-            var relPath = "/" + absolutePath.Substring(idx).Replace("\\", "/");
-            if (!System.IO.File.Exists(absolutePath))
-            {
-                if (absolutePath.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase))
-                {
-                    var altPath = absolutePath.Substring(0, absolutePath.Length - 4) + ".jpeg";
-                    if (System.IO.File.Exists(altPath))
-                    {
-                        return relPath.Substring(0, relPath.Length - 4) + ".jpeg";
-                    }
-                }
-            }
-            return relPath;
+            return absolutePath;
         }
-        return null;
+
+        if (absolutePath.Contains("\\Slike\\Profil\\", StringComparison.OrdinalIgnoreCase) ||
+            absolutePath.Contains("/Slike/Profil/", StringComparison.OrdinalIgnoreCase))
+        {
+            return "/Slike/Profil/" + Path.GetFileName(absolutePath);
+        }
+
+        return absolutePath;
     }
 }

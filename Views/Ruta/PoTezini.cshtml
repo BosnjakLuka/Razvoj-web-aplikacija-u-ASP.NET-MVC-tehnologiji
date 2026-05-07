@@ -1,38 +1,32 @@
-@model IReadOnlyList<planinarenje.Models.RutaIndexCardViewModel>
+@model IReadOnlyList<planinarenje.Entiteti.Ruta>
+@using planinarenje.Entiteti
+
+@{
+    var tezina = ViewBag.Tezina as string ?? "";
+}
 
 @section Breadcrumbs {
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Rute</li>
+            <li class="breadcrumb-item"><a asp-controller="Ruta" asp-action="Index">Rute</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Težina: @tezina</li>
         </ol>
     </nav>
 }
 
 <section class="mb-4">
-    <h1 class="section-title mb-3">Planinarske rute</h1>
+    <h1 class="section-title mb-3">Rute — težina: @tezina</h1>
     <p class="text-muted mb-0">
-        Katalog preporucenih pjesackih ruta. Istrazi težine, trajanja i poveznice s glavnim kontrolnim tockama.
+        Filtrirani prikaz ruta prema odabranoj tezini.
     </p>
 </section>
-
-<div class="d-flex flex-wrap gap-2 mb-4">
-    <a asp-controller="Ruta" asp-action="PoTezini" asp-route-tezina="Laka" class="btn btn-outline-primary btn-sm">
-        Lake
-    </a>
-    <a asp-controller="Ruta" asp-action="PoTezini" asp-route-tezina="Srednja" class="btn btn-outline-primary btn-sm">
-        Srednje
-    </a>
-    <a asp-controller="Ruta" asp-action="PoTezini" asp-route-tezina="Teska" class="btn btn-outline-primary btn-sm">
-        Teške
-    </a>
-</div>
 
 @if (!Model.Any())
 {
     <div class="app-card">
-        <h2 class="h5 mb-2">Nema dostupnih ruta</h2>
-        <p class="text-muted mb-0">Trenutno nisu pronađeni podatci za prikaz ruta.</p>
+        <h2 class="h5 mb-2">Nema ruta za odabranu tezinu</h2>
+        <p class="text-muted mb-0">Trenutno nisu pronađeni podatci za prikaz.</p>
     </div>
 }
 else
@@ -45,7 +39,7 @@ else
 
                     <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
                         <h2 class="h5 mb-0">@ruta.Naziv</h2>
-                        <span class="app-badge badge-subtle">@ruta.PovezanaKontrolnaTocka</span>
+                        <span class="app-badge badge-subtle">@ruta.KontrolnaTocka?.Naziv</span>
                     </div>
 
                     <div class="mb-3 ps-2 border-start border-3" style="border-color: var(--color-grey-light) !important;">
@@ -57,10 +51,10 @@ else
 
                     <div class="d-flex flex-wrap gap-2 mb-3">
                         <span class="app-badge badge-subtle text-uppercase" title="Težina rute">
-                            TEZINA: @ruta.TezinaTekst
+                            TEZINA: @DajNazivTezine(ruta.TezinaRute)
                         </span>
                         <span class="app-badge badge-subtle text-uppercase" title="Trajanje hodanja">
-                            VRIJEME: @ruta.Trajanje
+                            VRIJEME: @FormatTrajanje(ruta.VrijemeHodaMin)
                         </span>
                         <span class="app-badge badge-subtle text-uppercase" title="Duljina trase">
                             DULJINA: @ruta.DuljinaKm.ToString("F1") KM
@@ -73,9 +67,9 @@ else
                         }
                     </div>
 
-                    @if (!string.IsNullOrWhiteSpace(ruta.OpisPreview))
+                    @if (!string.IsNullOrWhiteSpace(ruta.Opis))
                     {
-                        <p class="text-muted mb-4 flex-grow-1">@ruta.OpisPreview</p>
+                        <p class="text-muted mb-4 flex-grow-1">@TrimOpis(ruta.Opis, 150)</p>
                     }
                     else
                     {
@@ -90,9 +84,37 @@ else
                             Detalji rute
                         </a>
                     </div>
-                    
                 </div>
             </article>
         }
     </section>
+}
+
+@functions {
+    private static string FormatTrajanje(int minute)
+    {
+        if (minute < 60) return $"{minute} min";
+        var h = minute / 60;
+        var m = minute % 60;
+        return m > 0 ? $"{h}h {m}min" : $"{h}h";
+    }
+
+    private static string DajNazivTezine(TezinaRute t)
+    {
+        return t switch
+        {
+            TezinaRute.Laka => "Laka",
+            TezinaRute.Srednja => "Srednja",
+            TezinaRute.Teska => "Teška",
+            _ => "Nepoznato"
+        };
+    }
+
+    private static string? TrimOpis(string? opis, int max)
+    {
+        if (string.IsNullOrWhiteSpace(opis)) return null;
+        var o = opis.Trim();
+        if (o.Length <= max) return o;
+        return o[..max].TrimEnd() + "...";
+    }
 }

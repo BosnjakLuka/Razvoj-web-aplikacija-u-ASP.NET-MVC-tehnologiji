@@ -18,12 +18,14 @@
             <div class="mb-3">
                 @if (!string.IsNullOrEmpty(Model.ProfilnaSlika))
                 {
-                    <img src="@Model.ProfilnaSlika" alt="Profilna slika korisnika @Model.Ime" class="img-fluid rounded-circle shadow-sm" style="width: 150px; height: 150px; object-fit: cover;" />
+                    <img src="@Model.ProfilnaSlika" alt="Profilna slika" class="img-fluid rounded-circle shadow-sm" style="width: 150px; height: 150px; object-fit: cover;" />
                 }
                 else
                 {
-                    <div class="d-inline-flex align-items-center justify-content-center bg-secondary-subtle text-secondary rounded-circle shadow-sm" style="width: 150px; height: 150px; font-size: 3rem;">
-                        <i class="bi bi-person"></i>
+                    var imeInicijal = !string.IsNullOrEmpty(Model.Ime) ? Model.Ime[0].ToString() : "?";
+                    var prezimeInicijal = !string.IsNullOrEmpty(Model.Prezime) ? Model.Prezime[0].ToString() : "?";
+                    <div class="profile-placeholder">
+                        <span>@imeInicijal@prezimeInicijal</span>
                     </div>
                 }
             </div>

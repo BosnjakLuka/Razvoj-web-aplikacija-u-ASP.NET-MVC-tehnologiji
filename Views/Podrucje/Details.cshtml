@@ -24,7 +24,7 @@
         </div>
         <div class="col-md-4">
             <strong>Ukupan broj KT</strong>
-            <p class="mb-0 text-muted">@Model.UkupanBrojKT</p>
+            <p class="mb-0 text-muted">@(Model.KontrolneTocke?.Count ?? 0)</p>
         </div>
         <div class="col-12">
             <strong>Opis</strong>
@@ -32,8 +32,16 @@
         </div>
     </div>
 
-    <h2 class="h5 mb-3">Kontrolne točke područja</h2>
-    @if (Model.KontrolneTocke.Any())
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0">Kontrolne točke područja</h2>
+        <a asp-controller="Podrucje"
+           asp-action="KontrolneTockePodrucja"
+           asp-route-id="@Model.IdPodrucje"
+           class="btn btn-outline-primary btn-sm">
+            Pogledaj kontrolne točke
+        </a>
+    </div>
+    @if (Model.KontrolneTocke != null && Model.KontrolneTocke.Any())
     {
         <ul class="mb-4">
             @foreach (var kt in Model.KontrolneTocke)

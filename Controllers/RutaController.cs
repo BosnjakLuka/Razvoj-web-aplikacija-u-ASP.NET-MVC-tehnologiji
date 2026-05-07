@@ -1,32 +1,32 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
-using planinarenje.Repositories;
+using System;
 
 namespace planinarenje.Controllers;
 
 public class RutaController : Controller
 {
-    private readonly IRutaMockRepository _rutaRepository;
-    private readonly IKontrolnaTockaMockRepository _kontrolnaTockaRepository;
+    private readonly PlaninarstvoDbContext _dbContext;
 
-    public RutaController(IRutaMockRepository rutaRepository, IKontrolnaTockaMockRepository kontrolnaTockaRepository)
+    public RutaController(PlaninarstvoDbContext dbContext)
     {
-        _rutaRepository = rutaRepository;
-        _kontrolnaTockaRepository = kontrolnaTockaRepository;
+        _dbContext = dbContext;
     }
 
     public IActionResult Index()
     {
-        var kontrolneTocke = _kontrolnaTockaRepository.GetAll();
-
-        var m = _rutaRepository.GetAll()
+        var m = _dbContext.Rute
+            .Include(r => r.KontrolnaTocka)
             .OrderBy(r => r.Naziv)
+            .AsEnumerable()
             .Select(r => new RutaIndexCardViewModel
             {
                 IdRuta = r.IdRuta,
                 Naziv = r.Naziv,
-                PovezanaKontrolnaTocka = kontrolneTocke.FirstOrDefault(kt => kt.IdKontrolnaTocka == r.IdKontrolnaTocka)?.Naziv ?? "Nije prijavljena KT",
+                PovezanaKontrolnaTocka = r.KontrolnaTocka?.Naziv ?? "Nije prijavljena KT",
                 Pocetak = r.Pocetak,
                 Kraj = r.Kraj,
                 Trajanje = FormatTrajanje(r.VrijemeHodaMin),
@@ -44,16 +44,30 @@ public class RutaController : Controller
 
     public IActionResult Details(int id)
     {
-        var ruta = _rutaRepository.GetById(id);
+        var ruta = _dbContext.Rute
+            .Include(r => r.KontrolnaTocka)
+            .FirstOrDefault(r => r.IdRuta == id);
         
         if (ruta == null)
             return NotFound();
 
-        // Pridruzimo ako nije
-        ruta.KontrolnaTocka = _kontrolnaTockaRepository.GetById(ruta.IdKontrolnaTocka);
-
         ViewData["Title"] = ruta.Naziv;
         return View(ruta);
+    }
+
+    [Route("rute/tezina/{tezina}")]
+    public IActionResult PoTezini(string tezina)
+    {
+        if (!Enum.TryParse<TezinaRute>(tezina, true, out var tezinaEnum))
+            return NotFound();
+
+        var filtrirane = _dbContext.Rute
+            .Include(r => r.KontrolnaTocka)
+            .Where(r => r.TezinaRute == tezinaEnum)
+            .ToList();
+
+        ViewBag.Tezina = tezina;
+        return View(filtrirane);
     }
 
     private static string FormatTrajanje(int minute)

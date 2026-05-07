@@ -20,7 +20,17 @@
 <div class="row g-4">
     <div class="col-lg-8">
         <div class="app-card h-auto text-center p-4 bg-light d-flex align-items-center justify-content-center" style="min-height: 400px;">
-            <img src="@Model.PutanjaDatoteke" class="img-fluid rounded shadow-sm" style="max-height: 600px; width: auto;" alt="@Model.NazivDatoteke" />
+            @if (!string.IsNullOrEmpty(Model.PutanjaDatoteke) && !Model.PutanjaDatoteke.StartsWith("C:"))
+            {
+                <img src="@Model.PutanjaDatoteke" class="img-fluid rounded shadow-sm" style="max-height: 600px; width: auto;" alt="@Model.NazivDatoteke" />
+            }
+            else
+            {
+                <div class="foto-placeholder text-muted">
+                    <i>Fotografija nije dostupna</i>
+                    <p class="mb-0">@Model.NazivDatoteke</p>
+                </div>
+            }
         </div>
     </div>
     <div class="col-lg-4">

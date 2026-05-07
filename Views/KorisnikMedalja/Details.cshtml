@@ -34,7 +34,16 @@
                     }
                     else
                     {
-                        <i class="bi bi-award-fill text-warning" style="font-size: 3rem;"></i>
+                        var inicijali = "";
+                        if (!string.IsNullOrWhiteSpace(Model.ImePrezimeKorisnika))
+                        {
+                            var dijelovi = Model.ImePrezimeKorisnika.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                            if (dijelovi.Length > 0) inicijali += dijelovi[0][0];
+                            if (dijelovi.Length > 1) inicijali += dijelovi[1][0];
+                        }
+                        <div class="profile-placeholder">
+                            <span>@(string.IsNullOrEmpty(inicijali) ? "?" : inicijali)</span>
+                        </div>
                     }
                 </div>
                 
