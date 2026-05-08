@@ -20,6 +20,7 @@ public class PlaninarstvoDbContext : DbContext
     public DbSet<PlaninarskaUdruga> PlaninarskeUdruge { get; set; }
     public DbSet<Medalja> Medalje { get; set; }
     public DbSet<KorisnikMedalja> KorisnikMedalje { get; set; }
+    public DbSet<Obavijest> Obavijesti { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -611,6 +612,36 @@ public class PlaninarstvoDbContext : DbContext
                 BrojMobitela = null,
                 ProfilnaSlika = "/Slike/Profil/test.jpg",
                 StatusAktivan = true
+            }
+        );
+
+        modelBuilder.Entity<Obavijest>().HasData(
+            new Obavijest
+            {
+                IdObavijest = 1,
+                Naslov = "Dobrodošli u planinarsku aplikaciju",
+                Sadrzaj = "Aplikacija je pokrenuta i spremna za korištenje.",
+                DatumObjave = new DateTime(2026, 4, 1, 10, 0, 0),
+                JeAktivna = true,
+                IdKorisnik = 1
+            },
+            new Obavijest
+            {
+                IdObavijest = 2,
+                Naslov = "Nova ruta dodana: Zavižan",
+                Sadrzaj = "Dodana je kružna tura od doma Zavižan preko Balinovca.",
+                DatumObjave = new DateTime(2026, 4, 15, 14, 30, 0),
+                JeAktivna = true,
+                IdKorisnik = 1
+            },
+            new Obavijest
+            {
+                IdObavijest = 3,
+                Naslov = "Održavanje sustava",
+                Sadrzaj = "Planirano održavanje 30. travnja od 22:00 do 23:00.",
+                DatumObjave = new DateTime(2026, 4, 28, 9, 0, 0),
+                JeAktivna = false,
+                IdKorisnik = 2
             }
         );
 

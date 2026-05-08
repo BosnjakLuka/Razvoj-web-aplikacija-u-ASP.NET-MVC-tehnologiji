@@ -1,0 +1,40 @@
+@model planinarenje.Entiteti.Obavijest
+
+@{
+    ViewData["Title"] = Model.Naslov;
+}
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Obavijest" asp-action="Index">Obavijesti</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Naslov</li>
+        </ol>
+    </nav>
+}
+
+<section class="detail-panel">
+    <h1 class="section-title no-accent mb-4">@Model.Naslov</h1>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <strong>Datum objave</strong>
+            <p class="mb-0 text-muted">@Model.DatumObjave.ToString("dd.MM.yyyy. HH:mm")</p>
+        </div>
+        <div class="col-md-4">
+            <strong>Status</strong>
+            <p class="mb-0 text-muted">@(Model.JeAktivna ? "Aktivna" : "Neaktivna")</p>
+        </div>
+        <div class="col-md-4">
+            <strong>Objavio</strong>
+            <p class="mb-0 text-muted">@(Model.Korisnik != null ? $"{Model.Korisnik.Ime} {Model.Korisnik.Prezime}" : "Nepoznato")</p>
+        </div>
+        <div class="col-12">
+            <strong>Sadržaj</strong>
+            <p class="mb-0 text-muted">@(string.IsNullOrWhiteSpace(Model.Sadrzaj) ? "Sadržaj obavijesti nije dostupan." : Model.Sadrzaj)</p>
+        </div>
+    </div>
+
+    <a asp-controller="Obavijest" asp-action="Index" class="btn btn-primary">Natrag na popis</a>
+</section>

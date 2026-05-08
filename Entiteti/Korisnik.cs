@@ -41,4 +41,5 @@ public class Korisnik
     public virtual Knjizica Knjizica { get; set; } = null!;
     public virtual ICollection<Posjet> Posjeti { get; set; } = new List<Posjet>();
     public virtual ICollection<KorisnikMedalja> KorisnikMedalje { get; set; } = new List<KorisnikMedalja>();
+    public virtual ICollection<Obavijest> Obavijesti { get; set; } = new List<Obavijest>();
 }
