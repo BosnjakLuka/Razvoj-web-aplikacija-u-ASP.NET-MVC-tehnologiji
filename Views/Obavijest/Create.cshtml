@@ -1,0 +1,57 @@
+@model planinarenje.Entiteti.Obavijest
+
+@{
+    ViewData["Title"] = "Nova obavijest";
+}
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Obavijest" asp-action="Index">Obavijesti</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Nova obavijest</li>
+        </ol>
+    </nav>
+}
+
+<section class="detail-panel">
+    <h1 class="section-title no-accent mb-4">Nova obavijest</h1>
+
+    <form asp-action="Create" method="post" class="app-card">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="Naslov" class="form-label"></label>
+            <input asp-for="Naslov" class="form-control" />
+            <span asp-validation-for="Naslov" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Sadrzaj" class="form-label"></label>
+            <textarea asp-for="Sadrzaj" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Sadrzaj" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="DatumObjave" class="form-label"></label>
+            <input asp-for="DatumObjave" class="form-control" type="datetime-local" value="@Model.DatumObjave.ToString("yyyy-MM-ddTHH:mm")" />
+            <span asp-validation-for="DatumObjave" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="IdKorisnik" class="form-label">Autor</label>
+            <select asp-for="IdKorisnik" class="form-select" asp-items="ViewBag.Korisnici"></select>
+            <span asp-validation-for="IdKorisnik" class="text-danger"></span>
+        </div>
+
+        <div class="form-check mb-4">
+            <input asp-for="JeAktivna" class="form-check-input" />
+            <label asp-for="JeAktivna" class="form-check-label"></label>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Spremi</button>
+            <a asp-controller="Obavijest" asp-action="Index" class="btn btn-outline-secondary">Odustani</a>
+        </div>
+    </form>
+</section>

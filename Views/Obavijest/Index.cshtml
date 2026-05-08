@@ -20,6 +20,12 @@
     </p>
 </section>
 
+<div class="d-flex justify-content-end mb-4">
+    <a asp-controller="Obavijest" asp-action="Create" class="btn btn-outline-primary">
+        Nova obavijest
+    </a>
+</div>
+
 @if (!Model.Any())
 {
     <div class="app-card">
