@@ -42,7 +42,7 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label asp-for="DatumVrijemePosjeta" class="form-label"></label>
-                <input asp-for="DatumVrijemePosjeta" class="form-control" />
+                <input asp-for="DatumVrijemePosjeta" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
                 <span asp-validation-for="DatumVrijemePosjeta" class="text-danger small"></span>
             </div>
             <div class="col-md-6 mb-3">
@@ -72,3 +72,36 @@
         </div>
     </form>
 </div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            const mapData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.KnjiziceByKorisnik ?? new List<object>()));
+            const korisnikToKnjizica = new Map(mapData.map(x => [String(x.IdKorisnik), String(x.IdKnjizica)]));
+            const korisnikSelect = $('#IdKorisnik');
+            const knjizicaSelect = $('#IdKnjizica');
+
+            function syncKnjizica() {
+                const korisnikId = korisnikSelect.val();
+                if (!korisnikId) return;
+
+                const knjizicaId = korisnikToKnjizica.get(String(korisnikId));
+                if (knjizicaId && !knjizicaSelect.val()) {
+                    knjizicaSelect.val(knjizicaId);
+                }
+            }
+
+            korisnikSelect.on('change', function () {
+                const korisnikId = $(this).val();
+                if (!korisnikId) return;
+
+                const knjizicaId = korisnikToKnjizica.get(String(korisnikId));
+                if (knjizicaId) {
+                    knjizicaSelect.val(knjizicaId);
+                }
+            });
+
+            syncKnjizica();
+        });
+    </script>
+}

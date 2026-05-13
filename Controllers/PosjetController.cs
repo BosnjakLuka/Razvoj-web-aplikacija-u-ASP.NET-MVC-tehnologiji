@@ -75,7 +75,10 @@ namespace planinarenje.Controllers
         {
             PopulateDropdowns();
             ViewData["Title"] = "Novi posjet";
-            return View(new PosjetCreateModel());
+            return View(new PosjetCreateModel
+            {
+                DatumVrijemePosjeta = DateTime.Now
+            });
         }
 
         [HttpPost]
@@ -304,6 +307,13 @@ namespace planinarenje.Controllers
                 .Select(k => new { k.IdKnjizica, Naziv = "Knjizica #" + k.IdKnjizica })
                 .ToList();
 
+            var knjiziceByKorisnik = _dbContext.Knjizice
+                .Where(k => k.StatusAktivna)
+                .OrderByDescending(k => k.DatumKreiranja)
+                .GroupBy(k => k.IdKorisnik)
+                .Select(g => new { IdKorisnik = g.Key, IdKnjizica = g.First().IdKnjizica })
+                .ToList();
+
             var kontrolneTocke = _dbContext.KontrolneTocke
                 .Where(k => k.DeletedAt == null)
                 .OrderBy(k => k.Naziv)
@@ -318,6 +328,7 @@ namespace planinarenje.Controllers
             ViewBag.Knjizice = new SelectList(knjizice, "IdKnjizica", "Naziv", knjizicaId);
             ViewBag.KontrolneTocke = new SelectList(kontrolneTocke, "IdKontrolnaTocka", "Naziv", kontrolnaTockaId);
             ViewBag.Rute = new SelectList(rute, "IdRuta", "Naziv", rutaId);
+            ViewBag.KnjiziceByKorisnik = knjiziceByKorisnik;
         }
     }
 }
