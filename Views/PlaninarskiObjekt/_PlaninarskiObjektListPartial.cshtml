@@ -1,0 +1,43 @@
+@model IReadOnlyList<planinarenje.Models.PlaninarskiObjektIndexCardViewModel>
+
+@if (!Model.Any())
+{
+    <div class="app-card">
+        <h2 class="h5 mb-2">Nema dostupnih objekata</h2>
+        <p class="text-muted mb-0">Trenutno nisu pronađeni podatci za prikaz.</p>
+    </div>
+}
+else
+{
+    <div class="app-card">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Naziv</th>
+                        <th>Tip</th>
+                        <th>Podrucje</th>
+                        <th>Udruga</th>
+                        <th class="text-end">Akcije</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Naziv</td>
+                            <td>@item.TipObjektaNaziv</td>
+                            <td>@item.PodrucjeNaziv</td>
+                            <td>@(item.UdrugaNaziv ?? "-")</td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@item.IdPlaninarskiObjekt" class="btn btn-sm btn-outline-primary">Detalji</a>
+                                <a asp-action="Edit" asp-route-id="@item.IdPlaninarskiObjekt" class="btn btn-sm btn-outline-secondary">Uredi</a>
+                                <a asp-action="Delete" asp-route-id="@item.IdPlaninarskiObjekt" class="btn btn-sm btn-outline-danger">Obrisi</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

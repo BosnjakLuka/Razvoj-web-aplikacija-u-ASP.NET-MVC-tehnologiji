@@ -10,69 +10,38 @@
 }
 
 <section class="mb-4">
-    <h1 class="section-title no-accent mb-3">Evidencija posjeta</h1>
-    <p class="text-muted mb-0">
-        Prikaz svih ostvarenih planinarskih aktivnosti i zabilježenih posjeta kontrolnim točkama.
-    </p>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <h1 class="section-title no-accent mb-2">Evidencija posjeta</h1>
+            <p class="text-muted mb-0">Prikaz svih ostvarenih planinarskih aktivnosti.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">Novi posjet</a>
+    </div>
 </section>
 
-@if (!Model.Any())
-{
-    <div class="app-card h-auto">
-        <h2 class="h5 mb-2">Nema evidentiranih posjeta</h2>
-        <p class="text-muted mb-0">Trenutno nisu pronađeni podatci o posjetima za prikaz.</p>
-    </div>
-}
-else
-{
-    <div class="table-responsive app-card h-auto p-0">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Termin obilaska</th>
-                    <th>Planinar</th>
-                    <th>Kontrolna točka</th>
-                    <th>Ruta izleta</th>
-                    <th>Doživljaj</th>
-                    <th>Zapis potvrđen</th>
-                    <th class="text-end">Akcije</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var posjet in Model)
-                {
-                    <tr>
-                        <td class="align-middle">
-                            <i class="bi bi-clock me-1 text-muted"></i>@posjet.DatumVrijemePosjeta.ToString("dd.MM.yyyy. HH:mm")
-                        </td>
-                        <td class="align-middle fw-medium text-dark">
-                            @posjet.ImePrezimeKorisnika
-                        </td>
-                        <td class="align-middle fw-bold">
-                            @posjet.NazivKontrolneTocke
-                        </td>
-                        <td class="align-middle">
-                            <span class="text-muted small">@posjet.NazivRute</span>
-                        </td>
-                        <td class="align-middle">
-                            <span class="badge bg-secondary-subtle text-secondary border">@posjet.Dozivljaj</span>
-                        </td>
-                        <td class="align-middle">
-                            @if (posjet.JeLiPotvrdenPosjet)
-                            {
-                                <span class="badge bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>Potvrđeno</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-warning-subtle text-warning"><i class="bi bi-hourglass-split me-1"></i>Na čekanju</span>
-                            }
-                        </td>
-                        <td class="text-end align-middle">
-                            <a asp-action="Details" asp-route-id="@posjet.IdPosjet" class="btn btn-outline-primary btn-sm">Detalji</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+<div class="app-card mb-4">
+    <input type="text" id="searchInput" class="form-control" placeholder="Pretrazi posjete..." />
+</div>
+
+<div id="resultsContainer">
+    @await Html.PartialAsync("_PosjetListPartial", Model)
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('#searchInput').on('input', function () {
+                const term = $(this).val();
+                $.ajax({
+                    url: '@Url.Action("Search", "Posjet")',
+                    data: { searchTerm: term },
+                    success: function (html) {
+                        $('#resultsContainer').fadeOut(150, function () {
+                            $(this).html(html).fadeIn(200);
+                        });
+                    }
+                });
+            });
+        });
+    </script>
 }

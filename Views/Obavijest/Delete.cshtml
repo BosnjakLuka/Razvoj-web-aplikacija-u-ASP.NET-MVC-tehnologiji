@@ -1,0 +1,30 @@
+@model planinarenje.Entiteti.Obavijest
+
+@{
+    ViewData["Title"] = "Obrisi obavijest";
+}
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Obavijest" asp-action="Index">Obavijesti</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Obrisi obavijest</li>
+        </ol>
+    </nav>
+}
+
+<section class="mb-4">
+    <h1 class="section-title mb-2">Obrisi obavijest</h1>
+    <p class="text-muted mb-0">Jeste li sigurni da zelite obrisati obavijest "@Model.Naslov"?</p>
+</section>
+
+<div class="app-card">
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="IdObavijest" />
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger">Potvrdi</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Odustani</a>
+        </div>
+    </form>
+</div>

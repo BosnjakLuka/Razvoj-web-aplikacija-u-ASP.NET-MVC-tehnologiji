@@ -33,6 +33,9 @@ namespace planinarenje.Migrations
                     b.Property<DateTime>("DatumUploada")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("IdPosjet")
                         .HasColumnType("int");
 
@@ -164,6 +167,9 @@ namespace planinarenje.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdKontrolnaTocka"));
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("GUIDOznaka")
                         .IsRequired()
@@ -367,6 +373,9 @@ namespace planinarenje.Migrations
                     b.Property<DateTime>("DatumDodjele")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("IdKorisnik")
                         .HasColumnType("int");
 
@@ -410,6 +419,9 @@ namespace planinarenje.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdMedalja"));
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("MinimalanBrojKontrolnihTocaka")
                         .HasColumnType("int");
@@ -568,6 +580,9 @@ namespace planinarenje.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("varchar(30)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Email")
                         .HasMaxLength(150)
                         .HasColumnType("varchar(150)");
@@ -676,6 +691,9 @@ namespace planinarenje.Migrations
                     b.Property<string>("Adresa")
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Email")
                         .HasMaxLength(150)
@@ -825,6 +843,9 @@ namespace planinarenje.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdPodrucje"));
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("MinimalanBrojKTZaObilazak")
                         .HasColumnType("int");
@@ -1022,6 +1043,9 @@ namespace planinarenje.Migrations
                     b.Property<DateTime>("DatumVrijemePosjeta")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("DozivljajPosjeta")
                         .HasColumnType("int");
 
@@ -1148,6 +1172,9 @@ namespace planinarenje.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdRuta"));
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<decimal>("DuljinaKm")
                         .HasPrecision(5, 2)

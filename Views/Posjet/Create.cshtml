@@ -1,0 +1,74 @@
+@model planinarenje.Models.ViewModels.PosjetCreateModel
+
+<section class="mb-4">
+    <h1 class="section-title mb-2">Novi posjet</h1>
+    <p class="text-muted mb-0">Unesite podatke o posjetu kontrolnoj tocki.</p>
+</section>
+
+<div class="app-card">
+    <form asp-action="Create" method="post">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="IdKorisnik" class="form-label">Korisnik</label>
+                <select asp-for="IdKorisnik" asp-items="ViewBag.Korisnici" class="form-select">
+                    <option value="">-- Odaberite korisnika --</option>
+                </select>
+                <span asp-validation-for="IdKorisnik" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="IdKnjizica" class="form-label">Knjizica</label>
+                <select asp-for="IdKnjizica" asp-items="ViewBag.Knjizice" class="form-select">
+                    <option value="">-- Odaberite knjizicu --</option>
+                </select>
+                <span asp-validation-for="IdKnjizica" class="text-danger small"></span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="IdKontrolnaTocka" class="form-label">Kontrolna tocka</label>
+                <select asp-for="IdKontrolnaTocka" asp-items="ViewBag.KontrolneTocke" class="form-select">
+                    <option value="">-- Odaberite kontrolnu tocku --</option>
+                </select>
+                <span asp-validation-for="IdKontrolnaTocka" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="IdRuta" class="form-label">Ruta</label>
+                <select asp-for="IdRuta" asp-items="ViewBag.Rute" class="form-select">
+                    <option value="">-- Odaberite rutu --</option>
+                </select>
+                <span asp-validation-for="IdRuta" class="text-danger small"></span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="DatumVrijemePosjeta" class="form-label"></label>
+                <input asp-for="DatumVrijemePosjeta" class="form-control" />
+                <span asp-validation-for="DatumVrijemePosjeta" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="VrijemeUsponaMin" class="form-label"></label>
+                <input asp-for="VrijemeUsponaMin" class="form-control" />
+                <span asp-validation-for="VrijemeUsponaMin" class="text-danger small"></span>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label asp-for="DozivljajPosjeta" class="form-label"></label>
+            <select asp-for="DozivljajPosjeta" asp-items="Html.GetEnumSelectList<planinarenje.Entiteti.DozivljajPosjeta>()" class="form-select"></select>
+            <span asp-validation-for="DozivljajPosjeta" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="UneseniGUID" class="form-label"></label>
+            <input asp-for="UneseniGUID" class="form-control" />
+            <span asp-validation-for="UneseniGUID" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="OpisIskustva" class="form-label"></label>
+            <textarea asp-for="OpisIskustva" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="OpisIskustva" class="text-danger small"></span>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Spremi</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Odustani</a>
+        </div>
+    </form>
+</div>

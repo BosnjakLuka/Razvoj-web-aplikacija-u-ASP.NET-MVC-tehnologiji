@@ -17,6 +17,8 @@ public class KorisnikMedalja
     public DateTime DatumDodjele { get; set; }
     public string? Napomena { get; set; }
 
+    public DateTime? DeletedAt { get; set; }
+
     public virtual Korisnik Korisnik { get; set; } = null!;
     public virtual Medalja Medalja { get; set; } = null!;
 }

@@ -35,5 +35,7 @@ public class PlaninarskaUdruga
 
     public int? BrojClanova { get; set; }
 
+    public DateTime? DeletedAt { get; set; }
+
     public virtual ICollection<PlaninarskiObjekt> PlaninarskiObjekti { get; set; } = new List<PlaninarskiObjekt>();
 }

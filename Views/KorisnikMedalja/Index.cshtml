@@ -12,65 +12,39 @@
     </nav>
 }
 
-<div class="row align-items-center mt-3 mb-4">
-    <div class="col-md-6">
-        <h1 class="h3 mb-0 text-primary-dark"><i class="bi bi-award-fill text-warning me-2"></i>Dodijeljene medalje</h1>
+<section class="mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <h1 class="section-title mb-2">Dodijeljene medalje</h1>
+            <p class="text-muted mb-0">Pregled dodjela medalja s brzim pretrazivanjem i CRUD akcijama.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">Nova dodjela</a>
     </div>
+</section>
+
+<div class="app-card mb-4">
+    <input type="text" id="searchInput" class="form-control" placeholder="Pretrazi dodjele..." />
 </div>
 
-<div class="app-card table-responsive p-0">
-    <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
-            <tr>
-                <th scope="col" class="ps-4">Planinar (Korisnik)</th>
-                <th scope="col">Medalja</th>
-                <th scope="col">Datum dodjele</th>
-                <th scope="col">Napomena</th>
-                <th scope="col" class="text-end pe-4">Akcije</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td class="ps-4 fw-medium text-primary-dark">
-                        <i class="bi bi-person-circle text-muted me-2"></i>
-                        <a asp-controller="Korisnik" asp-action="Details" asp-route-id="@item.IdKorisnik" class="text-decoration-none">
-                            @item.ImePrezimeKorisnika
-                        </a>
-                    </td>
-                    <td>
-                        <a asp-controller="Medalja" asp-action="Details" asp-route-id="@item.IdMedalja" class="fw-medium text-decoration-none text-dark">
-                            <i class="bi bi-award text-warning me-1"></i>@item.NazivMedalje
-                        </a>
-                    </td>
-                    <td>
-                        <span class="badge bg-light text-dark border">@item.DatumDodjele.ToString("dd.MM.yyyy.")</span>
-                    </td>
-                    <td>
-                        @if (!string.IsNullOrWhiteSpace(item.Napomena))
-                        {
-                            <span class="text-muted small text-truncate d-inline-block" style="max-width: 200px;" title="@item.Napomena">
-                                @item.Napomena
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="text-muted small opacity-50">-</span>
-                        }
-                    </td>
-                    <td class="text-end pe-4">
-                        <a asp-action="Details" asp-route-id="@item.IdKorisnikMedalja" class="btn btn-sm btn-outline-primary">Detalji zapisa</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-    @if (!Model.Any())
-    {
-        <div class="p-5 text-center text-muted">
-            <i class="bi bi-award d-block fs-1 mb-3 opacity-25"></i>
-            Nijedan korisnik još nije osvojio medalju u sustavu.
-        </div>
-    }
+<div id="resultsContainer">
+    @await Html.PartialAsync("_KorisnikMedaljaListPartial", Model)
 </div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('#searchInput').on('input', function () {
+                const term = $(this).val();
+                $.ajax({
+                    url: '@Url.Action("Search", "KorisnikMedalja")',
+                    data: { searchTerm: term },
+                    success: function (html) {
+                        $('#resultsContainer').fadeOut(150, function () {
+                            $(this).html(html).fadeIn(200);
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

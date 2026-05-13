@@ -28,6 +28,8 @@ public class KontrolnaTocka
 
     public string? OpisZiga { get; set; }
 
+    public DateTime? DeletedAt { get; set; }
+
     public virtual Podrucje Podrucje { get; set; } = null!;
     public virtual ICollection<Posjet> Posjeti { get; set; } = new List<Posjet>();
     public virtual ICollection<Ruta> Rute { get; set; } = new List<Ruta>();

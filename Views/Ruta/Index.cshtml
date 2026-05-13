@@ -10,89 +10,44 @@
 }
 
 <section class="mb-4">
-    <h1 class="section-title mb-3">Planinarske rute</h1>
-    <p class="text-muted mb-0">
-        Katalog preporucenih pjesackih ruta. Istrazi težine, trajanja i poveznice s glavnim kontrolnim tockama.
-    </p>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <h1 class="section-title mb-2">Planinarske rute</h1>
+            <p class="text-muted mb-0">Katalog ruta s brzim pretrazivanjem i CRUD akcijama.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">Nova ruta</a>
+    </div>
 </section>
 
-<div class="d-flex flex-wrap gap-2 mb-4">
-    <a asp-controller="Ruta" asp-action="PoTezini" asp-route-tezina="Laka" class="btn btn-outline-primary btn-sm">
-        Lake
-    </a>
-    <a asp-controller="Ruta" asp-action="PoTezini" asp-route-tezina="Srednja" class="btn btn-outline-primary btn-sm">
-        Srednje
-    </a>
-    <a asp-controller="Ruta" asp-action="PoTezini" asp-route-tezina="Teska" class="btn btn-outline-primary btn-sm">
-        Teške
-    </a>
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <a asp-controller="Ruta" asp-action="PoTezini" asp-route-tezina="Laka" class="btn btn-outline-primary btn-sm">Lake</a>
+    <a asp-controller="Ruta" asp-action="PoTezini" asp-route-tezina="Srednja" class="btn btn-outline-primary btn-sm">Srednje</a>
+    <a asp-controller="Ruta" asp-action="PoTezini" asp-route-tezina="Teska" class="btn btn-outline-primary btn-sm">Teske</a>
 </div>
 
-@if (!Model.Any())
-{
-    <div class="app-card">
-        <h2 class="h5 mb-2">Nema dostupnih ruta</h2>
-        <p class="text-muted mb-0">Trenutno nisu pronađeni podatci za prikaz ruta.</p>
-    </div>
-}
-else
-{
-    <section class="row g-4">
-        @foreach (var ruta in Model)
-        {
-            <article class="col-12 col-md-6 col-xl-4">
-                <div class="app-card h-100 d-flex flex-column">
+<div class="app-card mb-4">
+    <input type="text" id="searchInput" class="form-control" placeholder="Pretrazi rute..." />
+</div>
 
-                    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
-                        <h2 class="h5 mb-0">@ruta.Naziv</h2>
-                        <span class="app-badge badge-subtle">@ruta.PovezanaKontrolnaTocka</span>
-                    </div>
+<div id="resultsContainer">
+    @await Html.PartialAsync("_RutaListPartial", Model)
+</div>
 
-                    <div class="mb-3 ps-2 border-start border-3" style="border-color: var(--color-grey-light) !important;">
-                        <div class="d-flex flex-column text-muted small ms-2 gap-1">
-                            <span><strong>Pocetak:</strong> @ruta.Pocetak</span>
-                            <span><strong>Kraj:</strong> @ruta.Kraj</span>
-                        </div>
-                    </div>
-
-                    <div class="d-flex flex-wrap gap-2 mb-3">
-                        <span class="app-badge badge-subtle text-uppercase" title="Težina rute">
-                            TEZINA: @ruta.TezinaTekst
-                        </span>
-                        <span class="app-badge badge-subtle text-uppercase" title="Trajanje hodanja">
-                            VRIJEME: @ruta.Trajanje
-                        </span>
-                        <span class="app-badge badge-subtle text-uppercase" title="Duljina trase">
-                            DULJINA: @ruta.DuljinaKm.ToString("F1") KM
-                        </span>
-                        @if (ruta.VisinskaRazlikaM.HasValue)
-                        {
-                            <span class="app-badge badge-subtle text-uppercase" title="Visinska razlika">
-                                VISINA: @ruta.VisinskaRazlikaM M N/V
-                            </span>
-                        }
-                    </div>
-
-                    @if (!string.IsNullOrWhiteSpace(ruta.OpisPreview))
-                    {
-                        <p class="text-muted mb-4 flex-grow-1">@ruta.OpisPreview</p>
+@section Scripts {
+    <script>
+        $(function () {
+            $('#searchInput').on('input', function () {
+                const term = $(this).val();
+                $.ajax({
+                    url: '@Url.Action("Search", "Ruta")',
+                    data: { searchTerm: term },
+                    success: function (html) {
+                        $('#resultsContainer').fadeOut(150, function () {
+                            $(this).html(html).fadeIn(200);
+                        });
                     }
-                    else
-                    {
-                        <p class="text-muted mb-4 flex-grow-1 fst-italic">Detaljan opis rute nije dostupan.</p>
-                    }
-
-                    <div class="mt-auto d-grid">
-                        <a asp-controller="Ruta"
-                           asp-action="Details"
-                           asp-route-id="@ruta.IdRuta"
-                           class="btn btn-primary">
-                            Detalji rute
-                        </a>
-                    </div>
-                    
-                </div>
-            </article>
-        }
-    </section>
+                });
+            });
+        });
+    </script>
 }

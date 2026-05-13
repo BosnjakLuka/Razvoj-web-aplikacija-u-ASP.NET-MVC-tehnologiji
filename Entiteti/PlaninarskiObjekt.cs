@@ -39,6 +39,8 @@ public class PlaninarskiObjekt
     public bool ImaHranu { get; set; }
     public string? RadnoVrijemeOpis { get; set; }
 
+    public DateTime? DeletedAt { get; set; }
+
     public virtual Podrucje Podrucje { get; set; } = null!;
     public virtual PlaninarskaUdruga PlaninarskaUdruga { get; set; } = null!;
 }

@@ -1,0 +1,36 @@
+@model planinarenje.Models.ViewModels.PodrucjeCreateModel
+
+<section class="mb-4">
+    <h1 class="section-title mb-2">Novo podrucje</h1>
+    <p class="text-muted mb-0">Unesite osnovne informacije o novom podrucju.</p>
+</section>
+
+<div class="app-card">
+    <form asp-action="Create" method="post">
+        <div class="mb-3">
+            <label asp-for="Naziv" class="form-label"></label>
+            <input asp-for="Naziv" class="form-control" />
+            <span asp-validation-for="Naziv" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Regija" class="form-label"></label>
+            <input asp-for="Regija" class="form-control" />
+            <span asp-validation-for="Regija" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="MinimalanBrojKTZaObilazak" class="form-label"></label>
+            <input asp-for="MinimalanBrojKTZaObilazak" class="form-control" />
+            <span asp-validation-for="MinimalanBrojKTZaObilazak" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Opis" class="form-label"></label>
+            <textarea asp-for="Opis" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Opis" class="text-danger small"></span>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Spremi</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Odustani</a>
+        </div>
+    </form>
+</div>

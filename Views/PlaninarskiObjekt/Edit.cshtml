@@ -1,0 +1,99 @@
+@model planinarenje.Models.ViewModels.PlaninarskiObjektEditModel
+
+<section class="mb-4">
+    <h1 class="section-title mb-2">Uredi objekt</h1>
+    <p class="text-muted mb-0">Azurirajte podatke o objektu.</p>
+</section>
+
+<div class="app-card">
+    <form asp-action="Edit" method="post">
+        <div class="mb-3">
+            <label asp-for="Naziv" class="form-label"></label>
+            <input asp-for="Naziv" class="form-control" />
+            <span asp-validation-for="Naziv" class="text-danger small"></span>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="IdPodrucje" class="form-label">Podrucje</label>
+                <select asp-for="IdPodrucje" asp-items="ViewBag.Podrucja" class="form-select">
+                    <option value="">-- Odaberite podrucje --</option>
+                </select>
+                <span asp-validation-for="IdPodrucje" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="IdPlaninarskaUdruga" class="form-label">Udruga</label>
+                <select asp-for="IdPlaninarskaUdruga" asp-items="ViewBag.Udruge" class="form-select">
+                    <option value="">-- Odaberite udrugu --</option>
+                </select>
+                <span asp-validation-for="IdPlaninarskaUdruga" class="text-danger small"></span>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label asp-for="TipObjekta" class="form-label"></label>
+            <select asp-for="TipObjekta" asp-items="Html.GetEnumSelectList<planinarenje.Entiteti.TipObjekta>()" class="form-select"></select>
+            <span asp-validation-for="TipObjekta" class="text-danger small"></span>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label asp-for="NadmorskaVisina" class="form-label"></label>
+                <input asp-for="NadmorskaVisina" class="form-control" />
+                <span asp-validation-for="NadmorskaVisina" class="text-danger small"></span>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label asp-for="Kapacitet" class="form-label"></label>
+                <input asp-for="Kapacitet" class="form-control" />
+                <span asp-validation-for="Kapacitet" class="text-danger small"></span>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label asp-for="ImeOdgovorneOsobe" class="form-label"></label>
+                <input asp-for="ImeOdgovorneOsobe" class="form-control" />
+                <span asp-validation-for="ImeOdgovorneOsobe" class="text-danger small"></span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="Telefon" class="form-label"></label>
+                <input asp-for="Telefon" class="form-control" />
+                <span asp-validation-for="Telefon" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Adresa" class="form-label"></label>
+            <input asp-for="Adresa" class="form-control" />
+            <span asp-validation-for="Adresa" class="text-danger small"></span>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="form-check">
+                    <input asp-for="ImaNocenje" class="form-check-input" />
+                    <label asp-for="ImaNocenje" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-check">
+                    <input asp-for="ImaHranu" class="form-check-input" />
+                    <label asp-for="ImaHranu" class="form-check-label"></label>
+                </div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label asp-for="RadnoVrijemeOpis" class="form-label"></label>
+            <textarea asp-for="RadnoVrijemeOpis" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="RadnoVrijemeOpis" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Opis" class="form-label"></label>
+            <textarea asp-for="Opis" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Opis" class="text-danger small"></span>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Spremi</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Odustani</a>
+        </div>
+    </form>
+</div>

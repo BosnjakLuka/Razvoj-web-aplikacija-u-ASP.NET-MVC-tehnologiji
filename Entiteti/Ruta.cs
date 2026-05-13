@@ -38,6 +38,8 @@ public class Ruta
     [MaxLength(255)]
     public string? GPXPath { get; set; }
 
+    public DateTime? DeletedAt { get; set; }
+
     public virtual KontrolnaTocka KontrolnaTocka { get; set; } = null!;
     public virtual ICollection<Posjet> Posjeti { get; set; } = new List<Posjet>();
 }

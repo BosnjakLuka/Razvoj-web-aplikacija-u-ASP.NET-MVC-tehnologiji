@@ -73,6 +73,15 @@
     @if (ViewData["Title"]?.ToString() == "Naslovnica")
     {
         <main role="main" class="flex-grow-1">
+            @if (TempData["Success"] != null)
+            {
+                <div class="container mt-3">
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            }
             @RenderBody()
         </main>
     }
@@ -80,6 +89,13 @@
     {
         <div class="container page-container">
             <main role="main">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
                 @RenderBody()
             </main>
         </div>
@@ -94,6 +110,7 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

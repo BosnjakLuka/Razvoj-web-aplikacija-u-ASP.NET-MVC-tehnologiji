@@ -27,6 +27,29 @@ public class ObavijestController : Controller
         return View(model);
     }
 
+    public IActionResult Search(string? searchTerm)
+    {
+        var query = _dbContext.Obavijesti
+            .Include(o => o.Korisnik)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.Trim().ToLower();
+            query = query.Where(o =>
+                o.Naslov.ToLower().Contains(term) ||
+                (o.Sadrzaj != null && o.Sadrzaj.ToLower().Contains(term)) ||
+                (o.Korisnik != null &&
+                 (o.Korisnik.Ime + " " + o.Korisnik.Prezime).ToLower().Contains(term)));
+        }
+
+        var model = query
+            .OrderByDescending(o => o.DatumObjave)
+            .ToList();
+
+        return PartialView("_ObavijestListPartial", model);
+    }
+
     public IActionResult Create()
     {
         LoadKorisniciSelectList();
@@ -89,6 +112,31 @@ public class ObavijestController : Controller
         if (obavijest == null) return NotFound();
 
         return View(obavijest);
+    }
+
+    public IActionResult Delete(int id)
+    {
+        var obavijest = _dbContext.Obavijesti
+            .Include(o => o.Korisnik)
+            .FirstOrDefault(o => o.IdObavijest == id);
+
+        if (obavijest == null) return NotFound();
+
+        ViewData["Title"] = "Obrisi obavijest";
+        return View(obavijest);
+    }
+
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public IActionResult DeleteConfirmed(int id)
+    {
+        var obavijest = _dbContext.Obavijesti.FirstOrDefault(o => o.IdObavijest == id);
+        if (obavijest == null) return NotFound();
+
+        _dbContext.Obavijesti.Remove(obavijest);
+        _dbContext.SaveChanges();
+        TempData["Success"] = "Obavijest je uspjesno obrisana.";
+        return RedirectToAction(nameof(Index));
     }
 
     private void LoadKorisniciSelectList(int? selectedId = null)

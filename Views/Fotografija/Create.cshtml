@@ -1,0 +1,42 @@
+@model planinarenje.Models.ViewModels.FotografijaCreateModel
+
+<section class="mb-4">
+    <h1 class="section-title mb-2">Nova fotografija</h1>
+    <p class="text-muted mb-0">Unesite podatke o fotografiji.</p>
+</section>
+
+<div class="app-card">
+    <form asp-action="Create" method="post">
+        <div class="mb-3">
+            <label asp-for="IdPosjet" class="form-label">Posjet</label>
+            <select asp-for="IdPosjet" asp-items="ViewBag.Posjeti" class="form-select">
+                <option value="">-- Odaberite posjet --</option>
+            </select>
+            <span asp-validation-for="IdPosjet" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="NazivDatoteke" class="form-label"></label>
+            <input asp-for="NazivDatoteke" class="form-control" />
+            <span asp-validation-for="NazivDatoteke" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="PutanjaDatoteke" class="form-label"></label>
+            <input asp-for="PutanjaDatoteke" class="form-control" />
+            <span asp-validation-for="PutanjaDatoteke" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="TipSlike" class="form-label"></label>
+            <select asp-for="TipSlike" asp-items="Html.GetEnumSelectList<planinarenje.Entiteti.TipSlike>()" class="form-select"></select>
+            <span asp-validation-for="TipSlike" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Opis" class="form-label"></label>
+            <textarea asp-for="Opis" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Opis" class="text-danger small"></span>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Spremi</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Odustani</a>
+        </div>
+    </form>
+</div>

@@ -23,5 +23,7 @@ public class Fotografija
     public TipSlike TipSlike { get; set; }
     public string? Opis { get; set; }
 
+    public DateTime? DeletedAt { get; set; }
+
     public virtual Posjet Posjet { get; set; } = null!;
 }

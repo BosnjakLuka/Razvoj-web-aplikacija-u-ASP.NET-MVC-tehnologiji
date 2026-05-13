@@ -1,0 +1,41 @@
+@model planinarenje.Models.ViewModels.KorisnikMedaljaEditModel
+
+<section class="mb-4">
+    <h1 class="section-title mb-2">Uredi dodjelu</h1>
+    <p class="text-muted mb-0">Azurirajte podatke o dodjeli medalje.</p>
+</section>
+
+<div class="app-card">
+    <form asp-action="Edit" method="post">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="IdKorisnik" class="form-label">Korisnik</label>
+                <select asp-for="IdKorisnik" asp-items="ViewBag.Korisnici" class="form-select">
+                    <option value="">-- Odaberite korisnika --</option>
+                </select>
+                <span asp-validation-for="IdKorisnik" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="IdMedalja" class="form-label">Medalja</label>
+                <select asp-for="IdMedalja" asp-items="ViewBag.Medalje" class="form-select">
+                    <option value="">-- Odaberite medalju --</option>
+                </select>
+                <span asp-validation-for="IdMedalja" class="text-danger small"></span>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label asp-for="DatumDodjele" class="form-label"></label>
+            <input asp-for="DatumDodjele" class="form-control" />
+            <span asp-validation-for="DatumDodjele" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Napomena" class="form-label"></label>
+            <textarea asp-for="Napomena" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Napomena" class="text-danger small"></span>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Spremi</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Odustani</a>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,16 @@
+@model planinarenje.Entiteti.Korisnik
+
+<section class="mb-4">
+    <h1 class="section-title mb-2">Obrisi korisnika</h1>
+    <p class="text-muted mb-0">Jeste li sigurni da zelite obrisati korisnika "@Model.Ime @Model.Prezime"?</p>
+</section>
+
+<div class="app-card">
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="IdKorisnik" />
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger">Potvrdi</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Odustani</a>
+        </div>
+    </form>
+</div>
