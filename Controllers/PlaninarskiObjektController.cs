@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
 using planinarenje.Entiteti;
@@ -33,8 +32,6 @@ public class PlaninarskiObjektController : Controller
 
     public IActionResult Create()
     {
-        PopulatePodrucjaSelectList();
-        PopulateUdrugeSelectList();
         ViewData["Title"] = "Novi objekt";
         return View(new PlaninarskiObjektCreateModel());
     }
@@ -45,8 +42,8 @@ public class PlaninarskiObjektController : Controller
     {
         if (!ModelState.IsValid)
         {
-            PopulatePodrucjaSelectList(model.IdPodrucje);
-            PopulateUdrugeSelectList(model.IdPlaninarskaUdruga);
+            ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+            ViewData["UdrugaText"] = GetUdrugaNaziv(model.IdPlaninarskaUdruga);
             ViewData["Title"] = "Novi objekt";
             return View(model);
         }
@@ -79,6 +76,8 @@ public class PlaninarskiObjektController : Controller
     public IActionResult EditGet(int id)
     {
         var entity = _dbContext.PlaninarskiObjekti
+            .Include(po => po.Podrucje)
+            .Include(po => po.PlaninarskaUdruga)
             .FirstOrDefault(po => po.IdPlaninarskiObjekt == id && po.DeletedAt == null);
         if (entity == null)
         {
@@ -103,8 +102,8 @@ public class PlaninarskiObjektController : Controller
             RadnoVrijemeOpis = entity.RadnoVrijemeOpis
         };
 
-        PopulatePodrucjaSelectList(model.IdPodrucje);
-        PopulateUdrugeSelectList(model.IdPlaninarskaUdruga);
+        ViewData["PodrucjeText"] = entity.Podrucje?.Naziv ?? GetPodrucjeNaziv(model.IdPodrucje);
+        ViewData["UdrugaText"] = entity.PlaninarskaUdruga?.Naziv ?? GetUdrugaNaziv(model.IdPlaninarskaUdruga);
         ViewData["Title"] = "Uredi objekt";
         return View(model);
     }
@@ -115,8 +114,8 @@ public class PlaninarskiObjektController : Controller
     {
         if (!ModelState.IsValid)
         {
-            PopulatePodrucjaSelectList(model.IdPodrucje);
-            PopulateUdrugeSelectList(model.IdPlaninarskaUdruga);
+            ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+            ViewData["UdrugaText"] = GetUdrugaNaziv(model.IdPlaninarskaUdruga);
             ViewData["Title"] = "Uredi objekt";
             return View(model);
         }
@@ -251,23 +250,29 @@ public class PlaninarskiObjektController : Controller
             .ToList();
     }
 
-    private void PopulatePodrucjaSelectList(int? selectedId = null)
+    private string? GetPodrucjeNaziv(int? id)
     {
-        var podrucja = _dbContext.Podrucja
-            .Where(p => p.DeletedAt == null)
-            .OrderBy(p => p.Naziv)
-            .ToList();
+        if (!id.HasValue)
+        {
+            return null;
+        }
 
-        ViewBag.Podrucja = new SelectList(podrucja, "IdPodrucje", "Naziv", selectedId);
+        return _dbContext.Podrucja
+            .Where(p => p.DeletedAt == null && p.IdPodrucje == id.Value)
+            .Select(p => p.Naziv)
+            .FirstOrDefault();
     }
 
-    private void PopulateUdrugeSelectList(int? selectedId = null)
+    private string? GetUdrugaNaziv(int? id)
     {
-        var udruge = _dbContext.PlaninarskeUdruge
-            .Where(u => u.DeletedAt == null)
-            .OrderBy(u => u.Naziv)
-            .ToList();
+        if (!id.HasValue)
+        {
+            return null;
+        }
 
-        ViewBag.Udruge = new SelectList(udruge, "IdPlaninarskaUdruga", "Naziv", selectedId);
+        return _dbContext.PlaninarskeUdruge
+            .Where(u => u.DeletedAt == null && u.IdPlaninarskaUdruga == id.Value)
+            .Select(u => u.Naziv)
+            .FirstOrDefault();
     }
 }

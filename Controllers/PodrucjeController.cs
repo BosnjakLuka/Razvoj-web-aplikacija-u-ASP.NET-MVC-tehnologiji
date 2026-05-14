@@ -30,6 +30,23 @@ namespace planinarenje.Controllers
             return PartialView("_PodrucjeListPartial", model);
         }
 
+        [HttpGet]
+        public IActionResult AutocompleteSearch(string term)
+        {
+            var results = _dbContext.Podrucja
+                .Where(p => p.DeletedAt == null && p.Naziv.Contains(term))
+                .OrderBy(p => p.Naziv)
+                .Take(15)
+                .Select(p => new
+                {
+                    value = p.IdPodrucje,
+                    label = p.Naziv
+                })
+                .ToList();
+
+            return Json(results);
+        }
+
         public IActionResult Create()
         {
             ViewData["Title"] = "Novo podrucje";

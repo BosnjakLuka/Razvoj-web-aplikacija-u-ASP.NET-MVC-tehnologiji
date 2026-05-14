@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
 using planinarenje.Entiteti;
@@ -71,9 +70,40 @@ namespace planinarenje.Controllers
             return PartialView("_PosjetListPartial", model);
         }
 
+        [HttpGet]
+        public IActionResult AutocompleteSearch(string term)
+        {
+            var query = _dbContext.Posjeti
+                .Include(p => p.KontrolnaTocka)
+                .Where(p => p.DeletedAt == null);
+
+            if (int.TryParse(term, out var id))
+            {
+                query = query.Where(p => p.IdPosjet == id);
+            }
+            else
+            {
+                query = query.Where(p => p.KontrolnaTocka != null && p.KontrolnaTocka.Naziv.Contains(term));
+            }
+
+            var results = query
+                .OrderByDescending(p => p.DatumVrijemePosjeta)
+                .Take(15)
+                .Select(p => new
+                {
+                    value = p.IdPosjet,
+                    label = p.KontrolnaTocka != null
+                        ? "Posjet #" + p.IdPosjet + " - " + p.KontrolnaTocka.Naziv
+                        : "Posjet #" + p.IdPosjet
+                })
+                .ToList();
+
+            return Json(results);
+        }
+
         public IActionResult Create()
         {
-            PopulateDropdowns();
+            PopulateKnjiziceByKorisnik();
             ViewData["Title"] = "Novi posjet";
             return View(new PosjetCreateModel
             {
@@ -87,7 +117,11 @@ namespace planinarenje.Controllers
         {
             if (!ModelState.IsValid)
             {
-                PopulateDropdowns(model.IdKorisnik, model.IdKnjizica, model.IdKontrolnaTocka, model.IdRuta);
+                PopulateKnjiziceByKorisnik();
+                ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
+                ViewData["KnjizicaText"] = GetKnjizicaLabel(model.IdKnjizica);
+                ViewData["KontrolnaTockaText"] = GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
+                ViewData["RutaText"] = GetRutaLabel(model.IdRuta);
                 ViewData["Title"] = "Novi posjet";
                 return View(model);
             }
@@ -117,6 +151,10 @@ namespace planinarenje.Controllers
         public IActionResult EditGet(int id)
         {
             var entity = _dbContext.Posjeti
+                .Include(p => p.Korisnik)
+                .Include(p => p.Knjizica)
+                .Include(p => p.KontrolnaTocka)
+                .Include(p => p.Ruta)
                 .FirstOrDefault(p => p.IdPosjet == id && p.DeletedAt == null);
             if (entity == null)
             {
@@ -136,7 +174,18 @@ namespace planinarenje.Controllers
                 UneseniGUID = entity.UneseniGUID
             };
 
-            PopulateDropdowns(model.IdKorisnik, model.IdKnjizica, model.IdKontrolnaTocka, model.IdRuta);
+            PopulateKnjiziceByKorisnik();
+            ViewData["KorisnikText"] = entity.Korisnik != null
+                ? entity.Korisnik.Ime + " " + entity.Korisnik.Prezime + " (@" + entity.Korisnik.KorisnickoIme + ")"
+                : GetKorisnikLabel(model.IdKorisnik);
+            ViewData["KnjizicaText"] = entity.Knjizica != null
+                ? "Knjizica #" + entity.Knjizica.IdKnjizica + " - " +
+                  (entity.Korisnik != null ? entity.Korisnik.Ime + " " + entity.Korisnik.Prezime : "")
+                : GetKnjizicaLabel(model.IdKnjizica);
+            ViewData["KontrolnaTockaText"] = entity.KontrolnaTocka?.Naziv ?? GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
+            ViewData["RutaText"] = entity.Ruta != null
+                ? entity.Ruta.Naziv + " (" + entity.Ruta.Pocetak + " -> " + entity.Ruta.Kraj + ")"
+                : GetRutaLabel(model.IdRuta);
             ViewData["Title"] = "Uredi posjet";
             return View(model);
         }
@@ -147,7 +196,11 @@ namespace planinarenje.Controllers
         {
             if (!ModelState.IsValid)
             {
-                PopulateDropdowns(model.IdKorisnik, model.IdKnjizica, model.IdKontrolnaTocka, model.IdRuta);
+                PopulateKnjiziceByKorisnik();
+                ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
+                ViewData["KnjizicaText"] = GetKnjizicaLabel(model.IdKnjizica);
+                ViewData["KontrolnaTockaText"] = GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
+                ViewData["RutaText"] = GetRutaLabel(model.IdRuta);
                 ViewData["Title"] = "Uredi posjet";
                 return View(model);
             }
@@ -172,6 +225,60 @@ namespace planinarenje.Controllers
             _dbContext.SaveChanges();
             TempData["Success"] = "Posjet je uspjesno azuriran.";
             return RedirectToAction(nameof(Index));
+        }
+
+        private string? GetKontrolnaTockaNaziv(int? id)
+        {
+            if (!id.HasValue)
+            {
+                return null;
+            }
+
+            return _dbContext.KontrolneTocke
+                .Where(k => k.DeletedAt == null && k.IdKontrolnaTocka == id.Value)
+                .Select(k => k.Naziv)
+                .FirstOrDefault();
+        }
+
+        private string? GetKorisnikLabel(int? id)
+        {
+            if (!id.HasValue)
+            {
+                return null;
+            }
+
+            return _dbContext.Korisnici
+                .Where(k => k.StatusAktivan && k.IdKorisnik == id.Value)
+                .Select(k => k.Ime + " " + k.Prezime + " (@" + k.KorisnickoIme + ")")
+                .FirstOrDefault();
+        }
+
+        private string? GetKnjizicaLabel(int? id)
+        {
+            if (!id.HasValue)
+            {
+                return null;
+            }
+
+            return _dbContext.Knjizice
+                .Include(k => k.Korisnik)
+                .Where(k => k.StatusAktivna && k.IdKnjizica == id.Value)
+                .Select(k => "Knjizica #" + k.IdKnjizica + " - " +
+                             (k.Korisnik != null ? k.Korisnik.Ime + " " + k.Korisnik.Prezime : ""))
+                .FirstOrDefault();
+        }
+
+        private string? GetRutaLabel(int? id)
+        {
+            if (!id.HasValue)
+            {
+                return null;
+            }
+
+            return _dbContext.Rute
+                .Where(r => r.DeletedAt == null && r.IdRuta == id.Value)
+                .Select(r => r.Naziv + " (" + r.Pocetak + " -> " + r.Kraj + ")")
+                .FirstOrDefault();
         }
 
         public IActionResult Delete(int id)
@@ -292,42 +399,22 @@ namespace planinarenje.Controllers
                 .ToList();
         }
 
-        private void PopulateDropdowns(int? korisnikId = null, int? knjizicaId = null, int? kontrolnaTockaId = null, int? rutaId = null)
+        private void PopulateKnjiziceByKorisnik()
         {
-            var korisnici = _dbContext.Korisnici
-                .Where(k => k.StatusAktivan)
-                .OrderBy(k => k.Prezime)
-                .ThenBy(k => k.Ime)
-                .Select(k => new { k.IdKorisnik, Ime = k.Ime + " " + k.Prezime })
-                .ToList();
-
-            var knjizice = _dbContext.Knjizice
-                .Where(k => k.StatusAktivna)
-                .OrderByDescending(k => k.DatumKreiranja)
-                .Select(k => new { k.IdKnjizica, Naziv = "Knjizica #" + k.IdKnjizica })
-                .ToList();
-
             var knjiziceByKorisnik = _dbContext.Knjizice
+                .Include(k => k.Korisnik)
                 .Where(k => k.StatusAktivna)
                 .OrderByDescending(k => k.DatumKreiranja)
                 .GroupBy(k => k.IdKorisnik)
-                .Select(g => new { IdKorisnik = g.Key, IdKnjizica = g.First().IdKnjizica })
+                .Select(g => new
+                {
+                    IdKorisnik = g.Key,
+                    IdKnjizica = g.First().IdKnjizica,
+                    Label = "Knjizica #" + g.First().IdKnjizica + " - " +
+                            (g.First().Korisnik != null ? g.First().Korisnik.Ime + " " + g.First().Korisnik.Prezime : "")
+                })
                 .ToList();
 
-            var kontrolneTocke = _dbContext.KontrolneTocke
-                .Where(k => k.DeletedAt == null)
-                .OrderBy(k => k.Naziv)
-                .ToList();
-
-            var rute = _dbContext.Rute
-                .Where(r => r.DeletedAt == null)
-                .OrderBy(r => r.Naziv)
-                .ToList();
-
-            ViewBag.Korisnici = new SelectList(korisnici, "IdKorisnik", "Ime", korisnikId);
-            ViewBag.Knjizice = new SelectList(knjizice, "IdKnjizica", "Naziv", knjizicaId);
-            ViewBag.KontrolneTocke = new SelectList(kontrolneTocke, "IdKontrolnaTocka", "Naziv", kontrolnaTockaId);
-            ViewBag.Rute = new SelectList(rute, "IdRuta", "Naziv", rutaId);
             ViewBag.KnjiziceByKorisnik = knjiziceByKorisnik;
         }
     }

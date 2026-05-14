@@ -1,0 +1,32 @@
+@model object
+
+@{
+    var fieldName = ViewData["FieldName"]?.ToString();
+    var displayName = ViewData["DisplayName"]?.ToString();
+    var searchUrl = ViewData["SearchUrl"]?.ToString();
+    var currentId = ViewData["CurrentId"]?.ToString();
+    var currentText = ViewData["CurrentText"]?.ToString();
+    var placeholder = ViewData["Placeholder"]?.ToString() ?? "Pretrazi...";
+    var isRequired = ViewData["IsRequired"] as bool? ?? false;
+}
+
+<div class="autocomplete-wrapper position-relative" data-field="@fieldName" data-search-url="@searchUrl">
+    <input type="hidden"
+           name="@fieldName"
+           id="hidden_@fieldName"
+           value="@currentId"
+           @(isRequired ? "required" : null) />
+
+    <input type="text"
+           id="display_@fieldName"
+           class="form-control autocomplete-input"
+           placeholder="@placeholder"
+           value="@currentText"
+           autocomplete="off"
+           aria-label="@displayName" />
+
+    <ul class="autocomplete-list list-unstyled position-absolute w-100 shadow-sm d-none"
+        id="list_@fieldName"></ul>
+</div>
+
+<span class="text-danger small field-validation-error" id="val_@fieldName"></span>

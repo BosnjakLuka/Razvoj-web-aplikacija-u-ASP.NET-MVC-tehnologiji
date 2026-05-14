@@ -42,6 +42,23 @@ public class PlaninarskaUdrugaController : Controller
         return PartialView("_PlaninarskaUdrugaListPartial", model);
     }
 
+    [HttpGet]
+    public IActionResult AutocompleteSearch(string term)
+    {
+        var results = _dbContext.PlaninarskeUdruge
+            .Where(u => u.DeletedAt == null && u.Naziv.Contains(term))
+            .OrderBy(u => u.Naziv)
+            .Take(15)
+            .Select(u => new
+            {
+                value = u.IdPlaninarskaUdruga,
+                label = u.Naziv
+            })
+            .ToList();
+
+        return Json(results);
+    }
+
     public IActionResult Create()
     {
         ViewData["Title"] = "Nova udruga";

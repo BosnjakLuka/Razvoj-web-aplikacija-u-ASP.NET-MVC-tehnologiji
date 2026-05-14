@@ -29,6 +29,23 @@ public class MedaljaController : Controller
         return PartialView("_MedaljaListPartial", model);
     }
 
+    [HttpGet]
+    public IActionResult AutocompleteSearch(string term)
+    {
+        var results = _dbContext.Medalje
+            .Where(m => m.DeletedAt == null && m.Naziv.Contains(term))
+            .OrderBy(m => m.Naziv)
+            .Take(15)
+            .Select(m => new
+            {
+                value = m.IdMedalja,
+                label = m.Naziv
+            })
+            .ToList();
+
+        return Json(results);
+    }
+
     public IActionResult Create()
     {
         ViewData["Title"] = "Nova medalja";

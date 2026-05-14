@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
 using planinarenje.Entiteti;
@@ -31,9 +30,25 @@ namespace planinarenje.Controllers
             return PartialView("_KontrolnaTockaListPartial", model);
         }
 
+        [HttpGet]
+        public IActionResult AutocompleteSearch(string term)
+        {
+            var results = _dbContext.KontrolneTocke
+                .Where(k => k.DeletedAt == null && k.Naziv.Contains(term))
+                .OrderBy(k => k.Naziv)
+                .Take(15)
+                .Select(k => new
+                {
+                    value = k.IdKontrolnaTocka,
+                    label = k.Naziv
+                })
+                .ToList();
+
+            return Json(results);
+        }
+
         public IActionResult Create()
         {
-            PopulatePodrucjaSelectList();
             ViewData["Title"] = "Nova kontrolna tocka";
             return View(new KontrolnaTockaCreateModel());
         }
@@ -44,7 +59,7 @@ namespace planinarenje.Controllers
         {
             if (!ModelState.IsValid)
             {
-                PopulatePodrucjaSelectList(model.IdPodrucje);
+                ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
                 ViewData["Title"] = "Nova kontrolna tocka";
                 return View(model);
             }
@@ -71,6 +86,7 @@ namespace planinarenje.Controllers
         public IActionResult EditGet(int id)
         {
             var entity = _dbContext.KontrolneTocke
+                .Include(k => k.Podrucje)
                 .FirstOrDefault(k => k.IdKontrolnaTocka == id && k.DeletedAt == null);
             if (entity is null)
             {
@@ -89,7 +105,7 @@ namespace planinarenje.Controllers
                 OpisZiga = entity.OpisZiga
             };
 
-            PopulatePodrucjaSelectList(model.IdPodrucje);
+            ViewData["PodrucjeText"] = entity.Podrucje?.Naziv ?? GetPodrucjeNaziv(model.IdPodrucje);
             ViewData["Title"] = "Uredi kontrolnu tocku";
             return View(model);
         }
@@ -100,7 +116,7 @@ namespace planinarenje.Controllers
         {
             if (!ModelState.IsValid)
             {
-                PopulatePodrucjaSelectList(model.IdPodrucje);
+                ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
                 ViewData["Title"] = "Uredi kontrolnu tocku";
                 return View(model);
             }
@@ -229,14 +245,17 @@ namespace planinarenje.Controllers
                 .ToList();
         }
 
-        private void PopulatePodrucjaSelectList(int? selectedId = null)
+        private string? GetPodrucjeNaziv(int? id)
         {
-            var podrucja = _dbContext.Podrucja
-                .Where(p => p.DeletedAt == null)
-                .OrderBy(p => p.Naziv)
-                .ToList();
+            if (!id.HasValue)
+            {
+                return null;
+            }
 
-            ViewBag.Podrucja = new SelectList(podrucja, "IdPodrucje", "Naziv", selectedId);
+            return _dbContext.Podrucja
+                .Where(p => p.DeletedAt == null && p.IdPodrucje == id.Value)
+                .Select(p => p.Naziv)
+                .FirstOrDefault();
         }
     }
 }

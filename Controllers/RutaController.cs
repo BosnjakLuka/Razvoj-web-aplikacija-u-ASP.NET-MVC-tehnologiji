@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
 using planinarenje.Entiteti;
@@ -32,9 +31,25 @@ public class RutaController : Controller
         return PartialView("_RutaListPartial", model);
     }
 
+    [HttpGet]
+    public IActionResult AutocompleteSearch(string term)
+    {
+        var results = _dbContext.Rute
+            .Where(r => r.DeletedAt == null && r.Naziv.Contains(term))
+            .OrderBy(r => r.Naziv)
+            .Take(15)
+            .Select(r => new
+            {
+                value = r.IdRuta,
+                label = r.Naziv + " (" + r.Pocetak + " -> " + r.Kraj + ")"
+            })
+            .ToList();
+
+        return Json(results);
+    }
+
     public IActionResult Create()
     {
-        PopulateKontrolneTockeSelectList();
         ViewData["Title"] = "Nova ruta";
         return View(new RutaCreateModel());
     }
@@ -45,7 +60,7 @@ public class RutaController : Controller
     {
         if (!ModelState.IsValid)
         {
-            PopulateKontrolneTockeSelectList(model.IdKontrolnaTocka);
+            ViewData["KontrolnaTockaText"] = GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
             ViewData["Title"] = "Nova ruta";
             return View(model);
         }
@@ -77,6 +92,7 @@ public class RutaController : Controller
     public IActionResult EditGet(int id)
     {
         var entity = _dbContext.Rute
+            .Include(r => r.KontrolnaTocka)
             .FirstOrDefault(r => r.IdRuta == id && r.DeletedAt == null);
         if (entity == null)
         {
@@ -100,7 +116,7 @@ public class RutaController : Controller
             GPXPath = entity.GPXPath
         };
 
-        PopulateKontrolneTockeSelectList(model.IdKontrolnaTocka);
+        ViewData["KontrolnaTockaText"] = entity.KontrolnaTocka?.Naziv ?? GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
         ViewData["Title"] = "Uredi rutu";
         return View(model);
     }
@@ -111,7 +127,7 @@ public class RutaController : Controller
     {
         if (!ModelState.IsValid)
         {
-            PopulateKontrolneTockeSelectList(model.IdKontrolnaTocka);
+            ViewData["KontrolnaTockaText"] = GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
             ViewData["Title"] = "Uredi rutu";
             return View(model);
         }
@@ -275,13 +291,16 @@ public class RutaController : Controller
             .ToList();
     }
 
-    private void PopulateKontrolneTockeSelectList(int? selectedId = null)
+    private string? GetKontrolnaTockaNaziv(int? id)
     {
-        var kontrolneTocke = _dbContext.KontrolneTocke
-            .Where(k => k.DeletedAt == null)
-            .OrderBy(k => k.Naziv)
-            .ToList();
+        if (!id.HasValue)
+        {
+            return null;
+        }
 
-        ViewBag.KontrolneTocke = new SelectList(kontrolneTocke, "IdKontrolnaTocka", "Naziv", selectedId);
+        return _dbContext.KontrolneTocke
+            .Where(k => k.DeletedAt == null && k.IdKontrolnaTocka == id.Value)
+            .Select(k => k.Naziv)
+            .FirstOrDefault();
     }
 }

@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
 using planinarenje.Entiteti;
@@ -33,9 +32,33 @@ public class KnjizicaController : Controller
         return PartialView("_KnjizicaListPartial", model);
     }
 
+    [HttpGet]
+    public IActionResult AutocompleteSearch(string term)
+    {
+        var query = _dbContext.Knjizice
+            .Include(k => k.Korisnik)
+            .Where(k => k.StatusAktivna && k.Korisnik != null && k.Korisnik.StatusAktivan);
+
+        if (int.TryParse(term, out var id))
+        {
+            query = query.Where(k => k.IdKnjizica == id);
+        }
+
+        var results = query
+            .OrderByDescending(k => k.DatumKreiranja)
+            .Take(15)
+            .Select(k => new
+            {
+                value = k.IdKnjizica,
+                label = "Knjizica #" + k.IdKnjizica + " - " + (k.Korisnik != null ? k.Korisnik.Ime : "")
+            })
+            .ToList();
+
+        return Json(results);
+    }
+
     public IActionResult Create()
     {
-        PopulateKorisniciSelectList();
         ViewData["Title"] = "Nova knjizica";
         return View(new KnjizicaCreateModel());
     }
@@ -46,7 +69,7 @@ public class KnjizicaController : Controller
     {
         if (!ModelState.IsValid)
         {
-            PopulateKorisniciSelectList(model.IdKorisnik);
+            ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
             ViewData["Title"] = "Nova knjizica";
             return View(model);
         }
@@ -69,6 +92,7 @@ public class KnjizicaController : Controller
     public IActionResult EditGet(int id)
     {
         var entity = _dbContext.Knjizice
+            .Include(k => k.Korisnik)
             .FirstOrDefault(k => k.IdKnjizica == id && k.StatusAktivna);
         if (entity == null)
         {
@@ -81,7 +105,7 @@ public class KnjizicaController : Controller
             Napomena = entity.Napomena
         };
 
-        PopulateKorisniciSelectList(model.IdKorisnik);
+        ViewData["KorisnikText"] = entity.Korisnik != null ? entity.Korisnik.Ime + " " + entity.Korisnik.Prezime + " (@" + entity.Korisnik.KorisnickoIme + ")" : GetKorisnikLabel(model.IdKorisnik);
         ViewData["Title"] = "Uredi knjizicu";
         return View(model);
     }
@@ -92,7 +116,7 @@ public class KnjizicaController : Controller
     {
         if (!ModelState.IsValid)
         {
-            PopulateKorisniciSelectList(model.IdKorisnik);
+            ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
             ViewData["Title"] = "Uredi knjizicu";
             return View(model);
         }
@@ -227,19 +251,16 @@ public class KnjizicaController : Controller
             .ToList();
     }
 
-    private void PopulateKorisniciSelectList(int? selectedId = null)
+    private string? GetKorisnikLabel(int? id)
     {
-        var korisnici = _dbContext.Korisnici
-            .Where(k => k.StatusAktivan)
-            .OrderBy(k => k.Prezime)
-            .ThenBy(k => k.Ime)
-            .Select(k => new
-            {
-                k.IdKorisnik,
-                Ime = k.Ime + " " + k.Prezime
-            })
-            .ToList();
+        if (!id.HasValue)
+        {
+            return null;
+        }
 
-        ViewBag.Korisnici = new SelectList(korisnici, "IdKorisnik", "Ime", selectedId);
+        return _dbContext.Korisnici
+            .Where(k => k.StatusAktivan && k.IdKorisnik == id.Value)
+            .Select(k => k.Ime + " " + k.Prezime + " (@" + k.KorisnickoIme + ")")
+            .FirstOrDefault();
     }
 }

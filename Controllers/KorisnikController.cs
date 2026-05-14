@@ -51,6 +51,25 @@ namespace planinarenje.Controllers
             return PartialView("_KorisnikListPartial", model);
         }
 
+        [HttpGet]
+        public IActionResult AutocompleteSearch(string term)
+        {
+            var results = _dbContext.Korisnici
+                .Where(k => k.StatusAktivan &&
+                            (k.Ime.Contains(term) || k.Prezime.Contains(term) || k.KorisnickoIme.Contains(term)))
+                .OrderBy(k => k.Prezime)
+                .ThenBy(k => k.Ime)
+                .Take(15)
+                .Select(k => new
+                {
+                    value = k.IdKorisnik,
+                    label = k.Ime + " " + k.Prezime + " (@" + k.KorisnickoIme + ")"
+                })
+                .ToList();
+
+            return Json(results);
+        }
+
         public IActionResult Create()
         {
             ViewData["Title"] = "Novi korisnik";

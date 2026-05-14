@@ -10,17 +10,29 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label asp-for="IdKorisnik" class="form-label">Korisnik</label>
-                <select asp-for="IdKorisnik" asp-items="ViewBag.Korisnici" class="form-select">
-                    <option value="">-- Odaberite korisnika --</option>
-                </select>
-                <span asp-validation-for="IdKorisnik" class="text-danger small"></span>
+                @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+                {
+                    { "FieldName", "IdKorisnik" },
+                    { "DisplayName", "Korisnik" },
+                    { "SearchUrl", Url.Action("AutocompleteSearch", "Korisnik") },
+                    { "CurrentId", Model?.IdKorisnik.ToString() },
+                    { "CurrentText", ViewData["KorisnikText"]?.ToString() },
+                    { "Placeholder", "Pretrazi korisnike..." },
+                    { "IsRequired", true }
+                })
             </div>
             <div class="col-md-6 mb-3">
                 <label asp-for="IdMedalja" class="form-label">Medalja</label>
-                <select asp-for="IdMedalja" asp-items="ViewBag.Medalje" class="form-select">
-                    <option value="">-- Odaberite medalju --</option>
-                </select>
-                <span asp-validation-for="IdMedalja" class="text-danger small"></span>
+                @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+                {
+                    { "FieldName", "IdMedalja" },
+                    { "DisplayName", "Medalja" },
+                    { "SearchUrl", Url.Action("AutocompleteSearch", "Medalja") },
+                    { "CurrentId", Model?.IdMedalja.ToString() },
+                    { "CurrentText", ViewData["MedaljaText"]?.ToString() },
+                    { "Placeholder", "Pretrazi medalje..." },
+                    { "IsRequired", true }
+                })
             </div>
         </div>
         <div class="mb-3">

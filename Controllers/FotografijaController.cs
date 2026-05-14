@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
 using planinarenje.Entiteti;
@@ -66,7 +65,6 @@ public class FotografijaController : Controller
 
     public IActionResult Create()
     {
-        PopulatePosjetiSelectList();
         ViewData["Title"] = "Nova fotografija";
         return View(new FotografijaCreateModel());
     }
@@ -77,7 +75,7 @@ public class FotografijaController : Controller
     {
         if (!ModelState.IsValid)
         {
-            PopulatePosjetiSelectList(model.IdPosjet);
+            ViewData["PosjetText"] = GetPosjetLabel(model.IdPosjet);
             ViewData["Title"] = "Nova fotografija";
             return View(model);
         }
@@ -102,6 +100,8 @@ public class FotografijaController : Controller
     public IActionResult EditGet(int id)
     {
         var entity = _dbContext.Fotografije
+            .Include(f => f.Posjet)
+                .ThenInclude(p => p.KontrolnaTocka)
             .FirstOrDefault(f => f.IdFotografija == id && f.DeletedAt == null);
         if (entity == null)
         {
@@ -117,7 +117,9 @@ public class FotografijaController : Controller
             Opis = entity.Opis
         };
 
-        PopulatePosjetiSelectList(model.IdPosjet);
+        ViewData["PosjetText"] = entity.Posjet?.KontrolnaTocka != null
+            ? "Posjet #" + entity.Posjet.IdPosjet + " - " + entity.Posjet.KontrolnaTocka.Naziv
+            : GetPosjetLabel(model.IdPosjet);
         ViewData["Title"] = "Uredi fotografiju";
         return View(model);
     }
@@ -128,7 +130,7 @@ public class FotografijaController : Controller
     {
         if (!ModelState.IsValid)
         {
-            PopulatePosjetiSelectList(model.IdPosjet);
+            ViewData["PosjetText"] = GetPosjetLabel(model.IdPosjet);
             ViewData["Title"] = "Uredi fotografiju";
             return View(model);
         }
@@ -243,19 +245,19 @@ public class FotografijaController : Controller
             .ToList();
     }
 
-    private void PopulatePosjetiSelectList(int? selectedId = null)
+    private string? GetPosjetLabel(int? id)
     {
-        var posjeti = _dbContext.Posjeti
-            .Include(p => p.KontrolnaTocka)
-            .Where(p => p.DeletedAt == null)
-            .OrderByDescending(p => p.DatumVrijemePosjeta)
-            .Select(p => new
-            {
-                p.IdPosjet,
-                Naziv = p.KontrolnaTocka != null ? $"KT: {p.KontrolnaTocka.Naziv}" : $"Posjet #{p.IdPosjet}"
-            })
-            .ToList();
+        if (!id.HasValue)
+        {
+            return null;
+        }
 
-        ViewBag.Posjeti = new SelectList(posjeti, "IdPosjet", "Naziv", selectedId);
+        return _dbContext.Posjeti
+            .Include(p => p.KontrolnaTocka)
+            .Where(p => p.DeletedAt == null && p.IdPosjet == id.Value)
+            .Select(p => p.KontrolnaTocka != null
+                ? "Posjet #" + p.IdPosjet + " - " + p.KontrolnaTocka.Naziv
+                : "Posjet #" + p.IdPosjet)
+            .FirstOrDefault();
     }
 }

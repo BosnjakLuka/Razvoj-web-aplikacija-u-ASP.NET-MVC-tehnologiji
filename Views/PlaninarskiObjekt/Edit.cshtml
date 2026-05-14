@@ -15,17 +15,29 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label asp-for="IdPodrucje" class="form-label">Podrucje</label>
-                <select asp-for="IdPodrucje" asp-items="ViewBag.Podrucja" class="form-select">
-                    <option value="">-- Odaberite podrucje --</option>
-                </select>
-                <span asp-validation-for="IdPodrucje" class="text-danger small"></span>
+                @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+                {
+                    { "FieldName", "IdPodrucje" },
+                    { "DisplayName", "Podrucje" },
+                    { "SearchUrl", Url.Action("AutocompleteSearch", "Podrucje") },
+                    { "CurrentId", Model?.IdPodrucje.ToString() },
+                    { "CurrentText", ViewData["PodrucjeText"]?.ToString() },
+                    { "Placeholder", "Pretrazi podrucja..." },
+                    { "IsRequired", true }
+                })
             </div>
             <div class="col-md-6 mb-3">
                 <label asp-for="IdPlaninarskaUdruga" class="form-label">Udruga</label>
-                <select asp-for="IdPlaninarskaUdruga" asp-items="ViewBag.Udruge" class="form-select">
-                    <option value="">-- Odaberite udrugu --</option>
-                </select>
-                <span asp-validation-for="IdPlaninarskaUdruga" class="text-danger small"></span>
+                @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+                {
+                    { "FieldName", "IdPlaninarskaUdruga" },
+                    { "DisplayName", "Udruga" },
+                    { "SearchUrl", Url.Action("AutocompleteSearch", "PlaninarskaUdruga") },
+                    { "CurrentId", Model?.IdPlaninarskaUdruga.ToString() },
+                    { "CurrentText", ViewData["UdrugaText"]?.ToString() },
+                    { "Placeholder", "Pretrazi udruge..." },
+                    { "IsRequired", true }
+                })
             </div>
         </div>
         <div class="mb-3">

@@ -10,33 +10,57 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label asp-for="IdKorisnik" class="form-label">Korisnik</label>
-                <select asp-for="IdKorisnik" asp-items="ViewBag.Korisnici" class="form-select">
-                    <option value="">-- Odaberite korisnika --</option>
-                </select>
-                <span asp-validation-for="IdKorisnik" class="text-danger small"></span>
+                @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+                {
+                    { "FieldName", "IdKorisnik" },
+                    { "DisplayName", "Korisnik" },
+                    { "SearchUrl", Url.Action("AutocompleteSearch", "Korisnik") },
+                    { "CurrentId", Model?.IdKorisnik.ToString() },
+                    { "CurrentText", ViewData["KorisnikText"]?.ToString() },
+                    { "Placeholder", "Pretrazi korisnike..." },
+                    { "IsRequired", true }
+                })
             </div>
             <div class="col-md-6 mb-3">
                 <label asp-for="IdKnjizica" class="form-label">Knjizica</label>
-                <select asp-for="IdKnjizica" asp-items="ViewBag.Knjizice" class="form-select">
-                    <option value="">-- Odaberite knjizicu --</option>
-                </select>
-                <span asp-validation-for="IdKnjizica" class="text-danger small"></span>
+                @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+                {
+                    { "FieldName", "IdKnjizica" },
+                    { "DisplayName", "Knjizica" },
+                    { "SearchUrl", Url.Action("AutocompleteSearch", "Knjizica") },
+                    { "CurrentId", Model?.IdKnjizica.ToString() },
+                    { "CurrentText", ViewData["KnjizicaText"]?.ToString() },
+                    { "Placeholder", "Pretrazi knjizice..." },
+                    { "IsRequired", true }
+                })
             </div>
         </div>
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label asp-for="IdKontrolnaTocka" class="form-label">Kontrolna tocka</label>
-                <select asp-for="IdKontrolnaTocka" asp-items="ViewBag.KontrolneTocke" class="form-select">
-                    <option value="">-- Odaberite kontrolnu tocku --</option>
-                </select>
-                <span asp-validation-for="IdKontrolnaTocka" class="text-danger small"></span>
+                @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+                {
+                    { "FieldName", "IdKontrolnaTocka" },
+                    { "DisplayName", "Kontrolna tocka" },
+                    { "SearchUrl", Url.Action("AutocompleteSearch", "KontrolnaTocka") },
+                    { "CurrentId", Model?.IdKontrolnaTocka.ToString() },
+                    { "CurrentText", ViewData["KontrolnaTockaText"]?.ToString() },
+                    { "Placeholder", "Pretrazi kontrolne tocke..." },
+                    { "IsRequired", true }
+                })
             </div>
             <div class="col-md-6 mb-3">
                 <label asp-for="IdRuta" class="form-label">Ruta</label>
-                <select asp-for="IdRuta" asp-items="ViewBag.Rute" class="form-select">
-                    <option value="">-- Odaberite rutu --</option>
-                </select>
-                <span asp-validation-for="IdRuta" class="text-danger small"></span>
+                @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+                {
+                    { "FieldName", "IdRuta" },
+                    { "DisplayName", "Ruta" },
+                    { "SearchUrl", Url.Action("AutocompleteSearch", "Ruta") },
+                    { "CurrentId", Model?.IdRuta.ToString() },
+                    { "CurrentText", ViewData["RutaText"]?.ToString() },
+                    { "Placeholder", "Pretrazi rute..." },
+                    { "IsRequired", true }
+                })
             </div>
         </div>
         <div class="row">
@@ -77,31 +101,30 @@
     <script>
         $(function () {
             const mapData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.KnjiziceByKorisnik ?? new List<object>()));
-            const korisnikToKnjizica = new Map(mapData.map(x => [String(x.IdKorisnik), String(x.IdKnjizica)]));
-            const korisnikSelect = $('#IdKorisnik');
-            const knjizicaSelect = $('#IdKnjizica');
+            const korisnikToKnjizica = new Map(mapData.map(x => [String(x.IdKorisnik), { id: String(x.IdKnjizica), label: x.Label }]));
+            const korisnikHidden = $('#hidden_IdKorisnik');
+            const knjizicaHidden = $('#hidden_IdKnjizica');
+            const knjizicaDisplay = $('#display_IdKnjizica');
 
-            function syncKnjizica() {
-                const korisnikId = korisnikSelect.val();
-                if (!korisnikId) return;
-
-                const knjizicaId = korisnikToKnjizica.get(String(korisnikId));
-                if (knjizicaId && !knjizicaSelect.val()) {
-                    knjizicaSelect.val(knjizicaId);
+            function applyKnjizica(korisnikId) {
+                if (!korisnikId) {
+                    knjizicaHidden.val('');
+                    knjizicaDisplay.val('');
+                    return;
                 }
+
+                const data = korisnikToKnjizica.get(String(korisnikId));
+                if (!data) return;
+
+                knjizicaHidden.val(data.id).trigger('change');
+                knjizicaDisplay.val(data.label);
             }
 
-            korisnikSelect.on('change', function () {
-                const korisnikId = $(this).val();
-                if (!korisnikId) return;
-
-                const knjizicaId = korisnikToKnjizica.get(String(korisnikId));
-                if (knjizicaId) {
-                    knjizicaSelect.val(knjizicaId);
-                }
+            korisnikHidden.on('change', function () {
+                applyKnjizica($(this).val());
             });
 
-            syncKnjizica();
+            applyKnjizica(korisnikHidden.val());
         });
     </script>
 }

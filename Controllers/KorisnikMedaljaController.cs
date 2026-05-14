@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
 using planinarenje.Entiteti;
@@ -53,7 +52,6 @@ public class KorisnikMedaljaController : Controller
 
     public IActionResult Create()
     {
-        PopulateDropdowns();
         ViewData["Title"] = "Nova dodjela medalje";
         return View(new KorisnikMedaljaCreateModel());
     }
@@ -64,7 +62,8 @@ public class KorisnikMedaljaController : Controller
     {
         if (!ModelState.IsValid)
         {
-            PopulateDropdowns(model.IdKorisnik, model.IdMedalja);
+            ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
+            ViewData["MedaljaText"] = GetMedaljaNaziv(model.IdMedalja);
             ViewData["Title"] = "Nova dodjela medalje";
             return View(model);
         }
@@ -87,6 +86,8 @@ public class KorisnikMedaljaController : Controller
     public IActionResult EditGet(int id)
     {
         var entity = _dbContext.KorisnikMedalje
+            .Include(km => km.Korisnik)
+            .Include(km => km.Medalja)
             .FirstOrDefault(km => km.IdKorisnikMedalja == id && km.DeletedAt == null);
         if (entity == null) return NotFound();
 
@@ -98,7 +99,10 @@ public class KorisnikMedaljaController : Controller
             Napomena = entity.Napomena
         };
 
-        PopulateDropdowns(model.IdKorisnik, model.IdMedalja);
+        ViewData["KorisnikText"] = entity.Korisnik != null
+            ? entity.Korisnik.Ime + " " + entity.Korisnik.Prezime + " (@" + entity.Korisnik.KorisnickoIme + ")"
+            : GetKorisnikLabel(model.IdKorisnik);
+        ViewData["MedaljaText"] = entity.Medalja?.Naziv ?? GetMedaljaNaziv(model.IdMedalja);
         ViewData["Title"] = "Uredi dodjelu";
         return View(model);
     }
@@ -109,7 +113,8 @@ public class KorisnikMedaljaController : Controller
     {
         if (!ModelState.IsValid)
         {
-            PopulateDropdowns(model.IdKorisnik, model.IdMedalja);
+            ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
+            ViewData["MedaljaText"] = GetMedaljaNaziv(model.IdMedalja);
             ViewData["Title"] = "Uredi dodjelu";
             return View(model);
         }
@@ -212,21 +217,29 @@ public class KorisnikMedaljaController : Controller
             .ToList();
     }
 
-    private void PopulateDropdowns(int? korisnikId = null, int? medaljaId = null)
+    private string? GetKorisnikLabel(int? id)
     {
-        var korisnici = _dbContext.Korisnici
-            .Where(k => k.StatusAktivan)
-            .OrderBy(k => k.Prezime)
-            .ThenBy(k => k.Ime)
-            .Select(k => new { k.IdKorisnik, Ime = k.Ime + " " + k.Prezime })
-            .ToList();
+        if (!id.HasValue)
+        {
+            return null;
+        }
 
-        var medalje = _dbContext.Medalje
-            .Where(m => m.DeletedAt == null)
-            .OrderBy(m => m.Naziv)
-            .ToList();
+        return _dbContext.Korisnici
+            .Where(k => k.StatusAktivan && k.IdKorisnik == id.Value)
+            .Select(k => k.Ime + " " + k.Prezime + " (@" + k.KorisnickoIme + ")")
+            .FirstOrDefault();
+    }
 
-        ViewBag.Korisnici = new SelectList(korisnici, "IdKorisnik", "Ime", korisnikId);
-        ViewBag.Medalje = new SelectList(medalje, "IdMedalja", "Naziv", medaljaId);
+    private string? GetMedaljaNaziv(int? id)
+    {
+        if (!id.HasValue)
+        {
+            return null;
+        }
+
+        return _dbContext.Medalje
+            .Where(m => m.DeletedAt == null && m.IdMedalja == id.Value)
+            .Select(m => m.Naziv)
+            .FirstOrDefault();
     }
 }

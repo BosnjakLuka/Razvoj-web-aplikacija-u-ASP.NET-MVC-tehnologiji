@@ -9,10 +9,16 @@
     <form asp-action="Create" method="post">
         <div class="mb-3">
             <label asp-for="IdPosjet" class="form-label">Posjet</label>
-            <select asp-for="IdPosjet" asp-items="ViewBag.Posjeti" class="form-select">
-                <option value="">-- Odaberite posjet --</option>
-            </select>
-            <span asp-validation-for="IdPosjet" class="text-danger small"></span>
+            @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+            {
+                { "FieldName", "IdPosjet" },
+                { "DisplayName", "Posjet" },
+                { "SearchUrl", Url.Action("AutocompleteSearch", "Posjet") },
+                { "CurrentId", Model?.IdPosjet.ToString() },
+                { "CurrentText", ViewData["PosjetText"]?.ToString() },
+                { "Placeholder", "Pretrazi posjete..." },
+                { "IsRequired", true }
+            })
         </div>
         <div class="mb-3">
             <label asp-for="NazivDatoteke" class="form-label"></label>
