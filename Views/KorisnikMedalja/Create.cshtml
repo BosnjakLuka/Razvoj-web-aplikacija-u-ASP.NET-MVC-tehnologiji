@@ -1,57 +1,85 @@
-@model planinarenje.Models.ViewModels.KorisnikMedaljaCreateModel
+@model planinarenje.Models.KorisnikMedaljaEligibilityPageViewModel
 
 <section class="mb-4">
-    <h1 class="section-title mb-2">Nova dodjela medalje</h1>
-    <p class="text-muted mb-0">Unesite podatke o dodjeli medalje.</p>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <h1 class="section-title mb-2">Nova dodjela medalje</h1>
+            <p class="text-muted mb-0">Odaberi korisnika koji je eligible za određenu medalju i dodijeli je jednim klikom.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">Natrag na popis</a>
+    </div>
 </section>
 
-<div class="app-card">
-    <form asp-action="Create" method="post">
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label asp-for="IdKorisnik" class="form-label">Korisnik</label>
-                @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+@if (Model.Medalje.Count == 0)
+{
+    <div class="app-card">
+        <h2 class="h5 mb-2">Nema aktivnih medalja</h2>
+        <p class="text-muted mb-0">Trenutno nema medalja koje se mogu dodijeliti.</p>
+    </div>
+}
+else
+{
+    <div class="d-grid gap-4">
+        @foreach (var medalja in Model.Medalje)
+        {
+            <div class="app-card h-auto">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <h2 class="h4 mb-1">@medalja.NazivMedalje</h2>
+                        @if (!string.IsNullOrWhiteSpace(medalja.Opis))
+                        {
+                            <p class="text-muted mb-0">@medalja.Opis</p>
+                        }
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-success-subtle text-success">@medalja.MinimalanBrojKontrolnihTocaka KT</span>
+                        <span class="badge bg-primary-subtle text-primary ms-1">@medalja.MinimalanBrojPodrucja područja</span>
+                    </div>
+                </div>
+
+                @if (medalja.EligibleUsers.Count == 0)
                 {
-                    { "FieldName", "IdKorisnik" },
-                    { "DisplayName", "Korisnik" },
-                    { "SearchUrl", Url.Action("AutocompleteSearch", "Korisnik") },
-                    { "CurrentId", Model?.IdKorisnik.ToString() },
-                    { "CurrentText", ViewData["KorisnikText"]?.ToString() },
-                    { "Placeholder", "Pretrazi korisnike..." },
-                    { "IsRequired", true }
-                })
-            </div>
-            <div class="col-md-6 mb-3">
-                <label asp-for="IdMedalja" class="form-label">Medalja</label>
-                @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+                    <div class="alert alert-light mb-0">
+                        Trenutno nema eligible korisnika za ovu medalju.
+                    </div>
+                }
+                else
                 {
-                    { "FieldName", "IdMedalja" },
-                    { "DisplayName", "Medalja" },
-                    { "SearchUrl", Url.Action("AutocompleteSearch", "Medalja") },
-                    { "CurrentId", Model?.IdMedalja.ToString() },
-                    { "CurrentText", ViewData["MedaljaText"]?.ToString() },
-                    { "Placeholder", "Pretrazi medalje..." },
-                    { "IsRequired", true }
-                })
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Korisnik</th>
+                                    <th>KT</th>
+                                    <th>Područja</th>
+                                    <th class="text-end">Akcija</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in medalja.EligibleUsers)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold">@user.ImePrezimeKorisnika</div>
+                                            <div class="text-muted small">@user.KorisnickoIme</div>
+                                        </td>
+                                        <td>@user.BrojKontrolnihTocaka</td>
+                                        <td>@user.BrojPodrucja</td>
+                                        <td class="text-end">
+                                            <form asp-action="Award" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="medaljaId" value="@medalja.IdMedalja" />
+                                                <input type="hidden" name="korisnikId" value="@user.IdKorisnik" />
+                                                <button type="submit" class="btn btn-success btn-sm">Dodijeli</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </div>
-        </div>
-        <div class="mb-3">
-            @await Html.PartialAsync("_DateTimePicker", null, new ViewDataDictionary(ViewData)
-            {
-                { "FieldName", "DatumDodjele" },
-                { "Label", "Datum dodjele" },
-                { "IncludeTime", true },
-                { "Required", true }
-            })
-        </div>
-        <div class="mb-3">
-            <label asp-for="Napomena" class="form-label"></label>
-            <textarea asp-for="Napomena" class="form-control" rows="3"></textarea>
-            <span asp-validation-for="Napomena" class="text-danger small"></span>
-        </div>
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary">Spremi</button>
-            <a asp-action="Index" class="btn btn-outline-secondary">Odustani</a>
-        </div>
-    </form>
-</div>
+        }
+    </div>
+}

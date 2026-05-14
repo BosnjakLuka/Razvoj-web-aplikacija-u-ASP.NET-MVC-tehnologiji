@@ -53,27 +53,43 @@ public class KorisnikMedaljaController : Controller
     public IActionResult Create()
     {
         ViewData["Title"] = "Nova dodjela medalje";
-        return View(new KorisnikMedaljaCreateModel());
+        var model = BuildEligibilityPageModel();
+        return View(model);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(KorisnikMedaljaCreateModel model)
+    public IActionResult Award(int medaljaId, int korisnikId)
     {
-        if (!ModelState.IsValid)
+        var medalja = _dbContext.Medalje.FirstOrDefault(m => m.IdMedalja == medaljaId && m.DeletedAt == null);
+        if (medalja == null)
         {
-            ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
-            ViewData["MedaljaText"] = GetMedaljaNaziv(model.IdMedalja);
-            ViewData["Title"] = "Nova dodjela medalje";
-            return View(model);
+            TempData["Error"] = "Odabrana medalja nije valjana.";
+            return RedirectToAction(nameof(Create));
+        }
+
+        var eligibleUsers = GetEligibleUsersForMedal(medalja).ToList();
+        var eligibleUser = eligibleUsers.FirstOrDefault(u => u.IdKorisnik == korisnikId);
+        if (eligibleUser == null)
+        {
+            TempData["Error"] = "Korisnik nije eligible za ovu medalju.";
+            return RedirectToAction(nameof(Create));
+        }
+
+        var exists = _dbContext.KorisnikMedalje.Any(km =>
+            km.DeletedAt == null && km.IdKorisnik == korisnikId && km.IdMedalja == medaljaId);
+        if (exists)
+        {
+            TempData["Error"] = "Korisnik već ima ovu medalju.";
+            return RedirectToAction(nameof(Create));
         }
 
         var entity = new KorisnikMedalja
         {
-            IdKorisnik = model.IdKorisnik,
-            IdMedalja = model.IdMedalja,
-            DatumDodjele = model.DatumDodjele,
-            Napomena = model.Napomena
+            IdKorisnik = korisnikId,
+            IdMedalja = medaljaId,
+            DatumDodjele = DateTime.UtcNow,
+            Napomena = "Automatski dodijeljeno kroz eligibility stranicu."
         };
 
         _dbContext.KorisnikMedalje.Add(entity);
@@ -242,5 +258,71 @@ public class KorisnikMedaljaController : Controller
             .Where(m => m.DeletedAt == null && m.IdMedalja == id.Value)
             .Select(m => m.Naziv)
             .FirstOrDefault();
+    }
+
+    private KorisnikMedaljaEligibilityPageViewModel BuildEligibilityPageModel()
+    {
+        var userStats = GetEligibleUsersBaseQuery();
+        var medals = _dbContext.Medalje
+            .Where(m => m.DeletedAt == null)
+            .OrderBy(m => m.MinimalanBrojKontrolnihTocaka)
+            .ThenBy(m => m.Naziv)
+            .ToList();
+
+        var medalCards = medals.Select(medalja => new MedaljaEligibilityCardViewModel
+        {
+            IdMedalja = medalja.IdMedalja,
+            NazivMedalje = medalja.Naziv,
+            Opis = medalja.Opis,
+            MinimalanBrojKontrolnihTocaka = medalja.MinimalanBrojKontrolnihTocaka,
+            MinimalanBrojPodrucja = medalja.MinimalanBrojPodrucja,
+            EligibleUsers = GetEligibleUsersForMedal(medalja, userStats).ToList()
+        }).ToList();
+
+        return new KorisnikMedaljaEligibilityPageViewModel
+        {
+            Medalje = medalCards
+        };
+    }
+
+    private List<KorisnikMedaljaEligibleUserViewModel> GetEligibleUsersBaseQuery()
+    {
+        return _dbContext.Korisnici
+            .Where(k => k.StatusAktivan)
+            .Select(k => new KorisnikMedaljaEligibleUserViewModel
+            {
+                IdKorisnik = k.IdKorisnik,
+                ImePrezimeKorisnika = k.Ime + " " + k.Prezime,
+                KorisnickoIme = k.KorisnickoIme,
+                BrojKontrolnihTocaka = _dbContext.Posjeti
+                    .Where(p => p.DeletedAt == null && p.IdKorisnik == k.IdKorisnik)
+                    .Select(p => p.IdKontrolnaTocka)
+                    .Distinct()
+                    .Count(),
+                BrojPodrucja = _dbContext.Posjeti
+                    .Where(p => p.DeletedAt == null && p.IdKorisnik == k.IdKorisnik)
+                    .Select(p => p.KontrolnaTocka != null ? p.KontrolnaTocka.IdPodrucje : 0)
+                    .Where(id => id > 0)
+                    .Distinct()
+                    .Count()
+            })
+            .ToList();
+    }
+
+    private IEnumerable<KorisnikMedaljaEligibleUserViewModel> GetEligibleUsersForMedal(Medalja medalja, List<KorisnikMedaljaEligibleUserViewModel>? cachedStats = null)
+    {
+        var stats = cachedStats ?? GetEligibleUsersBaseQuery();
+
+        var awardedUserIds = _dbContext.KorisnikMedalje
+            .Where(km => km.DeletedAt == null && km.IdMedalja == medalja.IdMedalja)
+            .Select(km => km.IdKorisnik)
+            .ToHashSet();
+
+        return stats
+            .Where(user =>
+                !awardedUserIds.Contains(user.IdKorisnik) &&
+                user.BrojKontrolnihTocaka >= medalja.MinimalanBrojKontrolnihTocaka &&
+                user.BrojPodrucja >= medalja.MinimalanBrojPodrucja)
+            .OrderBy(user => user.ImePrezimeKorisnika);
     }
 }
