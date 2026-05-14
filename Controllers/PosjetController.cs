@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
 using planinarenje.Entiteti;
@@ -101,9 +102,26 @@ namespace planinarenje.Controllers
             return Json(results);
         }
 
+        [HttpGet]
+        public IActionResult RuteZaKontrolnuTocku(int kontrolnaTockaId)
+        {
+            var results = _dbContext.Rute
+                .Where(r => r.DeletedAt == null && r.IdKontrolnaTocka == kontrolnaTockaId)
+                .OrderBy(r => r.Naziv)
+                .Select(r => new
+                {
+                    value = r.IdRuta,
+                    label = r.Naziv + " (" + r.Pocetak + " -> " + r.Kraj + ")"
+                })
+                .ToList();
+
+            return Json(results);
+        }
+
         public IActionResult Create()
         {
             PopulateKnjiziceByKorisnik();
+            PopulateRuteByKontrolnaTocka(null);
             ViewData["Title"] = "Novi posjet";
             return View(new PosjetCreateModel
             {
@@ -115,13 +133,26 @@ namespace planinarenje.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(PosjetCreateModel model)
         {
+            ValidatePosjetSelection(model);
+
             if (!ModelState.IsValid)
             {
                 PopulateKnjiziceByKorisnik();
-                ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
-                ViewData["KnjizicaText"] = GetKnjizicaLabel(model.IdKnjizica);
-                ViewData["KontrolnaTockaText"] = GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
-                ViewData["RutaText"] = GetRutaLabel(model.IdRuta);
+                PopulateRuteByKontrolnaTocka(model.IdKontrolnaTocka, model.IdRuta);
+                SetPosjetViewTexts(model.IdKorisnik, model.IdKnjizica, model.IdKontrolnaTocka, model.IdRuta);
+                ViewData["Title"] = "Novi posjet";
+                return View(model);
+            }
+
+            var kontrolnaTocka = _dbContext.KontrolneTocke
+                .AsNoTracking()
+                .FirstOrDefault(k => k.DeletedAt == null && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
+            if (kontrolnaTocka == null)
+            {
+                ModelState.AddModelError(nameof(model.IdKontrolnaTocka), "Kontrolna tocka nije valjana.");
+                PopulateKnjiziceByKorisnik();
+                PopulateRuteByKontrolnaTocka(model.IdKontrolnaTocka, model.IdRuta);
+                SetPosjetViewTexts(model.IdKorisnik, model.IdKnjizica, model.IdKontrolnaTocka, model.IdRuta);
                 ViewData["Title"] = "Novi posjet";
                 return View(model);
             }
@@ -136,7 +167,7 @@ namespace planinarenje.Controllers
                 VrijemeUsponaMin = model.VrijemeUsponaMin,
                 DozivljajPosjeta = model.DozivljajPosjeta,
                 OpisIskustva = model.OpisIskustva,
-                UneseniGUID = model.UneseniGUID,
+                UneseniGUID = kontrolnaTocka.GUIDOznaka,
                 JeLiPotvrdenPosjet = false,
                 DatumKreiranjaZapisa = DateTime.UtcNow
             };
@@ -177,17 +208,8 @@ namespace planinarenje.Controllers
             };
 
             PopulateKnjiziceByKorisnik();
-            ViewData["KorisnikText"] = entity.Korisnik != null
-                ? entity.Korisnik.Ime + " " + entity.Korisnik.Prezime + " (@" + entity.Korisnik.KorisnickoIme + ")"
-                : GetKorisnikLabel(model.IdKorisnik);
-            ViewData["KnjizicaText"] = entity.Knjizica != null
-                ? "Knjizica #" + entity.Knjizica.IdKnjizica + " - " +
-                  (entity.Korisnik != null ? entity.Korisnik.Ime + " " + entity.Korisnik.Prezime : "")
-                : GetKnjizicaLabel(model.IdKnjizica);
-            ViewData["KontrolnaTockaText"] = entity.KontrolnaTocka?.Naziv ?? GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
-            ViewData["RutaText"] = entity.Ruta != null
-                ? entity.Ruta.Naziv + " (" + entity.Ruta.Pocetak + " -> " + entity.Ruta.Kraj + ")"
-                : GetRutaLabel(model.IdRuta);
+            PopulateRuteByKontrolnaTocka(model.IdKontrolnaTocka, model.IdRuta);
+            SetPosjetViewTexts(model.IdKorisnik, model.IdKnjizica, model.IdKontrolnaTocka, model.IdRuta);
             ViewData["Title"] = "Uredi posjet";
             return View(model);
         }
@@ -196,13 +218,26 @@ namespace planinarenje.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult EditPost(int id, PosjetEditModel model)
         {
+            ValidatePosjetSelection(model);
+
             if (!ModelState.IsValid)
             {
                 PopulateKnjiziceByKorisnik();
-                ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
-                ViewData["KnjizicaText"] = GetKnjizicaLabel(model.IdKnjizica);
-                ViewData["KontrolnaTockaText"] = GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
-                ViewData["RutaText"] = GetRutaLabel(model.IdRuta);
+                PopulateRuteByKontrolnaTocka(model.IdKontrolnaTocka, model.IdRuta);
+                SetPosjetViewTexts(model.IdKorisnik, model.IdKnjizica, model.IdKontrolnaTocka, model.IdRuta);
+                ViewData["Title"] = "Uredi posjet";
+                return View(model);
+            }
+
+            var kontrolnaTocka = _dbContext.KontrolneTocke
+                .AsNoTracking()
+                .FirstOrDefault(k => k.DeletedAt == null && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
+            if (kontrolnaTocka == null)
+            {
+                ModelState.AddModelError(nameof(model.IdKontrolnaTocka), "Kontrolna tocka nije valjana.");
+                PopulateKnjiziceByKorisnik();
+                PopulateRuteByKontrolnaTocka(model.IdKontrolnaTocka, model.IdRuta);
+                SetPosjetViewTexts(model.IdKorisnik, model.IdKnjizica, model.IdKontrolnaTocka, model.IdRuta);
                 ViewData["Title"] = "Uredi posjet";
                 return View(model);
             }
@@ -222,7 +257,7 @@ namespace planinarenje.Controllers
             entity.VrijemeUsponaMin = model.VrijemeUsponaMin;
             entity.DozivljajPosjeta = model.DozivljajPosjeta;
             entity.OpisIskustva = model.OpisIskustva;
-            entity.UneseniGUID = model.UneseniGUID;
+            entity.UneseniGUID = kontrolnaTocka.GUIDOznaka;
 
             _dbContext.SaveChanges();
             TempData["Success"] = "Posjet je uspjesno azuriran.";
@@ -281,6 +316,81 @@ namespace planinarenje.Controllers
                 .Where(r => r.DeletedAt == null && r.IdRuta == id.Value)
                 .Select(r => r.Naziv + " (" + r.Pocetak + " -> " + r.Kraj + ")")
                 .FirstOrDefault();
+        }
+
+        private string? GetKontrolnaTockaGuid(int? id)
+        {
+            if (!id.HasValue)
+            {
+                return null;
+            }
+
+            return _dbContext.KontrolneTocke
+                .Where(k => k.DeletedAt == null && k.IdKontrolnaTocka == id.Value)
+                .Select(k => k.GUIDOznaka)
+                .FirstOrDefault();
+        }
+
+        private void PopulateRuteByKontrolnaTocka(int? kontrolnaTockaId, int? selectedRutaId = null)
+        {
+            var routes = new List<SelectListItem>();
+
+            if (kontrolnaTockaId.HasValue)
+            {
+                routes = _dbContext.Rute
+                    .Where(r => r.DeletedAt == null && r.IdKontrolnaTocka == kontrolnaTockaId.Value)
+                    .OrderBy(r => r.Naziv)
+                    .Select(r => new SelectListItem
+                    {
+                        Value = r.IdRuta.ToString(),
+                        Text = r.Naziv + " (" + r.Pocetak + " -> " + r.Kraj + ")",
+                        Selected = selectedRutaId.HasValue && r.IdRuta == selectedRutaId.Value
+                    })
+                    .ToList();
+            }
+
+            ViewBag.RuteOptions = routes;
+        }
+
+        private void SetPosjetViewTexts(int idKorisnik, int idKnjizica, int idKontrolnaTocka, int idRuta)
+        {
+            ViewData["KorisnikText"] = GetKorisnikLabel(idKorisnik);
+            ViewData["KnjizicaText"] = GetKnjizicaLabel(idKnjizica);
+            ViewData["KontrolnaTockaText"] = GetKontrolnaTockaNaziv(idKontrolnaTocka);
+            ViewData["RutaText"] = GetRutaLabel(idRuta);
+        }
+
+        private void ValidatePosjetSelection(PosjetCreateModel model)
+        {
+            var kontrolnaTocka = _dbContext.KontrolneTocke
+                .AsNoTracking()
+                .FirstOrDefault(k => k.DeletedAt == null && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
+
+            if (kontrolnaTocka == null)
+            {
+                return;
+            }
+
+            var ruta = _dbContext.Rute
+                .AsNoTracking()
+                .FirstOrDefault(r => r.DeletedAt == null && r.IdRuta == model.IdRuta);
+
+            if (ruta == null || ruta.IdKontrolnaTocka != model.IdKontrolnaTocka)
+            {
+                ModelState.AddModelError(nameof(model.IdRuta), "Odabrana ruta mora pripadati odabranoj kontrolnoj tocki.");
+            }
+
+            var uneseniGuid = model.UneseniGUID?.Trim();
+            if (string.IsNullOrWhiteSpace(uneseniGuid))
+            {
+                ModelState.AddModelError(nameof(model.UneseniGUID), "GUID je obavezan.");
+                return;
+            }
+
+            if (!string.Equals(uneseniGuid, kontrolnaTocka.GUIDOznaka, StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError(nameof(model.UneseniGUID), "GUID mora odgovarati odabranoj kontrolnoj tocki.");
+            }
         }
 
         public IActionResult Delete(int id)

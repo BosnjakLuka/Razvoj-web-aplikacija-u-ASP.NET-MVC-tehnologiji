@@ -76,7 +76,7 @@
 
                 li.addEventListener('mousedown', function (e) {
                     e.preventDefault();
-                    selectItem(item.value, item.label);
+                    selectItem(item);
                 });
 
                 list.appendChild(li);
@@ -85,10 +85,14 @@
             showList();
         }
 
-        function selectItem(id, label) {
-            hiddenInput.value = id;
-            textInput.value = label;
+        function selectItem(item) {
+            hiddenInput.value = item.value;
+            textInput.value = item.label;
             hiddenInput.dispatchEvent(new Event('change'));
+            hiddenInput.dispatchEvent(new CustomEvent('autocomplete:selected', {
+                bubbles: true,
+                detail: { value: item.value, label: item.label, guid: item.guid || '' }
+            }));
             if (valSpan) valSpan.textContent = '';
             hideList();
         }

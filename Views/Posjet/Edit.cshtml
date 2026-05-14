@@ -51,16 +51,10 @@
             </div>
             <div class="col-md-6 mb-3">
                 <label asp-for="IdRuta" class="form-label">Ruta</label>
-                @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
-                {
-                    { "FieldName", "IdRuta" },
-                    { "DisplayName", "Ruta" },
-                    { "SearchUrl", Url.Action("AutocompleteSearch", "Ruta") },
-                    { "CurrentId", Model?.IdRuta.ToString() },
-                    { "CurrentText", ViewData["RutaText"]?.ToString() },
-                    { "Placeholder", "Pretrazi rute..." },
-                    { "IsRequired", true }
-                })
+                <select asp-for="IdRuta" class="form-select" asp-items="ViewBag.RuteOptions">
+                    <option value="">Odaberi kontrolnu tocku prvo</option>
+                </select>
+                <span asp-validation-for="IdRuta" class="text-danger small"></span>
             </div>
         </div>
         <div class="row">
@@ -86,8 +80,8 @@
             <span asp-validation-for="DozivljajPosjeta" class="text-danger small"></span>
         </div>
         <div class="mb-3">
-            <label asp-for="UneseniGUID" class="form-label"></label>
-            <input asp-for="UneseniGUID" class="form-control" />
+            <label asp-for="UneseniGUID" class="form-label">GUID vrha</label>
+            <input asp-for="UneseniGUID" class="form-control" placeholder="Rucno unesi GUID vrha" />
             <span asp-validation-for="UneseniGUID" class="text-danger small"></span>
         </div>
         <div class="mb-3">
@@ -110,6 +104,44 @@
             const korisnikHidden = $('#hidden_IdKorisnik');
             const knjizicaHidden = $('#hidden_IdKnjizica');
             const knjizicaDisplay = $('#display_IdKnjizica');
+            const routeUrl = '@Url.Action("RuteZaKontrolnuTocku", "Posjet")';
+            const kontrolnaHidden = document.getElementById('hidden_IdKontrolnaTocka');
+            const routeSelect = document.getElementById('IdRuta');
+
+            function resetRoutes() {
+                if (!routeSelect) return;
+                routeSelect.innerHTML = '<option value="">Odaberi kontrolnu tocku prvo</option>';
+                routeSelect.value = '';
+            }
+
+            function loadRoutes(kontrolnaTockaId, selectedRutaId) {
+                if (!routeSelect) return;
+
+                if (!kontrolnaTockaId) {
+                    resetRoutes();
+                    return;
+                }
+
+                $.ajax({
+                    url: routeUrl,
+                    data: { kontrolnaTockaId: kontrolnaTockaId },
+                    success: function (results) {
+                        routeSelect.innerHTML = '<option value="">Odaberi rutu</option>';
+                        (results || []).forEach(function (item) {
+                            const option = document.createElement('option');
+                            option.value = item.value;
+                            option.textContent = item.label;
+                            if (selectedRutaId && String(selectedRutaId) === String(item.value)) {
+                                option.selected = true;
+                            }
+                            routeSelect.appendChild(option);
+                        });
+                    },
+                    error: function () {
+                        resetRoutes();
+                    }
+                });
+            }
 
             function applyKnjizica(korisnikId) {
                 if (!korisnikId) {
@@ -129,6 +161,20 @@
                 applyKnjizica($(this).val());
             });
 
+            if (kontrolnaHidden) {
+                kontrolnaHidden.addEventListener('autocomplete:selected', function (e) {
+                    const data = e.detail || {};
+                    loadRoutes(data.value || '', '');
+                });
+
+                kontrolnaHidden.addEventListener('change', function () {
+                    if (!kontrolnaHidden.value) {
+                        resetRoutes();
+                    }
+                });
+            }
+
+            loadRoutes(kontrolnaHidden ? kontrolnaHidden.value : '', $('#IdRuta').val());
             applyKnjizica(korisnikHidden.val());
         });
     </script>

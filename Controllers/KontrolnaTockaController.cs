@@ -40,7 +40,8 @@ namespace planinarenje.Controllers
                 .Select(k => new
                 {
                     value = k.IdKontrolnaTocka,
-                    label = k.Naziv
+                    label = k.Naziv,
+                    guid = k.GUIDOznaka
                 })
                 .ToList();
 

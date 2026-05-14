@@ -6,6 +6,7 @@
     var searchUrl = ViewData["SearchUrl"]?.ToString();
     var currentId = ViewData["CurrentId"]?.ToString();
     var currentText = ViewData["CurrentText"]?.ToString();
+    var currentGuid = ViewData["CurrentGuid"]?.ToString();
     var placeholder = ViewData["Placeholder"]?.ToString() ?? "Pretrazi...";
     var isRequired = ViewData["IsRequired"] as bool? ?? false;
 }
@@ -15,6 +16,7 @@
            name="@fieldName"
            id="hidden_@fieldName"
            value="@currentId"
+           data-current-guid="@currentGuid"
            @(isRequired ? "required" : null) />
 
     <input type="text"
