@@ -36,9 +36,13 @@
             </div>
         </div>
         <div class="mb-3">
-            <label asp-for="DatumDodjele" class="form-label"></label>
-            <input asp-for="DatumDodjele" class="form-control" />
-            <span asp-validation-for="DatumDodjele" class="text-danger small"></span>
+            @await Html.PartialAsync("_DateTimePicker", null, new ViewDataDictionary(ViewData)
+            {
+                { "FieldName", "DatumDodjele" },
+                { "Label", "Datum dodjele" },
+                { "IncludeTime", true },
+                { "Required", true }
+            })
         </div>
         <div class="mb-3">
             <label asp-for="Napomena" class="form-label"></label>

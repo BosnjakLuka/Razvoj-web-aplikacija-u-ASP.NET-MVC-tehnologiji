@@ -1,0 +1,28 @@
+@{
+    var fieldName = ViewData["FieldName"]?.ToString();
+    var displayLabel = ViewData["Label"]?.ToString() ?? fieldName;
+    var currentValue = ViewData["Value"]?.ToString();
+    var includeTime = (bool)(ViewData["IncludeTime"] ?? true);
+    var isRequired = (bool)(ViewData["Required"] ?? false);
+    var htmlClass = ViewData["Class"]?.ToString() ?? "form-control";
+}
+
+<div class="mb-3 datepicker-wrapper">
+    <label for="dp_@fieldName" class="form-label fw-semibold">@displayLabel</label>
+
+    @* Vidljivi input koji flatpickr kontrolira *@
+    <input type="text"
+           id="dp_@fieldName"
+           class="@htmlClass datepicker-input"
+           placeholder="@(includeTime ? "dd.MM.yyyy HH:mm" : "dd.MM.yyyy")"
+           autocomplete="off"
+           @(isRequired ? "required" : "") />
+
+    @* Hidden input koji se salje na server — uvijek ISO format *@
+    <input type="hidden"
+           id="hidden_@fieldName"
+           name="@fieldName"
+           value="@currentValue" />
+
+    <span class="text-danger small" id="val_@fieldName"></span>
+</div>

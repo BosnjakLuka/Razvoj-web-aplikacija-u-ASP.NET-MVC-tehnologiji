@@ -69,3 +69,59 @@ document.addEventListener('DOMContentLoaded', function () {
 		});
 	});
 });
+
+// Datepicker inicijalizacija
+(function () {
+	'use strict';
+
+	function getBrowserLocale() {
+		var lang = (navigator.languages && navigator.languages[0]) ||
+			navigator.language || 'hr';
+		return lang.toLowerCase().startsWith('en') ? 'en' : 'hr';
+	}
+
+	function initDatepickers() {
+		document.querySelectorAll('.datepicker-input').forEach(function (input) {
+			var wrapperId = input.id;
+			var fieldName = wrapperId.replace('dp_', '');
+			var hiddenEl = document.getElementById('hidden_' + fieldName);
+			var valSpan = document.getElementById('val_' + fieldName);
+			var withTime = input.placeholder.indexOf('HH:mm') !== -1;
+			var locale = getBrowserLocale();
+
+			var displayFmt = locale === 'hr'
+				? (withTime ? 'd.m.Y H:i' : 'd.m.Y')
+				: (withTime ? 'm/d/Y H:i' : 'm/d/Y');
+
+			var defaultDate = null;
+			if (hiddenEl && hiddenEl.value) {
+				defaultDate = new Date(hiddenEl.value);
+			}
+
+			flatpickr(input, {
+				locale: locale === 'hr' ? 'hr' : 'default',
+				enableTime: withTime,
+				dateFormat: displayFmt,
+				defaultDate: defaultDate,
+				time_24hr: true,
+
+				onChange: function (selectedDates) {
+					if (selectedDates.length > 0) {
+						hiddenEl.value = selectedDates[0].toISOString();
+						if (valSpan) valSpan.textContent = '';
+					} else {
+						hiddenEl.value = '';
+					}
+				},
+
+				onClose: function () {
+					if (valSpan && input.hasAttribute('required') && !hiddenEl.value) {
+						valSpan.textContent = 'Datum je obavezan.';
+					}
+				}
+			});
+		});
+	}
+
+	document.addEventListener('DOMContentLoaded', initDatepickers);
+})();

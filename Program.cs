@@ -1,7 +1,9 @@
 using planinarenje.Data;
 using planinarenje.Entiteti;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -207,6 +209,19 @@ else
     app.Logger.LogWarning("Folder 'Slike' nije pronađen. Očekivana putanja: {SlikePath}", slikePath);
 }
 app.UseRouting();
+
+var supportedCultures = new[]
+{
+    new CultureInfo("hr"),
+    new CultureInfo("en-US")
+};
+
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("hr"),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures
+});
 
 app.UseAuthorization();
 

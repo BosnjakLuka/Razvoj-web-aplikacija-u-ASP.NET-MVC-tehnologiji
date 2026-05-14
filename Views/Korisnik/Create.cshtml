@@ -38,9 +38,13 @@
                 <span asp-validation-for="BrojMobitela" class="text-danger small"></span>
             </div>
             <div class="col-md-6 mb-3">
-                <label asp-for="DatumRodenja" class="form-label"></label>
-                <input asp-for="DatumRodenja" class="form-control" type="date" asp-format="{0:yyyy-MM-dd}" />
-                <span asp-validation-for="DatumRodenja" class="text-danger small"></span>
+                @await Html.PartialAsync("_DateTimePicker", null, new ViewDataDictionary(ViewData)
+                {
+                    { "FieldName", "DatumRodenja" },
+                    { "Label", "Datum rodenja" },
+                    { "IncludeTime", false },
+                    { "Required", false }
+                })
             </div>
         </div>
         <div class="d-flex gap-2">
