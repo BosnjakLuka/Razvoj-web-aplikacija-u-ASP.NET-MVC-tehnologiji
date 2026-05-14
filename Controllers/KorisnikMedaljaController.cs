@@ -95,6 +95,7 @@ public class KorisnikMedaljaController : Controller
         _dbContext.KorisnikMedalje.Add(entity);
         _dbContext.SaveChanges();
         TempData["NewId"] = entity.IdKorisnikMedalja;
+        TempData["MedaljaSuccess"] = true;
         TempData["Success"] = "Medalja je uspjesno dodijeljena.";
         return RedirectToAction(nameof(Index));
     }

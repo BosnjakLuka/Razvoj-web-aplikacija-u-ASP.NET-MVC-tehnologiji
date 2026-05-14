@@ -16,6 +16,7 @@
 <body class="app-shell">
     @{ 
         var hasPosjetSuccess = TempData["PosjetSuccess"] != null;
+    var hasMedaljaSuccess = TempData["MedaljaSuccess"] != null;
         var successMessage = TempData["Success"]?.ToString();
         var errorMessage = TempData["Error"]?.ToString();
     }
@@ -80,7 +81,7 @@
     @if (ViewData["Title"]?.ToString() == "Naslovnica")
     {
         <main role="main" class="flex-grow-1">
-            @if (!string.IsNullOrWhiteSpace(successMessage) && !hasPosjetSuccess)
+            @if (!string.IsNullOrWhiteSpace(successMessage) && !hasPosjetSuccess && !hasMedaljaSuccess)
             {
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
@@ -95,6 +96,16 @@
                         setTimeout(function () {
                             showToast('@Html.Raw(successMessage)', 'success');
                         }, 5000);
+                    });
+                </script>
+            }
+            @if (!string.IsNullOrWhiteSpace(successMessage) && hasMedaljaSuccess)
+            {
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        setTimeout(function () {
+                            showToast('@Html.Raw(successMessage)', 'success');
+                        }, 5500);
                     });
                 </script>
             }
@@ -113,7 +124,7 @@
     {
         <div class="container page-container">
             <main role="main">
-                @if (!string.IsNullOrWhiteSpace(successMessage) && !hasPosjetSuccess)
+                @if (!string.IsNullOrWhiteSpace(successMessage) && !hasPosjetSuccess && !hasMedaljaSuccess)
                 {
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
@@ -131,6 +142,16 @@
                         });
                     </script>
                 }
+                    @if (!string.IsNullOrWhiteSpace(successMessage) && hasMedaljaSuccess)
+                    {
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                setTimeout(function () {
+                                    showToast('@Html.Raw(successMessage)', 'success');
+                                }, 5500);
+                            });
+                        </script>
+                    }
                 @if (!string.IsNullOrWhiteSpace(errorMessage))
                 {
                     <script>
@@ -147,6 +168,11 @@
     @if (hasPosjetSuccess)
     {
         @await Html.PartialAsync("_SummitAnimation")
+    }
+
+    @if (hasMedaljaSuccess)
+    {
+        @await Html.PartialAsync("_MedalAnimation")
     }
 
     <footer class="footer-shell">
