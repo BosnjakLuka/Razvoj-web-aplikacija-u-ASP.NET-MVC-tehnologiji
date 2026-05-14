@@ -1,0 +1,285 @@
+# ZADATAK: Summit animacija nakon uspješnog dodavanja posjeta — Planinarska aplikacija
+
+## KONTEKST
+
+Kad korisnik uspješno doda novi posjet, treba se prikazati fullscreen overlay animacija
+planinarskog lika koji se penje na vrh planine, zastava se pojavi na vrhu i zaviori,
+confetti eksplodira, i prikaže se motivacijska poruka. Overlay se automatski zatvara nakon 4.5 sekundi.
+
+Ova animacija je "napredni JavaScript" zahtjev iz Lab4 vježbe.
+
+---
+
+## KORAK 1 — Napravi partial view `Views/Shared/_SummitAnimation.cshtml`
+
+Kreiraj ovu datoteku s TOČNO ovim sadržajem — ne mijenjaj CSS vrijednosti, animacijske
+timinge ni SVG koordinate jer su precizno kalibrirani:
+
+```cshtml
+@* Summit success animacija — prikazuje se samo kad TempData["PosjetSuccess"] postoji *@
+
+<div id="summit-overlay" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#0d1f2d 0%,#1a3a1a 60%,#2d5a2d 100%);
+  opacity:1;transition:opacity 0.4s ease;">
+
+  <!-- Zvijezde -->
+  <div id="summit-stars" style="position:absolute;top:0;left:0;right:0;height:40%;pointer-events:none;"></div>
+
+  <!-- Scena s planinom -->
+  <div style="position:relative;width:320px;height:260px;">
+
+    <!-- Planina SVG -->
+    <svg viewBox="0 0 320 260" width="320" height="260" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="60" cy="38" r="18" fill="#f0e68c" opacity="0.18"/>
+      <polygon points="20,260 120,80 220,260" fill="#1f3d1f" opacity="0.6"/>
+      <polygon points="60,260 160,20 280,260" fill="#2d5016"/>
+      <polygon points="140,55 160,20 180,55 170,62 150,62" fill="#e8f5e9" opacity="0.92"/>
+      <polygon points="160,20 180,55 220,120 200,140 160,80" fill="#1a3a0a" opacity="0.35"/>
+      <ellipse cx="210" cy="195" rx="12" ry="5" fill="#3a5a1a" opacity="0.7"/>
+      <ellipse cx="180" cy="155" rx="8" ry="4" fill="#3a5a1a" opacity="0.6"/>
+      <ellipse cx="165" cy="115" rx="6" ry="3" fill="#2d4a10" opacity="0.5"/>
+      <polyline points="225,210 205,175 185,145 168,115 155,88 143,62"
+                stroke="#6abf40" stroke-width="1.5" stroke-dasharray="4,4"
+                fill="none" opacity="0.6"/>
+      <rect x="0" y="240" width="320" height="20" fill="#1a3a0a" opacity="0.8"/>
+      <polygon points="240,240 248,215 256,240" fill="#0f2a0a"/>
+      <polygon points="252,240 261,210 270,240" fill="#0f2a0a"/>
+      <polygon points="50,240 58,218 66,240" fill="#0f2a0a"/>
+    </svg>
+
+    <!-- Sjaj na vrhu -->
+    <div style="position:absolute;bottom:202px;left:96px;width:40px;height:40px;border-radius:50%;
+      background:radial-gradient(circle,rgba(163,230,53,0.35) 0%,transparent 70%);
+      animation:summitGlow 1.4s ease-in-out 2.4s infinite alternate;opacity:0;"></div>
+
+    <!-- Stup zastave -->
+    <div style="position:absolute;bottom:213px;left:110px;width:3px;height:0;background:#ccc;
+      animation:summitPole 0.4s ease 2.4s forwards;transform-origin:bottom center;"></div>
+
+    <!-- Zastava -->
+    <div style="position:absolute;bottom:237px;left:113px;width:0;height:14px;background:#e63946;
+      transform-origin:left center;clip-path:polygon(0 0,100% 25%,100% 75%,0 100%);
+      animation:summitFlag 0.3s ease 2.8s forwards, summitWave 1.2s ease-in-out 3.1s infinite alternate;"></div>
+
+    <!-- Planinar -->
+    <div id="summit-climber" style="position:absolute;width:32px;height:32px;opacity:0;
+      animation:summitClimb 2.4s cubic-bezier(0.4,0,0.2,1) forwards;">
+      <svg viewBox="0 0 32 32" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+        <rect x="12" y="14" width="8" height="9" rx="2" fill="#8B4513"/>
+        <rect x="13" y="12" width="2" height="3" rx="1" fill="#6B3410"/>
+        <rect x="17" y="12" width="2" height="3" rx="1" fill="#6B3410"/>
+        <rect x="11" y="16" width="10" height="10" rx="3" fill="#2563EB"/>
+        <circle cx="16" cy="11" r="5" fill="#FBBF24"/>
+        <ellipse cx="16" cy="8" rx="5.5" ry="2.5" fill="#16A34A"/>
+        <rect x="12" y="7" width="8" height="3" rx="1" fill="#16A34A"/>
+        <line x1="11" y1="19" x2="6" y2="14" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="21" y1="19" x2="25" y2="22" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="13" y1="26" x2="11" y2="31" stroke="#1E3A8A" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="19" y1="26" x2="21" y2="30" stroke="#1E3A8A" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="6" y1="14" x2="4" y2="32" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Confetti container -->
+  <div id="summit-confetti" style="position:absolute;top:30%;left:50%;pointer-events:none;"></div>
+
+  <!-- Poruka -->
+  <div style="margin-top:12px;text-align:center;animation:summitFadeUp 0.6s ease 2.6s both;">
+    <h2 style="color:#a3e635;font-size:18px;font-weight:500;letter-spacing:0.5px;margin:0;">
+      Posjet uspješno dodan!
+    </h2>
+    <p style="color:#86efac;font-size:13px;margin-top:4px;opacity:0.85;">
+      Svaki vrh počinje jednim korakom.
+    </p>
+  </div>
+</div>
+
+<style>
+  @@keyframes summitClimb {
+    0%   { bottom:30px; left:210px; opacity:0; transform:scale(0.7); }
+    15%  { opacity:1; }
+    35%  { bottom:80px; left:190px; }
+    55%  { bottom:130px; left:170px; transform:scale(0.85); }
+    75%  { bottom:170px; left:148px; transform:scale(0.9); }
+    90%  { bottom:196px; left:130px; transform:scale(1); }
+    100% { bottom:204px; left:118px; transform:scale(1); opacity:1; }
+  }
+  @@keyframes summitPole {
+    to { height:28px; }
+  }
+  @@keyframes summitFlag {
+    to { width:22px; }
+  }
+  @@keyframes summitWave {
+    from { transform:skewY(-4deg) scaleX(1); }
+    to   { transform:skewY(4deg) scaleX(0.9); }
+  }
+  @@keyframes summitGlow {
+    from { opacity:0; transform:scale(0.8); }
+    to   { opacity:1; transform:scale(1.3); }
+  }
+  @@keyframes summitFadeUp {
+    from { opacity:0; transform:translateY(12px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  @@keyframes summitTwinkle {
+    from { opacity:0.3; }
+    to   { opacity:1; }
+  }
+  @@keyframes summitConfetti {
+    0%   { opacity:1; transform:translate(0,0) rotate(0deg); }
+    100% { opacity:0; transform:var(--stx) rotate(var(--srot)); }
+  }
+</style>
+
+<script>
+(function () {
+    // Generiraj zvijezde
+    var stars = document.getElementById('summit-stars');
+    for (var i = 0; i < 28; i++) {
+        var s = document.createElement('div');
+        s.style.cssText = 'position:absolute;width:' + (Math.random() > 0.7 ? 3 : 2) + 'px;height:' +
+            (Math.random() > 0.7 ? 3 : 2) + 'px;background:#fff;border-radius:50%;' +
+            'left:' + (Math.random() * 100) + '%;top:' + (Math.random() * 100) + '%;' +
+            'animation:summitTwinkle ' + (1.2 + Math.random() * 1.8) + 's ' +
+            (Math.random() * 2) + 's infinite alternate;';
+        stars.appendChild(s);
+    }
+
+    // Generiraj confetti
+    var confettiColors = ['#a3e635','#4ade80','#facc15','#f87171','#60a5fa','#e879f9'];
+    var confettiData = [
+        {tx:'translate(-80px,-90px)',  rot:'360deg'},
+        {tx:'translate(-50px,-110px)', rot:'-270deg'},
+        {tx:'translate(0px,-120px)',   rot:'300deg'},
+        {tx:'translate(50px,-105px)',  rot:'-320deg'},
+        {tx:'translate(85px,-85px)',   rot:'280deg'},
+        {tx:'translate(110px,-50px)',  rot:'-240deg'},
+        {tx:'translate(100px,20px)',   rot:'310deg'},
+        {tx:'translate(70px,60px)',    rot:'-200deg'},
+        {tx:'translate(-60px,55px)',   rot:'250deg'},
+        {tx:'translate(-105px,15px)', rot:'-280deg'},
+        {tx:'translate(-95px,-30px)', rot:'220deg'},
+        {tx:'translate(30px,-115px)', rot:'-300deg'}
+    ];
+    var cc = document.getElementById('summit-confetti');
+    confettiData.forEach(function (d, i) {
+        var p = document.createElement('div');
+        p.style.cssText = 'position:absolute;width:7px;height:7px;border-radius:2px;opacity:0;' +
+            'background:' + confettiColors[i % confettiColors.length] + ';' +
+            'animation:summitConfetti 1s ease ' + (3 + i * 0.04) + 's forwards;';
+        p.style.setProperty('--stx', d.tx);
+        p.style.setProperty('--srot', d.rot);
+        cc.appendChild(p);
+    });
+
+    // Auto-zatvori overlay nakon 4.5 sekundi
+    setTimeout(function () {
+        var overlay = document.getElementById('summit-overlay');
+        if (overlay) {
+            overlay.style.opacity = '0';
+            setTimeout(function () {
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            }, 400);
+        }
+    }, 4500);
+})();
+</script>
+```
+
+> **VAŽNO:** U Razor `.cshtml` datotekama `@` se escapira kao `@@` unutar `<style>` blokova.
+> Gore je to već ispravno primijenjeno. NE mijenjaj `@@keyframes` u `@keyframes` —
+> Razor parser će baciti grešku.
+
+---
+
+## KORAK 2 — Uključi partial u `_Layout.cshtml`
+
+Pronađi `_Layout.cshtml` i dodaj **na sam kraj, neposredno prije `</body>`**:
+
+```cshtml
+@if (TempData["PosjetSuccess"] != null)
+{
+    @await Html.PartialAsync("_SummitAnimation")
+}
+```
+
+---
+
+## KORAK 3 — Postavi TempData u PosjetController
+
+Pronađi `PosjetController.cs`, akciju `Create` (POST verzija).
+Nakon uspješnog `SaveChangesAsync()` dodaj:
+
+```csharp
+TempData["PosjetSuccess"] = true;
+TempData["Success"] = "Posjet je uspješno dodan.";  // ovo ostaje za toast
+```
+
+Pronađi da se TempData postavlja **prije** `return RedirectToAction(nameof(Index));`
+
+---
+
+## KORAK 4 — Provjeri z-index
+
+Overlay koristi `z-index: 99999`. Provjeri da ništa drugo u aplikaciji (navbar, modal, toast container)
+nema viši z-index. Ako toast container ima `z-index: 9999`, to je OK — overlay je iznad svega.
+
+Toast notifikacija se neće vidjeti dok je overlay aktivan jer overlay pokriva cijeli ekran.
+Kad se overlay zatvori (nakon 4.5s), toast se prikaže normalno jer traje 4s i počinje kad se
+stranica učita.
+
+Ako želiš da se toast prikaže TEK NAKON što se overlay zatvori, postavi delay na toast:
+
+U `_Layout.cshtml` gdje se TempData["Success"] toast okida, promijeni:
+
+```html
+@if (TempData["Success"] != null && TempData["PosjetSuccess"] != null)
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                showToast('@Html.Raw(TempData["Success"])', 'success');
+            }, 5000);
+        });
+    </script>
+}
+@if (TempData["Success"] != null && TempData["PosjetSuccess"] == null)
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            showToast('@Html.Raw(TempData["Success"])', 'success');
+        });
+    </script>
+}
+```
+
+---
+
+## ŠTO NE MIJENJAJ
+
+- ❌ Ne mijenjaj SVG koordinate planine (points, cx, cy vrijednosti) — precizno su kalibrirane
+- ❌ Ne mijenjaj animation keyframe postotke ni timinge — sekvenca je usklađena
+- ❌ Ne mijenjaj boje (#2d5016, #1a3a1a, #e8f5e9 itd.) — usklađene su s hiking temom
+- ❌ Ne dodavaj Bootstrap klase na overlay elemente — ova animacija koristi čisti inline CSS
+- ❌ Ne wrappaj `<style>` keyframes u `@media` ili `@supports` blokove
+
+## ŠTO SMIJEŠ PRILAGODITI
+
+- ✅ Tekst poruke ("Posjet uspješno dodan!") i podnaslov ("Svaki vrh počinje jednim korakom.")
+- ✅ Vrijeme auto-zatvaranja (4500ms u setTimeout-u) — može biti 3000-6000ms
+- ✅ Broj zvijezda (28) — može biti 15-40
+
+---
+
+## REDOSLIJED
+
+| Korak | Što raditi |
+|---|---|
+| 1 | Kreiraj `Views/Shared/_SummitAnimation.cshtml` s gornjim kodom |
+| 2 | Dodaj `@if (TempData["PosjetSuccess"])` blok u `_Layout.cshtml` prije `</body>` |
+| 3 | Dodaj `TempData["PosjetSuccess"] = true;` u `PosjetController.Create` POST akciju |
+| 4 | Provjeri z-index i toast delay logiku |
+| 5 | **Testiraj** — dodaj novi posjet, overlay se prikaže, planinar se popne, zastava se pojavi, overlay nestane |

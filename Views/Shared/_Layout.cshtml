@@ -12,6 +12,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="app-shell">
+    @{ 
+        var hasPosjetSuccess = TempData["PosjetSuccess"] != null;
+        var successMessage = TempData["Success"]?.ToString();
+        var errorMessage = TempData["Error"]?.ToString();
+    }
     <header>
         <nav class="navbar navbar-expand-lg topbar">
             <div class="container">
@@ -73,19 +78,29 @@
     @if (ViewData["Title"]?.ToString() == "Naslovnica")
     {
         <main role="main" class="flex-grow-1">
-            @if (TempData["Success"] != null)
+            @if (!string.IsNullOrWhiteSpace(successMessage) && !hasPosjetSuccess)
             {
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
-                        showToast('@Html.Raw(TempData["Success"])', 'success');
+                        showToast('@Html.Raw(successMessage)', 'success');
                     });
                 </script>
             }
-            @if (TempData["Error"] != null)
+            @if (!string.IsNullOrWhiteSpace(successMessage) && hasPosjetSuccess)
             {
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
-                        showToast('@Html.Raw(TempData["Error"])', 'error');
+                        setTimeout(function () {
+                            showToast('@Html.Raw(successMessage)', 'success');
+                        }, 5000);
+                    });
+                </script>
+            }
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        showToast('@Html.Raw(errorMessage)', 'error');
                     });
                 </script>
             }
@@ -96,25 +111,40 @@
     {
         <div class="container page-container">
             <main role="main">
-                @if (TempData["Success"] != null)
+                @if (!string.IsNullOrWhiteSpace(successMessage) && !hasPosjetSuccess)
                 {
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
-                            showToast('@Html.Raw(TempData["Success"])', 'success');
+                            showToast('@Html.Raw(successMessage)', 'success');
                         });
                     </script>
                 }
-                @if (TempData["Error"] != null)
+                @if (!string.IsNullOrWhiteSpace(successMessage) && hasPosjetSuccess)
                 {
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
-                            showToast('@Html.Raw(TempData["Error"])', 'error');
+                            setTimeout(function () {
+                                showToast('@Html.Raw(successMessage)', 'success');
+                            }, 5000);
+                        });
+                    </script>
+                }
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            showToast('@Html.Raw(errorMessage)', 'error');
                         });
                     </script>
                 }
                 @RenderBody()
             </main>
         </div>
+    }
+
+    @if (hasPosjetSuccess)
+    {
+        @await Html.PartialAsync("_SummitAnimation")
     }
 
     <footer class="footer-shell">
