@@ -143,6 +143,7 @@ namespace planinarenje.Controllers
 
             _dbContext.Posjeti.Add(entity);
             _dbContext.SaveChanges();
+            TempData["NewId"] = entity.IdPosjet;
             TempData["Success"] = "Posjet je uspjesno dodan.";
             return RedirectToAction(nameof(Index));
         }

@@ -24,7 +24,7 @@ else
                 <tbody>
                     @foreach (var item in Model)
                     {
-                        <tr>
+                        <tr data-id="@item.IdPodrucje">
                             <td>@item.Naziv</td>
                             <td>@item.Regija</td>
                             <td>@item.MinimalanBrojKTZaObilazak</td>

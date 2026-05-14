@@ -22,7 +22,7 @@ else
             <tbody>
                 @foreach (var medalja in Model)
                 {
-                    <tr>
+                    <tr data-id="@medalja.IdMedalja">
                         <td class="ps-4">@medalja.Naziv</td>
                         <td>@medalja.MinimalanBrojKontrolnihTocaka</td>
                         <td>@medalja.MinimalanBrojPodrucja</td>

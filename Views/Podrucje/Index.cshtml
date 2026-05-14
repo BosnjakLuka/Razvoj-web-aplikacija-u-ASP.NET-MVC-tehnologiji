@@ -23,6 +23,10 @@
     <input type="text" id="searchInput" class="form-control" placeholder="Pretrazi podrucja..." />
 </div>
 
+<div id="searchSpinner" class="text-center py-2 d-none">
+    <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+</div>
+
 <div id="resultsContainer">
     @await Html.PartialAsync("_PodrucjeListPartial", Model)
 </div>
@@ -32,16 +36,39 @@
         $(function () {
             $('#searchInput').on('input', function () {
                 const term = $(this).val();
+                $('#searchSpinner').removeClass('d-none');
                 $.ajax({
                     url: '@Url.Action("Search", "Podrucje")',
                     data: { searchTerm: term },
                     success: function (html) {
+                        $('#searchSpinner').addClass('d-none');
                         $('#resultsContainer').fadeOut(150, function () {
                             $(this).html(html).fadeIn(200);
                         });
+                    },
+                    error: function () {
+                        $('#searchSpinner').addClass('d-none');
+                        showToast('Greska pri pretrazi. Pokusaj ponovo.', 'error');
                     }
                 });
             });
         });
     </script>
+
+    @if (TempData["NewId"] != null)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const newId = @TempData["NewId"];
+                const row = document.querySelector('tr[data-id="' + newId + '"]');
+                if (row) {
+                    row.style.transition = 'background 0.4s ease';
+                    row.style.background = '#d1fae5';
+                    setTimeout(function () {
+                        row.style.background = '';
+                    }, 2500);
+                }
+            });
+        </script>
+    }
 }

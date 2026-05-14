@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
 using planinarenje.Entiteti;
@@ -52,7 +51,6 @@ public class ObavijestController : Controller
 
     public IActionResult Create()
     {
-        LoadKorisniciSelectList();
         return View(new Obavijest
         {
             DatumObjave = DateTime.Now,
@@ -66,21 +64,26 @@ public class ObavijestController : Controller
     {
         if (!ModelState.IsValid)
         {
-            LoadKorisniciSelectList(obavijest.IdKorisnik);
+            ViewData["KorisnikText"] = GetKorisnikLabel(obavijest.IdKorisnik);
             return View(obavijest);
         }
 
         _dbContext.Obavijesti.Add(obavijest);
         _dbContext.SaveChanges();
+        TempData["NewId"] = obavijest.IdObavijest;
         return RedirectToAction(nameof(Index));
     }
 
     public IActionResult Edit(int id)
     {
-        var obavijest = _dbContext.Obavijesti.Find(id);
+        var obavijest = _dbContext.Obavijesti
+            .Include(o => o.Korisnik)
+            .FirstOrDefault(o => o.IdObavijest == id);
         if (obavijest == null) return NotFound();
 
-        LoadKorisniciSelectList(obavijest.IdKorisnik);
+        ViewData["KorisnikText"] = obavijest.Korisnik != null
+            ? obavijest.Korisnik.Ime + " " + obavijest.Korisnik.Prezime + " (@" + obavijest.Korisnik.KorisnickoIme + ")"
+            : GetKorisnikLabel(obavijest.IdKorisnik);
         return View(obavijest);
     }
 
@@ -92,7 +95,7 @@ public class ObavijestController : Controller
 
         if (!ModelState.IsValid)
         {
-            LoadKorisniciSelectList(obavijest.IdKorisnik);
+            ViewData["KorisnikText"] = GetKorisnikLabel(obavijest.IdKorisnik);
             return View(obavijest);
         }
 
@@ -139,18 +142,16 @@ public class ObavijestController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private void LoadKorisniciSelectList(int? selectedId = null)
+    private string? GetKorisnikLabel(int? id)
     {
-        var korisnici = _dbContext.Korisnici
-            .OrderBy(k => k.Prezime)
-            .ThenBy(k => k.Ime)
-            .Select(k => new
-            {
-                k.IdKorisnik,
-                Naziv = k.Ime + " " + k.Prezime
-            })
-            .ToList();
+        if (!id.HasValue)
+        {
+            return null;
+        }
 
-        ViewBag.Korisnici = new SelectList(korisnici, "IdKorisnik", "Naziv", selectedId);
+        return _dbContext.Korisnici
+            .Where(k => k.StatusAktivan && k.IdKorisnik == id.Value)
+            .Select(k => k.Ime + " " + k.Prezime + " (@" + k.KorisnickoIme + ")")
+            .FirstOrDefault();
     }
 }

@@ -23,7 +23,7 @@ else
             <tbody>
                 @foreach (var item in Model)
                 {
-                    <tr>
+                    <tr data-id="@item.IdPlaninarskaUdruga">
                         <td class="ps-4 fw-medium">@item.Naziv</td>
                         <td class="text-muted font-monospace small">@item.OIB</td>
                         <td>@(string.IsNullOrWhiteSpace(item.Grad) ? "N/A" : item.Grad)</td>

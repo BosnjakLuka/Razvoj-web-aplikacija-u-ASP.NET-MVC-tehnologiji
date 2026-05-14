@@ -23,7 +23,7 @@ else
             <tbody>
                 @foreach (var korisnik in Model)
                 {
-                    <tr>
+                    <tr data-id="@korisnik.IdKorisnik">
                         <td>
                             <div class="fw-bold">@korisnik.Ime @korisnik.Prezime</div>
                             <small class="text-muted">@korisnik.KorisnickoIme</small>

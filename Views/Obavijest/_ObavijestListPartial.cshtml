@@ -23,7 +23,7 @@ else
             <tbody>
                 @foreach (var obavijest in Model)
                 {
-                    <tr>
+                    <tr data-id="@obavijest.IdObavijest">
                         <td class="ps-4 fw-medium">@obavijest.Naslov</td>
                         <td>
                             <span class="app-badge badge-subtle text-uppercase">

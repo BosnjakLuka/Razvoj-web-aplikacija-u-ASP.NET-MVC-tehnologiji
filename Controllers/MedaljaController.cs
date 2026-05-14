@@ -72,6 +72,7 @@ public class MedaljaController : Controller
 
         _dbContext.Medalje.Add(entity);
         _dbContext.SaveChanges();
+        TempData["NewId"] = entity.IdMedalja;
         TempData["Success"] = "Medalja je uspjesno dodana.";
         return RedirectToAction(nameof(Index));
     }

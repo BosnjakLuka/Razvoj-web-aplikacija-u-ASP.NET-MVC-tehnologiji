@@ -23,7 +23,7 @@ else
             <tbody>
                 @foreach (var item in Model)
                 {
-                    <tr>
+                    <tr data-id="@item.IdFotografija">
                         <td class="ps-4 fw-medium">@item.NazivDatoteke</td>
                         <td>@item.PosjetNaslov</td>
                         <td>@item.DatumUploada.ToString("dd.MM.yyyy.")</td>

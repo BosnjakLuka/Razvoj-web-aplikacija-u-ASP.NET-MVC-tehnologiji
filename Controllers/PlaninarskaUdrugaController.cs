@@ -90,6 +90,7 @@ public class PlaninarskaUdrugaController : Controller
 
         _dbContext.PlaninarskeUdruge.Add(entity);
         _dbContext.SaveChanges();
+        TempData["NewId"] = entity.IdPlaninarskaUdruga;
         TempData["Success"] = "Udruga je uspjesno dodana.";
         return RedirectToAction(nameof(Index));
     }

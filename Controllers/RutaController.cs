@@ -84,6 +84,7 @@ public class RutaController : Controller
 
         _dbContext.Rute.Add(entity);
         _dbContext.SaveChanges();
+        TempData["NewId"] = entity.IdRuta;
         TempData["Success"] = "Ruta je uspjesno dodana.";
         return RedirectToAction(nameof(Index));
     }

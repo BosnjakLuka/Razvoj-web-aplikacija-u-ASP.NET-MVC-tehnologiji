@@ -101,6 +101,7 @@ namespace planinarenje.Controllers
 
             _dbContext.Korisnici.Add(korisnik);
             _dbContext.SaveChanges();
+            TempData["NewId"] = korisnik.IdKorisnik;
             TempData["Success"] = "Korisnik je uspjesno dodan.";
             return RedirectToAction(nameof(Index));
         }

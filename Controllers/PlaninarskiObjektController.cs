@@ -68,6 +68,7 @@ public class PlaninarskiObjektController : Controller
 
         _dbContext.PlaninarskiObjekti.Add(entity);
         _dbContext.SaveChanges();
+        TempData["NewId"] = entity.IdPlaninarskiObjekt;
         TempData["Success"] = "Objekt je uspjesno dodan.";
         return RedirectToAction(nameof(Index));
     }

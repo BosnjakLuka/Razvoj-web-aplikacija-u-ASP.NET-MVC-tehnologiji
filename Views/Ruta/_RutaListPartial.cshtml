@@ -25,7 +25,7 @@ else
                 <tbody>
                     @foreach (var ruta in Model)
                     {
-                        <tr>
+                        <tr data-id="@ruta.IdRuta">
                             <td>@ruta.Naziv</td>
                             <td>@ruta.PovezanaKontrolnaTocka</td>
                             <td>@ruta.TezinaTekst</td>

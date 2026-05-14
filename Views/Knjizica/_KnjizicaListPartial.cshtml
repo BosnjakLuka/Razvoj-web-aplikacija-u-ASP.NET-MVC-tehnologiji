@@ -23,7 +23,7 @@ else
             <tbody>
                 @foreach (var knjizica in Model)
                 {
-                    <tr>
+                    <tr data-id="@knjizica.IdKnjizica">
                         <td class="ps-4 font-monospace text-muted">#@knjizica.IdKnjizica</td>
                         <td>@knjizica.ImePrezimeKorisnika</td>
                         <td>@knjizica.DatumKreiranja.ToString("dd.MM.yyyy. HH:mm")</td>

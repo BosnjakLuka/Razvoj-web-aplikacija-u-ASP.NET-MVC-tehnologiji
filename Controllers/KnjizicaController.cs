@@ -84,6 +84,7 @@ public class KnjizicaController : Controller
 
         _dbContext.Knjizice.Add(entity);
         _dbContext.SaveChanges();
+        TempData["NewId"] = entity.IdKnjizica;
         TempData["Success"] = "Knjizica je uspjesno dodana.";
         return RedirectToAction(nameof(Index));
     }

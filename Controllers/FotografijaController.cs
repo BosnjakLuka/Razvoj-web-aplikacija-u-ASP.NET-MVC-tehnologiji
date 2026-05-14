@@ -92,6 +92,7 @@ public class FotografijaController : Controller
 
         _dbContext.Fotografije.Add(entity);
         _dbContext.SaveChanges();
+        TempData["NewId"] = entity.IdFotografija;
         TempData["Success"] = "Fotografija je uspjesno dodana.";
         return RedirectToAction(nameof(Index));
     }

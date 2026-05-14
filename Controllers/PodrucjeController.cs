@@ -73,6 +73,7 @@ namespace planinarenje.Controllers
 
             _dbContext.Podrucja.Add(podrucje);
             _dbContext.SaveChanges();
+            TempData["NewId"] = podrucje.IdPodrucje;
             TempData["Success"] = "Podrucje je uspjesno dodano.";
             return RedirectToAction(nameof(Index));
         }

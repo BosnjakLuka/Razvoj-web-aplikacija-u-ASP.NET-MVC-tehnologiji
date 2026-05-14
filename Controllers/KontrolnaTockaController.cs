@@ -78,6 +78,7 @@ namespace planinarenje.Controllers
 
             _dbContext.KontrolneTocke.Add(entity);
             _dbContext.SaveChanges();
+            TempData["NewId"] = entity.IdKontrolnaTocka;
             TempData["Success"] = "Kontrolna tocka je uspjesno dodana.";
             return RedirectToAction(nameof(Index));
         }
