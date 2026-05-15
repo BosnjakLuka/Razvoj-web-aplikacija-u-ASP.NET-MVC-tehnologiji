@@ -33,9 +33,14 @@
         </div>
 
         <div class="mb-3">
-            <label asp-for="DatumObjave" class="form-label"></label>
-            <input asp-for="DatumObjave" class="form-control" type="datetime-local" value="@Model.DatumObjave.ToString("yyyy-MM-ddTHH:mm")" />
-            <span asp-validation-for="DatumObjave" class="text-danger"></span>
+            @await Html.PartialAsync("_DateTimePicker", null, new ViewDataDictionary(ViewData)
+            {
+                { "FieldName", "DatumObjave" },
+                { "Label", "Datum i vrijeme objave" },
+                { "Value", Model?.DatumObjave.ToString("o") },
+                { "IncludeTime", true },
+                { "Required", true }
+            })
         </div>
 
         <div class="mb-3">
