@@ -8,10 +8,18 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/planinarenje.styles.css" asp-append-version="true" />
+        <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
     <!-- Globalna tipografija -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="app-shell">
+    @{ 
+        var hasPosjetSuccess = TempData["PosjetSuccess"] != null;
+    var hasMedaljaSuccess = TempData["MedaljaSuccess"] != null;
+        var successMessage = TempData["Success"]?.ToString();
+        var errorMessage = TempData["Error"]?.ToString();
+    }
     <header>
         <nav class="navbar navbar-expand-lg topbar">
             <div class="container">
@@ -73,6 +81,42 @@
     @if (ViewData["Title"]?.ToString() == "Naslovnica")
     {
         <main role="main" class="flex-grow-1">
+            @if (!string.IsNullOrWhiteSpace(successMessage) && !hasPosjetSuccess && !hasMedaljaSuccess)
+            {
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        showToast('@Html.Raw(successMessage)', 'success');
+                    });
+                </script>
+            }
+            @if (!string.IsNullOrWhiteSpace(successMessage) && hasPosjetSuccess)
+            {
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        setTimeout(function () {
+                            showToast('@Html.Raw(successMessage)', 'success');
+                        }, 5000);
+                    });
+                </script>
+            }
+            @if (!string.IsNullOrWhiteSpace(successMessage) && hasMedaljaSuccess)
+            {
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        setTimeout(function () {
+                            showToast('@Html.Raw(successMessage)', 'success');
+                        }, 5500);
+                    });
+                </script>
+            }
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        showToast('@Html.Raw(errorMessage)', 'error');
+                    });
+                </script>
+            }
             @RenderBody()
         </main>
     }
@@ -80,9 +124,55 @@
     {
         <div class="container page-container">
             <main role="main">
+                @if (!string.IsNullOrWhiteSpace(successMessage) && !hasPosjetSuccess && !hasMedaljaSuccess)
+                {
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            showToast('@Html.Raw(successMessage)', 'success');
+                        });
+                    </script>
+                }
+                @if (!string.IsNullOrWhiteSpace(successMessage) && hasPosjetSuccess)
+                {
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            setTimeout(function () {
+                                showToast('@Html.Raw(successMessage)', 'success');
+                            }, 5000);
+                        });
+                    </script>
+                }
+                    @if (!string.IsNullOrWhiteSpace(successMessage) && hasMedaljaSuccess)
+                    {
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                setTimeout(function () {
+                                    showToast('@Html.Raw(successMessage)', 'success');
+                                }, 5500);
+                            });
+                        </script>
+                    }
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            showToast('@Html.Raw(errorMessage)', 'error');
+                        });
+                    </script>
+                }
                 @RenderBody()
             </main>
         </div>
+    }
+
+    @if (hasPosjetSuccess)
+    {
+        @await Html.PartialAsync("_SummitAnimation")
+    }
+
+    @if (hasMedaljaSuccess)
+    {
+        @await Html.PartialAsync("_MedalAnimation")
     }
 
     <footer class="footer-shell">
@@ -94,7 +184,15 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/hr.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/autocomplete.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    <div id="toast-container"
+         style="position:fixed; bottom:1.5rem; right:1.5rem; z-index:9999; display:flex; flex-direction:column; gap:8px;">
+    </div>
 </body>
 </html>

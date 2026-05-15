@@ -1,0 +1,54 @@
+@model IReadOnlyList<planinarenje.Models.PosjetIndexViewModel>
+
+@if (!Model.Any())
+{
+    <div class="app-card h-auto">
+        <h2 class="h5 mb-2">Nema evidentiranih posjeta</h2>
+        <p class="text-muted mb-0">Trenutno nisu pronađeni podatci o posjetima za prikaz.</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive app-card h-auto p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Termin</th>
+                    <th>Planinar</th>
+                    <th>Kontrolna tocka</th>
+                    <th>Ruta</th>
+                    <th>Dozivljaj</th>
+                    <th>Potvrda</th>
+                    <th class="text-end">Akcije</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var posjet in Model)
+                {
+                    <tr data-id="@posjet.IdPosjet">
+                        <td>@posjet.DatumVrijemePosjeta.ToString("dd.MM.yyyy. HH:mm")</td>
+                        <td>@posjet.ImePrezimeKorisnika</td>
+                        <td>@posjet.NazivKontrolneTocke</td>
+                        <td>@posjet.NazivRute</td>
+                        <td>@posjet.Dozivljaj</td>
+                        <td>
+                            @if (posjet.JeLiPotvrdenPosjet)
+                            {
+                                <span class="badge bg-success-subtle text-success">Potvrdeno</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning-subtle text-warning">Na cekanju</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <a asp-action="Details" asp-route-id="@posjet.IdPosjet" class="btn btn-outline-primary btn-sm">Detalji</a>
+                            <a asp-action="Edit" asp-route-id="@posjet.IdPosjet" class="btn btn-outline-secondary btn-sm">Uredi</a>
+                            <a asp-action="Delete" asp-route-id="@posjet.IdPosjet" class="btn btn-outline-danger btn-sm">Obrisi</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

@@ -10,55 +10,65 @@
 }
 
 <section class="mb-4">
-    <h1 class="section-title no-accent mb-3">Planinarska područja Hrvatske</h1>
-    <p class="text-muted mb-0">
-        Vizualni pregled svih područja obilaznice, s fokusom na broj kontrolnih točaka i minimalne uvjete za obilazak.
-    </p>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <h1 class="section-title no-accent mb-2">Planinarska područja Hrvatske</h1>
+            <p class="text-muted mb-0">Pregled područja obilaznice, uz brzu pretragu i CRUD akcije.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">Novo podrucje</a>
+    </div>
 </section>
 
-@if (!Model.Any())
-{
-    <div class="app-card">
-        <h2 class="h5 mb-2">Nema dostupnih područja</h2>
-        <p class="text-muted mb-0">Trenutno nisu pronađeni podatci za prikaz.</p>
-    </div>
-}
-else
-{
-    <section class="row g-4">
-        @foreach (var item in Model)
-        {
-            <article class="col-12 col-md-6 col-xl-4">
-                <div class="app-card d-flex flex-column h-100">
-                    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
-                        <h2 class="h5 mb-0">@item.Naziv</h2>
-                        <span class="app-badge badge-subtle">@item.Regija</span>
-                    </div>
+<div class="app-card mb-4">
+    <input type="text" id="searchInput" class="form-control" placeholder="Pretrazi podrucja..." />
+</div>
 
-                    <div class="d-flex flex-wrap gap-2 mb-3">
-                        <span class="app-badge badge-subtle text-uppercase">MINIMALNO @item.MinimalanBrojKTZaObilazak KT</span>
-                        <span class="app-badge badge-subtle text-uppercase">UKUPNO @item.UkupanBrojKT KT</span>
-                    </div>
+<div id="searchSpinner" class="text-center py-2 d-none">
+    <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+</div>
 
-                    @if (!string.IsNullOrWhiteSpace(item.OpisPreview))
-                    {
-                        <p class="text-muted mb-4">@item.OpisPreview</p>
+<div id="resultsContainer">
+    @await Html.PartialAsync("_PodrucjeListPartial", Model)
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('#searchInput').on('input', function () {
+                const term = $(this).val();
+                $('#searchSpinner').removeClass('d-none');
+                $.ajax({
+                    url: '@Url.Action("Search", "Podrucje")',
+                    data: { searchTerm: term },
+                    success: function (html) {
+                        $('#searchSpinner').addClass('d-none');
+                        $('#resultsContainer').fadeOut(150, function () {
+                            $(this).html(html).fadeIn(200);
+                        });
+                    },
+                    error: function () {
+                        $('#searchSpinner').addClass('d-none');
+                        showToast('Greska pri pretrazi. Pokusaj ponovo.', 'error');
                     }
-                    else
-                    {
-                        <p class="text-muted mb-4">Opis područja trenutno nije dostupan.</p>
-                    }
+                });
+            });
+        });
+    </script>
 
-                    <div class="mt-auto d-grid">
-                        <a asp-controller="Podrucje"
-                           asp-action="Details"
-                           asp-route-id="@item.IdPodrucje"
-                           class="btn btn-primary">
-                            Detalji područja
-                        </a>
-                    </div>
-                </div>
-            </article>
-        }
-    </section>
+    @if (TempData["NewId"] != null)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const newId = @TempData["NewId"];
+                const row = document.querySelector('tr[data-id="' + newId + '"]');
+                if (row) {
+                    row.style.transition = 'background 0.4s ease';
+                    row.style.background = '#d1fae5';
+                    setTimeout(function () {
+                        row.style.background = '';
+                    }, 2500);
+                }
+            });
+        </script>
+    }
 }

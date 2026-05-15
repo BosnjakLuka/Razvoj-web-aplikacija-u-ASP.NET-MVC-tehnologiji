@@ -1,0 +1,271 @@
+# ZADATAK: Medal ceremony animacija nakon dodjele medalje — Planinarska aplikacija
+
+## KONTEKST
+
+Kad se korisniku dodijeli medalja (KorisnikMedalja Create), treba se prikazati fullscreen
+overlay animacija s planinarom na podijumu koji dobiva medalju. Overlay se automatski
+zatvara nakon 5 sekundi. Ovo je isti pattern kao summit animacija za Posjet.
+
+---
+
+## KORAK 1 — Napravi partial view `Views/Shared/_MedalAnimation.cshtml`
+
+Kreiraj ovu datoteku s TOČNO ovim sadržajem — ne mijenjaj CSS vrijednosti,
+animacijske timinge ni SVG koordinate:
+
+```cshtml
+@* Medal ceremony animacija — prikazuje se samo kad TempData["MedaljaSuccess"] postoji *@
+
+<div id="medal-overlay" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#0f1a2e 0%,#1a2744 50%,#243352 100%);
+  opacity:1;transition:opacity 0.4s ease;">
+
+  <!-- Spotlight -->
+  <div style="position:absolute;width:200px;height:350px;top:-20px;left:50%;transform:translateX(-50%);
+    background:radial-gradient(ellipse at 50% 0%,rgba(255,215,0,0.12) 0%,transparent 70%);
+    pointer-events:none;animation:medalSpotPulse 2s ease-in-out infinite alternate;"></div>
+
+  <!-- Scena -->
+  <div style="position:relative;width:300px;height:280px;">
+
+    <!-- Podijum -->
+    <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);opacity:0;
+      animation:medalPodiumRise 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.3s forwards;">
+      <svg viewBox="0 0 180 75" width="180" height="75" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="20,0 160,0 180,75 0,75" fill="#2a4a7f"/>
+        <polygon points="20,0 160,0 155,5 25,5" fill="#4a7abf" opacity="0.6"/>
+        <polygon points="20,0 25,5 5,75 0,75" fill="#1a3a6f" opacity="0.8"/>
+        <text x="90" y="50" text-anchor="middle" fill="#ffd700" font-size="28"
+              font-weight="700" font-family="sans-serif">1</text>
+        <text x="60" y="35" text-anchor="middle" fill="#ffd700" font-size="10" opacity="0.7">★</text>
+        <text x="120" y="35" text-anchor="middle" fill="#ffd700" font-size="10" opacity="0.7">★</text>
+      </svg>
+    </div>
+
+    <!-- Planinar -->
+    <div style="position:absolute;bottom:72px;left:50%;transform:translateX(-50%);opacity:0;
+      animation:medalHikerAppear 0.6s ease 1s forwards;">
+      <svg viewBox="0 0 50 100" width="50" height="100" xmlns="http://www.w3.org/2000/svg">
+        <rect x="28" y="38" width="12" height="16" rx="3" fill="#8B4513"/>
+        <rect x="30" y="34" width="3" height="5" rx="1" fill="#6B3410"/>
+        <rect x="35" y="34" width="3" height="5" rx="1" fill="#6B3410"/>
+        <rect x="14" y="42" width="18" height="22" rx="5" fill="#2563EB"/>
+        <circle cx="23" cy="30" r="10" fill="#FBBF24"/>
+        <ellipse cx="23" cy="24" rx="11" ry="5" fill="#16A34A"/>
+        <rect x="14" y="22" width="18" height="5" rx="2" fill="#16A34A"/>
+        <path d="M19 33 Q23 37 27 33" stroke="#92400E" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <line x1="14" y1="50" x2="6" y2="62" stroke="#1D4ED8" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="32" y1="50" x2="40" y2="62" stroke="#1D4ED8" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="18" y1="64" x2="14" y2="82" stroke="#1E3A8A" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="28" y1="64" x2="32" y2="82" stroke="#1E3A8A" stroke-width="3.5" stroke-linecap="round"/>
+        <rect x="10" y="80" width="10" height="5" rx="2" fill="#4a3520"/>
+        <rect x="28" y="80" width="10" height="5" rx="2" fill="#4a3520"/>
+      </svg>
+    </div>
+
+    <!-- Ruke podignute (pojave se nakon medalje) -->
+    <div style="position:absolute;bottom:72px;left:50%;transform:translateX(-50%);opacity:0;
+      animation:medalArmsRaise 0.5s ease 2.8s forwards;">
+      <svg viewBox="0 0 50 100" width="50" height="100" xmlns="http://www.w3.org/2000/svg">
+        <line x1="14" y1="50" x2="4" y2="32" stroke="#1D4ED8" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="32" y1="50" x2="42" y2="32" stroke="#1D4ED8" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="4" cy="30" r="3" fill="#FBBF24"/>
+        <circle cx="42" cy="30" r="3" fill="#FBBF24"/>
+      </svg>
+    </div>
+
+    <!-- Medalja -->
+    <div style="position:absolute;bottom:180px;left:50%;
+      transform:translateX(-50%) translateY(-120px);opacity:0;
+      animation:medalDrop 1s cubic-bezier(0.22,0.61,0.36,1) 1.8s forwards;">
+      <svg viewBox="0 0 60 70" width="60" height="70" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="15,0 30,25 45,0" fill="#e63946"/>
+        <polygon points="15,0 20,0 35,25 30,25" fill="#c1121f" opacity="0.6"/>
+        <circle cx="30" cy="40" r="18" fill="#ffd700"/>
+        <circle cx="30" cy="40" r="14" fill="#f59e0b" stroke="#ffd700" stroke-width="1.5"/>
+        <polygon points="30,28 33,36 41,36 34,41 37,49 30,44 23,49 26,41 19,36 27,36" fill="#ffd700"/>
+        <ellipse cx="24" cy="34" rx="4" ry="6" fill="#fff" opacity="0.2" transform="rotate(-20,24,34)"/>
+      </svg>
+    </div>
+
+    <!-- Sjaj medalje -->
+    <div style="position:absolute;bottom:155px;left:50%;transform:translateX(-50%);
+      width:70px;height:70px;border-radius:50%;
+      background:radial-gradient(circle,rgba(255,215,0,0.4) 0%,transparent 70%);
+      opacity:0;animation:medalGlowPulse 1.2s ease-in-out 2.8s infinite alternate;"></div>
+
+    <!-- Sparkle čestice -->
+    <div id="medal-sparkles" style="position:absolute;bottom:160px;left:50%;pointer-events:none;"></div>
+  </div>
+
+  <!-- Poruka -->
+  <div style="margin-top:16px;text-align:center;animation:medalFadeUp 0.6s ease 3s both;">
+    <h2 style="color:#ffd700;font-size:18px;font-weight:500;letter-spacing:0.5px;margin:0;">
+      Medalja dodijeljena!
+    </h2>
+    <p style="color:#fbbf24;font-size:13px;margin-top:4px;opacity:0.8;">
+      Svaki korak vodi do nagrade.
+    </p>
+  </div>
+</div>
+
+<style>
+  @@keyframes medalSpotPulse {
+    from { opacity:0.6; } to { opacity:1; }
+  }
+  @@keyframes medalPodiumRise {
+    from { opacity:0; transform:translateX(-50%) translateY(30px) scale(0.9); }
+    to   { opacity:1; transform:translateX(-50%) translateY(0) scale(1); }
+  }
+  @@keyframes medalHikerAppear {
+    from { opacity:0; transform:translateX(-50%) translateY(20px); }
+    to   { opacity:1; transform:translateX(-50%) translateY(0); }
+  }
+  @@keyframes medalDrop {
+    0%   { opacity:0; transform:translateX(-50%) translateY(-120px) scale(1.3) rotate(-15deg); }
+    40%  { opacity:1; transform:translateX(-50%) translateY(-30px) scale(1.1) rotate(5deg); }
+    70%  { transform:translateX(-50%) translateY(5px) scale(1) rotate(-3deg); }
+    85%  { transform:translateX(-50%) translateY(-3px) scale(1) rotate(1deg); }
+    100% { opacity:1; transform:translateX(-50%) translateY(0) scale(1) rotate(0deg); }
+  }
+  @@keyframes medalArmsRaise {
+    from { opacity:0; } to { opacity:1; }
+  }
+  @@keyframes medalGlowPulse {
+    from { opacity:0; transform:translateX(-50%) scale(0.8); }
+    to   { opacity:1; transform:translateX(-50%) scale(1.4); }
+  }
+  @@keyframes medalFadeUp {
+    from { opacity:0; transform:translateY(12px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  @@keyframes medalSparkleBurst {
+    0%   { opacity:1; transform:translate(0,0) scale(1); }
+    100% { opacity:0; transform:var(--msp-tx) scale(0); }
+  }
+</style>
+
+<script>
+(function () {
+    // Sparkle čestice
+    var sparkleData = [
+        {tx:'translate(-45px,-50px)',d:0},{tx:'translate(-30px,-65px)',d:0.05},
+        {tx:'translate(0px,-70px)',d:0.1},{tx:'translate(30px,-60px)',d:0.15},
+        {tx:'translate(50px,-40px)',d:0.2},{tx:'translate(55px,-10px)',d:0.25},
+        {tx:'translate(45px,25px)',d:0.3},{tx:'translate(-40px,20px)',d:0.35},
+        {tx:'translate(-55px,-15px)',d:0.4},{tx:'translate(15px,-68px)',d:0.12},
+        {tx:'translate(-20px,30px)',d:0.22},{tx:'translate(40px,-55px)',d:0.08}
+    ];
+    var sparkColors = ['#ffd700','#fbbf24','#f59e0b','#fff','#fcd34d','#fde68a'];
+    var sc = document.getElementById('medal-sparkles');
+
+    sparkleData.forEach(function (s, i) {
+        var el = document.createElement('div');
+        el.style.cssText = 'position:absolute;border-radius:50%;opacity:0;' +
+            'width:' + (3 + Math.random() * 3) + 'px;' +
+            'height:' + (3 + Math.random() * 3) + 'px;' +
+            'background:' + sparkColors[i % sparkColors.length] + ';' +
+            'animation:medalSparkleBurst 0.8s ease ' + (2.8 + s.d) + 's forwards;';
+        el.style.setProperty('--msp-tx', s.tx);
+        sc.appendChild(el);
+    });
+
+    // Auto-zatvori overlay nakon 5 sekundi
+    setTimeout(function () {
+        var overlay = document.getElementById('medal-overlay');
+        if (overlay) {
+            overlay.style.opacity = '0';
+            setTimeout(function () {
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            }, 400);
+        }
+    }, 5000);
+})();
+</script>
+```
+
+> **VAŽNO:** U Razor `.cshtml` datotekama `@` se escapira kao `@@` unutar `<style>` blokova.
+> Gore je to već ispravno primijenjeno. NE mijenjaj `@@keyframes` u `@keyframes`.
+
+---
+
+## KORAK 2 — Uključi partial u `_Layout.cshtml`
+
+Pronađi `_Layout.cshtml`. Neposredno prije `</body>`, dodaj ISPOD postojećeg
+`@if (TempData["PosjetSuccess"])` bloka:
+
+```cshtml
+@if (TempData["MedaljaSuccess"] != null)
+{
+    @await Html.PartialAsync("_MedalAnimation")
+}
+```
+
+---
+
+## KORAK 3 — Postavi TempData u KorisnikMedaljaController
+
+Pronađi `KorisnikMedaljaController.cs`, akciju `Create` (POST verzija).
+Nakon uspješnog `SaveChangesAsync()` dodaj:
+
+```csharp
+TempData["MedaljaSuccess"] = true;
+TempData["Success"] = "Medalja je uspješno dodijeljena.";
+```
+
+Pronađi da se TempData postavlja **prije** `return RedirectToAction(nameof(Index));`
+
+---
+
+## KORAK 4 — Toast delay logika
+
+Ako je toast (iz prethodnog zadatka) aktivan istovremeno kad i medal overlay,
+toast neće biti vidljiv jer overlay pokriva ekran.
+
+U `_Layout.cshtml` gdje se TempData["Success"] toast okida, dodaj provjeru za
+MedaljaSuccess delay (isto kao za PosjetSuccess):
+
+```html
+@if (TempData["Success"] != null && TempData["MedaljaSuccess"] != null)
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                showToast('@Html.Raw(TempData["Success"])', 'success');
+            }, 5500);
+        });
+    </script>
+}
+```
+
+> Delay je 5500ms jer medal overlay traje 5000ms + 400ms fade out.
+> Toast se pojavi tek kad overlay potpuno nestane.
+
+---
+
+## ŠTO NE MIJENJAJ
+
+- ❌ Ne mijenjaj SVG koordinate — precizno su kalibrirane za podijum + lik + medalju
+- ❌ Ne mijenjaj animation keyframe postotke ni timinge — sekvenca je usklađena:
+  podijum (0.3s) → planinar (1s) → medalja pada (1.8s) → ruke gore + sparkle (2.8s) → tekst (3s)
+- ❌ Ne mijenjaj boje (#ffd700 zlatna, #2a4a7f podijum plava, #e63946 vrpca crvena)
+- ❌ Ne dodavaj Bootstrap klase na overlay elemente
+- ❌ Ne wrappaj keyframes u `@media` ili `@supports` blokove
+
+## ŠTO SMIJEŠ PRILAGODITI
+
+- ✅ Tekst poruke ("Medalja dodijeljena!") i podnaslov ("Svaki korak vodi do nagrade.")
+- ✅ Vrijeme auto-zatvaranja (5000ms u setTimeout-u) — može biti 4000-6000ms
+
+---
+
+## REDOSLIJED
+
+| Korak | Što raditi |
+|---|---|
+| 1 | Kreiraj `Views/Shared/_MedalAnimation.cshtml` s gornjim kodom |
+| 2 | Dodaj `@if (TempData["MedaljaSuccess"])` blok u `_Layout.cshtml` prije `</body>` |
+| 3 | Dodaj `TempData["MedaljaSuccess"] = true;` u `KorisnikMedaljaController.Create` POST |
+| 4 | Provjeri toast delay logiku |
+| 5 | **Testiraj** — dodijeli medalju korisniku, overlay se prikaže, medalja padne, ruke se podignu, overlay nestane |

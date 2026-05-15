@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
+using planinarenje.Models.ViewModels;
 using System;
 using System.IO;
 using System.Linq;
@@ -57,25 +59,371 @@ namespace planinarenje.Controllers
 
         public IActionResult Index()
         {
-            var model = _dbContext.Posjeti
-                .Include(p => p.Korisnik)
+            var model = BuildIndexModel(null);
+            ViewData["Title"] = "Posjeti";
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult Search(string? searchTerm)
+        {
+            var model = BuildIndexModel(searchTerm);
+            return PartialView("_PosjetListPartial", model);
+        }
+
+        [HttpGet]
+        public IActionResult AutocompleteSearch(string term)
+        {
+            var query = _dbContext.Posjeti
                 .Include(p => p.KontrolnaTocka)
-                .Include(p => p.Ruta)
+                .Where(p => p.DeletedAt == null);
+
+            if (int.TryParse(term, out var id))
+            {
+                query = query.Where(p => p.IdPosjet == id);
+            }
+            else
+            {
+                query = query.Where(p => p.KontrolnaTocka != null && p.KontrolnaTocka.Naziv.Contains(term));
+            }
+
+            var results = query
                 .OrderByDescending(p => p.DatumVrijemePosjeta)
-                .AsEnumerable()
-                .Select(p => new PosjetIndexViewModel
+                .Take(15)
+                .Select(p => new
                 {
-                    IdPosjet = p.IdPosjet,
-                    ImePrezimeKorisnika = p.Korisnik != null ? $"{p.Korisnik.Ime} {p.Korisnik.Prezime}" : "Nepoznati korisnik",
-                    NazivKontrolneTocke = p.KontrolnaTocka?.Naziv ?? "Nepoznata točka",
-                    NazivRute = p.Ruta?.Naziv ?? "Samostalni posjet",
-                    DatumVrijemePosjeta = p.DatumVrijemePosjeta,
-                    Dozivljaj = FormatirajDozivljaj(p.DozivljajPosjeta),
-                    JeLiPotvrdenPosjet = p.JeLiPotvrdenPosjet
+                    value = p.IdPosjet,
+                    label = p.KontrolnaTocka != null
+                        ? "Posjet #" + p.IdPosjet + " - " + p.KontrolnaTocka.Naziv
+                        : "Posjet #" + p.IdPosjet
                 })
                 .ToList();
 
+            return Json(results);
+        }
+
+        [HttpGet]
+        public IActionResult RuteZaKontrolnuTocku(int kontrolnaTockaId)
+        {
+            var results = _dbContext.Rute
+                .Where(r => r.DeletedAt == null && r.IdKontrolnaTocka == kontrolnaTockaId)
+                .OrderBy(r => r.Naziv)
+                .Select(r => new
+                {
+                    value = r.IdRuta,
+                    label = r.Naziv + " (" + r.Pocetak + " -> " + r.Kraj + ")"
+                })
+                .ToList();
+
+            return Json(results);
+        }
+
+        public IActionResult Create()
+        {
+            PopulateKnjiziceByKorisnik();
+            PopulateRuteByKontrolnaTocka(null);
+            ViewData["Title"] = "Novi posjet";
+            return View(new PosjetCreateModel
+            {
+                DatumVrijemePosjeta = DateTime.Now
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Create(PosjetCreateModel model)
+        {
+            ValidatePosjetSelection(model);
+
+            if (!ModelState.IsValid)
+            {
+                PopulateKnjiziceByKorisnik();
+                PopulateRuteByKontrolnaTocka(model.IdKontrolnaTocka, model.IdRuta);
+                SetPosjetViewTexts(model.IdKorisnik, model.IdKnjizica, model.IdKontrolnaTocka, model.IdRuta);
+                ViewData["Title"] = "Novi posjet";
+                return View(model);
+            }
+
+            var kontrolnaTocka = _dbContext.KontrolneTocke
+                .AsNoTracking()
+                .FirstOrDefault(k => k.DeletedAt == null && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
+            if (kontrolnaTocka == null)
+            {
+                ModelState.AddModelError(nameof(model.IdKontrolnaTocka), "Kontrolna tocka nije valjana.");
+                PopulateKnjiziceByKorisnik();
+                PopulateRuteByKontrolnaTocka(model.IdKontrolnaTocka, model.IdRuta);
+                SetPosjetViewTexts(model.IdKorisnik, model.IdKnjizica, model.IdKontrolnaTocka, model.IdRuta);
+                ViewData["Title"] = "Novi posjet";
+                return View(model);
+            }
+
+            var entity = new Posjet
+            {
+                IdKorisnik = model.IdKorisnik,
+                IdKnjizica = model.IdKnjizica,
+                IdKontrolnaTocka = model.IdKontrolnaTocka,
+                IdRuta = model.IdRuta,
+                DatumVrijemePosjeta = model.DatumVrijemePosjeta,
+                VrijemeUsponaMin = model.VrijemeUsponaMin,
+                DozivljajPosjeta = model.DozivljajPosjeta,
+                OpisIskustva = model.OpisIskustva,
+                UneseniGUID = kontrolnaTocka.GUIDOznaka,
+                JeLiPotvrdenPosjet = false,
+                DatumKreiranjaZapisa = DateTime.UtcNow
+            };
+
+            _dbContext.Posjeti.Add(entity);
+            _dbContext.SaveChanges();
+            TempData["NewId"] = entity.IdPosjet;
+            TempData["PosjetSuccess"] = true;
+            TempData["Success"] = "Posjet je uspjesno dodan.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [ActionName("Edit")]
+        public IActionResult EditGet(int id)
+        {
+            var entity = _dbContext.Posjeti
+                .Include(p => p.Korisnik)
+                .Include(p => p.Knjizica)
+                .Include(p => p.KontrolnaTocka)
+                .Include(p => p.Ruta)
+                .FirstOrDefault(p => p.IdPosjet == id && p.DeletedAt == null);
+            if (entity == null)
+            {
+                return NotFound();
+            }
+
+            var model = new PosjetEditModel
+            {
+                IdKorisnik = entity.IdKorisnik,
+                IdKnjizica = entity.IdKnjizica,
+                IdKontrolnaTocka = entity.IdKontrolnaTocka,
+                IdRuta = entity.IdRuta,
+                DatumVrijemePosjeta = entity.DatumVrijemePosjeta,
+                VrijemeUsponaMin = entity.VrijemeUsponaMin,
+                DozivljajPosjeta = entity.DozivljajPosjeta,
+                OpisIskustva = entity.OpisIskustva,
+                UneseniGUID = entity.UneseniGUID
+            };
+
+            PopulateKnjiziceByKorisnik();
+            PopulateRuteByKontrolnaTocka(model.IdKontrolnaTocka, model.IdRuta);
+            SetPosjetViewTexts(model.IdKorisnik, model.IdKnjizica, model.IdKontrolnaTocka, model.IdRuta);
+            ViewData["Title"] = "Uredi posjet";
             return View(model);
+        }
+
+        [HttpPost, ActionName("Edit")]
+        [ValidateAntiForgeryToken]
+        public IActionResult EditPost(int id, PosjetEditModel model)
+        {
+            ValidatePosjetSelection(model);
+
+            if (!ModelState.IsValid)
+            {
+                PopulateKnjiziceByKorisnik();
+                PopulateRuteByKontrolnaTocka(model.IdKontrolnaTocka, model.IdRuta);
+                SetPosjetViewTexts(model.IdKorisnik, model.IdKnjizica, model.IdKontrolnaTocka, model.IdRuta);
+                ViewData["Title"] = "Uredi posjet";
+                return View(model);
+            }
+
+            var kontrolnaTocka = _dbContext.KontrolneTocke
+                .AsNoTracking()
+                .FirstOrDefault(k => k.DeletedAt == null && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
+            if (kontrolnaTocka == null)
+            {
+                ModelState.AddModelError(nameof(model.IdKontrolnaTocka), "Kontrolna tocka nije valjana.");
+                PopulateKnjiziceByKorisnik();
+                PopulateRuteByKontrolnaTocka(model.IdKontrolnaTocka, model.IdRuta);
+                SetPosjetViewTexts(model.IdKorisnik, model.IdKnjizica, model.IdKontrolnaTocka, model.IdRuta);
+                ViewData["Title"] = "Uredi posjet";
+                return View(model);
+            }
+
+            var entity = _dbContext.Posjeti
+                .FirstOrDefault(p => p.IdPosjet == id && p.DeletedAt == null);
+            if (entity == null)
+            {
+                return NotFound();
+            }
+
+            entity.IdKorisnik = model.IdKorisnik;
+            entity.IdKnjizica = model.IdKnjizica;
+            entity.IdKontrolnaTocka = model.IdKontrolnaTocka;
+            entity.IdRuta = model.IdRuta;
+            entity.DatumVrijemePosjeta = model.DatumVrijemePosjeta;
+            entity.VrijemeUsponaMin = model.VrijemeUsponaMin;
+            entity.DozivljajPosjeta = model.DozivljajPosjeta;
+            entity.OpisIskustva = model.OpisIskustva;
+            entity.UneseniGUID = kontrolnaTocka.GUIDOznaka;
+
+            _dbContext.SaveChanges();
+            TempData["Success"] = "Posjet je uspjesno azuriran.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        private string? GetKontrolnaTockaNaziv(int? id)
+        {
+            if (!id.HasValue)
+            {
+                return null;
+            }
+
+            return _dbContext.KontrolneTocke
+                .Where(k => k.DeletedAt == null && k.IdKontrolnaTocka == id.Value)
+                .Select(k => k.Naziv)
+                .FirstOrDefault();
+        }
+
+        private string? GetKorisnikLabel(int? id)
+        {
+            if (!id.HasValue)
+            {
+                return null;
+            }
+
+            return _dbContext.Korisnici
+                .Where(k => k.StatusAktivan && k.IdKorisnik == id.Value)
+                .Select(k => k.Ime + " " + k.Prezime + " (@" + k.KorisnickoIme + ")")
+                .FirstOrDefault();
+        }
+
+        private string? GetKnjizicaLabel(int? id)
+        {
+            if (!id.HasValue)
+            {
+                return null;
+            }
+
+            return _dbContext.Knjizice
+                .Include(k => k.Korisnik)
+                .Where(k => k.StatusAktivna && k.IdKnjizica == id.Value)
+                .Select(k => "Knjizica #" + k.IdKnjizica + " - " +
+                             (k.Korisnik != null ? k.Korisnik.Ime + " " + k.Korisnik.Prezime : ""))
+                .FirstOrDefault();
+        }
+
+        private string? GetRutaLabel(int? id)
+        {
+            if (!id.HasValue)
+            {
+                return null;
+            }
+
+            return _dbContext.Rute
+                .Where(r => r.DeletedAt == null && r.IdRuta == id.Value)
+                .Select(r => r.Naziv + " (" + r.Pocetak + " -> " + r.Kraj + ")")
+                .FirstOrDefault();
+        }
+
+        private string? GetKontrolnaTockaGuid(int? id)
+        {
+            if (!id.HasValue)
+            {
+                return null;
+            }
+
+            return _dbContext.KontrolneTocke
+                .Where(k => k.DeletedAt == null && k.IdKontrolnaTocka == id.Value)
+                .Select(k => k.GUIDOznaka)
+                .FirstOrDefault();
+        }
+
+        private void PopulateRuteByKontrolnaTocka(int? kontrolnaTockaId, int? selectedRutaId = null)
+        {
+            var routes = new List<SelectListItem>();
+
+            if (kontrolnaTockaId.HasValue)
+            {
+                routes = _dbContext.Rute
+                    .Where(r => r.DeletedAt == null && r.IdKontrolnaTocka == kontrolnaTockaId.Value)
+                    .OrderBy(r => r.Naziv)
+                    .Select(r => new SelectListItem
+                    {
+                        Value = r.IdRuta.ToString(),
+                        Text = r.Naziv + " (" + r.Pocetak + " -> " + r.Kraj + ")",
+                        Selected = selectedRutaId.HasValue && r.IdRuta == selectedRutaId.Value
+                    })
+                    .ToList();
+            }
+
+            ViewBag.RuteOptions = routes;
+        }
+
+        private void SetPosjetViewTexts(int idKorisnik, int idKnjizica, int idKontrolnaTocka, int idRuta)
+        {
+            ViewData["KorisnikText"] = GetKorisnikLabel(idKorisnik);
+            ViewData["KnjizicaText"] = GetKnjizicaLabel(idKnjizica);
+            ViewData["KontrolnaTockaText"] = GetKontrolnaTockaNaziv(idKontrolnaTocka);
+            ViewData["RutaText"] = GetRutaLabel(idRuta);
+        }
+
+        private void ValidatePosjetSelection(PosjetCreateModel model)
+        {
+            var kontrolnaTocka = _dbContext.KontrolneTocke
+                .AsNoTracking()
+                .FirstOrDefault(k => k.DeletedAt == null && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
+
+            if (kontrolnaTocka == null)
+            {
+                return;
+            }
+
+            var ruta = _dbContext.Rute
+                .AsNoTracking()
+                .FirstOrDefault(r => r.DeletedAt == null && r.IdRuta == model.IdRuta);
+
+            if (ruta == null || ruta.IdKontrolnaTocka != model.IdKontrolnaTocka)
+            {
+                ModelState.AddModelError(nameof(model.IdRuta), "Odabrana ruta mora pripadati odabranoj kontrolnoj tocki.");
+            }
+
+            var uneseniGuid = model.UneseniGUID?.Trim();
+            if (string.IsNullOrWhiteSpace(uneseniGuid))
+            {
+                ModelState.AddModelError(nameof(model.UneseniGUID), "GUID je obavezan.");
+                return;
+            }
+
+            if (!string.Equals(uneseniGuid, kontrolnaTocka.GUIDOznaka, StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError(nameof(model.UneseniGUID), "GUID mora odgovarati odabranoj kontrolnoj tocki.");
+            }
+        }
+
+        public IActionResult Delete(int id)
+        {
+            var entity = _dbContext.Posjeti
+                .Include(p => p.Korisnik)
+                .Include(p => p.KontrolnaTocka)
+                .Include(p => p.Ruta)
+                .FirstOrDefault(p => p.IdPosjet == id && p.DeletedAt == null);
+            if (entity == null)
+            {
+                return NotFound();
+            }
+
+            ViewData["Title"] = "Obrisi posjet";
+            return View(entity);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            var entity = _dbContext.Posjeti
+                .FirstOrDefault(p => p.IdPosjet == id && p.DeletedAt == null);
+            if (entity == null)
+            {
+                return NotFound();
+            }
+
+            entity.DeletedAt = DateTime.UtcNow;
+            _dbContext.SaveChanges();
+            TempData["Success"] = "Posjet je uspjesno obrisan.";
+            return RedirectToAction(nameof(Index));
         }
 
         public IActionResult Details(int id)
@@ -86,11 +434,12 @@ namespace planinarenje.Controllers
                 .Include(x => x.KontrolnaTocka)
                 .Include(x => x.Ruta)
                 .Include(x => x.Fotografije)
-                .FirstOrDefault(x => x.IdPosjet == id);
+                .FirstOrDefault(x => x.IdPosjet == id && x.DeletedAt == null);
 
             if (p == null) return NotFound();
 
             var fotografijePosjeta = p.Fotografije
+                .Where(f => f.DeletedAt == null)
                 .Select(f => new FotografijaPosjetaViewModel
                 {
                     IdFotografija = f.IdFotografija,
@@ -122,6 +471,63 @@ namespace planinarenje.Controllers
             };
 
             return View(model);
+        }
+
+        private List<PosjetIndexViewModel> BuildIndexModel(string? searchTerm)
+        {
+            var query = _dbContext.Posjeti
+                .Include(p => p.Korisnik)
+                .Include(p => p.KontrolnaTocka)
+                .Include(p => p.Ruta)
+                .Where(p => p.DeletedAt == null &&
+                            (p.Korisnik == null || p.Korisnik.StatusAktivan) &&
+                            (p.KontrolnaTocka == null || p.KontrolnaTocka.DeletedAt == null) &&
+                            (p.Ruta == null || p.Ruta.DeletedAt == null));
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim();
+                query = query.Where(p =>
+                    (p.Korisnik != null &&
+                     (p.Korisnik.Ime.Contains(term) || p.Korisnik.Prezime.Contains(term))) ||
+                    (p.KontrolnaTocka != null && p.KontrolnaTocka.Naziv.Contains(term)) ||
+                    (p.Ruta != null && p.Ruta.Naziv.Contains(term)) ||
+                    p.UneseniGUID.Contains(term));
+            }
+
+            return query
+                .OrderByDescending(p => p.DatumVrijemePosjeta)
+                .AsEnumerable()
+                .Select(p => new PosjetIndexViewModel
+                {
+                    IdPosjet = p.IdPosjet,
+                    ImePrezimeKorisnika = p.Korisnik != null ? $"{p.Korisnik.Ime} {p.Korisnik.Prezime}" : "Nepoznati korisnik",
+                    NazivKontrolneTocke = p.KontrolnaTocka?.Naziv ?? "Nepoznata tocka",
+                    NazivRute = p.Ruta?.Naziv ?? "Samostalni posjet",
+                    DatumVrijemePosjeta = p.DatumVrijemePosjeta,
+                    Dozivljaj = FormatirajDozivljaj(p.DozivljajPosjeta),
+                    JeLiPotvrdenPosjet = p.JeLiPotvrdenPosjet
+                })
+                .ToList();
+        }
+
+        private void PopulateKnjiziceByKorisnik()
+        {
+            var knjiziceByKorisnik = _dbContext.Knjizice
+                .Include(k => k.Korisnik)
+                .Where(k => k.StatusAktivna)
+                .OrderByDescending(k => k.DatumKreiranja)
+                .GroupBy(k => k.IdKorisnik)
+                .Select(g => new
+                {
+                    IdKorisnik = g.Key,
+                    IdKnjizica = g.First().IdKnjizica,
+                    Label = "Knjizica #" + g.First().IdKnjizica + " - " +
+                            (g.First().Korisnik != null ? g.First().Korisnik.Ime + " " + g.First().Korisnik.Prezime : "")
+                })
+                .ToList();
+
+            ViewBag.KnjiziceByKorisnik = knjiziceByKorisnik;
         }
     }
 }

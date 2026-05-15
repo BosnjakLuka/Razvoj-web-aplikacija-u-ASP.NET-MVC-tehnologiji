@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
 using planinarenje.Entiteti;
@@ -27,9 +26,31 @@ public class ObavijestController : Controller
         return View(model);
     }
 
+    public IActionResult Search(string? searchTerm)
+    {
+        var query = _dbContext.Obavijesti
+            .Include(o => o.Korisnik)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.Trim().ToLower();
+            query = query.Where(o =>
+                o.Naslov.ToLower().Contains(term) ||
+                (o.Sadrzaj != null && o.Sadrzaj.ToLower().Contains(term)) ||
+                (o.Korisnik != null &&
+                 (o.Korisnik.Ime + " " + o.Korisnik.Prezime).ToLower().Contains(term)));
+        }
+
+        var model = query
+            .OrderByDescending(o => o.DatumObjave)
+            .ToList();
+
+        return PartialView("_ObavijestListPartial", model);
+    }
+
     public IActionResult Create()
     {
-        LoadKorisniciSelectList();
         return View(new Obavijest
         {
             DatumObjave = DateTime.Now,
@@ -43,21 +64,26 @@ public class ObavijestController : Controller
     {
         if (!ModelState.IsValid)
         {
-            LoadKorisniciSelectList(obavijest.IdKorisnik);
+            ViewData["KorisnikText"] = GetKorisnikLabel(obavijest.IdKorisnik);
             return View(obavijest);
         }
 
         _dbContext.Obavijesti.Add(obavijest);
         _dbContext.SaveChanges();
+        TempData["NewId"] = obavijest.IdObavijest;
         return RedirectToAction(nameof(Index));
     }
 
     public IActionResult Edit(int id)
     {
-        var obavijest = _dbContext.Obavijesti.Find(id);
+        var obavijest = _dbContext.Obavijesti
+            .Include(o => o.Korisnik)
+            .FirstOrDefault(o => o.IdObavijest == id);
         if (obavijest == null) return NotFound();
 
-        LoadKorisniciSelectList(obavijest.IdKorisnik);
+        ViewData["KorisnikText"] = obavijest.Korisnik != null
+            ? obavijest.Korisnik.Ime + " " + obavijest.Korisnik.Prezime + " (@" + obavijest.Korisnik.KorisnickoIme + ")"
+            : GetKorisnikLabel(obavijest.IdKorisnik);
         return View(obavijest);
     }
 
@@ -69,7 +95,7 @@ public class ObavijestController : Controller
 
         if (!ModelState.IsValid)
         {
-            LoadKorisniciSelectList(obavijest.IdKorisnik);
+            ViewData["KorisnikText"] = GetKorisnikLabel(obavijest.IdKorisnik);
             return View(obavijest);
         }
 
@@ -91,18 +117,41 @@ public class ObavijestController : Controller
         return View(obavijest);
     }
 
-    private void LoadKorisniciSelectList(int? selectedId = null)
+    public IActionResult Delete(int id)
     {
-        var korisnici = _dbContext.Korisnici
-            .OrderBy(k => k.Prezime)
-            .ThenBy(k => k.Ime)
-            .Select(k => new
-            {
-                k.IdKorisnik,
-                Naziv = k.Ime + " " + k.Prezime
-            })
-            .ToList();
+        var obavijest = _dbContext.Obavijesti
+            .Include(o => o.Korisnik)
+            .FirstOrDefault(o => o.IdObavijest == id);
 
-        ViewBag.Korisnici = new SelectList(korisnici, "IdKorisnik", "Naziv", selectedId);
+        if (obavijest == null) return NotFound();
+
+        ViewData["Title"] = "Obrisi obavijest";
+        return View(obavijest);
+    }
+
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public IActionResult DeleteConfirmed(int id)
+    {
+        var obavijest = _dbContext.Obavijesti.FirstOrDefault(o => o.IdObavijest == id);
+        if (obavijest == null) return NotFound();
+
+        _dbContext.Obavijesti.Remove(obavijest);
+        _dbContext.SaveChanges();
+        TempData["Success"] = "Obavijest je uspjesno obrisana.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    private string? GetKorisnikLabel(int? id)
+    {
+        if (!id.HasValue)
+        {
+            return null;
+        }
+
+        return _dbContext.Korisnici
+            .Where(k => k.StatusAktivan && k.IdKorisnik == id.Value)
+            .Select(k => k.Ime + " " + k.Prezime + " (@" + k.KorisnickoIme + ")")
+            .FirstOrDefault();
     }
 }

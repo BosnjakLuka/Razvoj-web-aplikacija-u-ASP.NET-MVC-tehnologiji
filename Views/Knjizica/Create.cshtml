@@ -1,0 +1,33 @@
+@model planinarenje.Models.ViewModels.KnjizicaCreateModel
+
+<section class="mb-4">
+    <h1 class="section-title mb-2">Nova knjizica</h1>
+    <p class="text-muted mb-0">Unesite podatke o novoj knjizici.</p>
+</section>
+
+<div class="app-card">
+    <form asp-action="Create" method="post">
+        <div class="mb-3">
+            <label asp-for="IdKorisnik" class="form-label">Korisnik</label>
+            @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+            {
+                { "FieldName", "IdKorisnik" },
+                { "DisplayName", "Korisnik" },
+                { "SearchUrl", Url.Action("AutocompleteSearch", "Korisnik") },
+                { "CurrentId", Model?.IdKorisnik.ToString() },
+                { "CurrentText", ViewData["KorisnikText"]?.ToString() },
+                { "Placeholder", "Pretrazi korisnike..." },
+                { "IsRequired", true }
+            })
+        </div>
+        <div class="mb-3">
+            <label asp-for="Napomena" class="form-label"></label>
+            <textarea asp-for="Napomena" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Napomena" class="text-danger small"></span>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Spremi</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Odustani</a>
+        </div>
+    </form>
+</div>

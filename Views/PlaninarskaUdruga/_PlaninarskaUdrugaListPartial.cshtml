@@ -1,0 +1,41 @@
+@model IEnumerable<planinarenje.Models.PlaninarskaUdrugaIndexViewModel>
+
+@if (!Model.Any())
+{
+    <div class="app-card">
+        <h2 class="h5 mb-2">Nema dostupnih udruga</h2>
+        <p class="text-muted mb-0">Trenutno nisu pronađeni podatci za prikaz.</p>
+    </div>
+}
+else
+{
+    <div class="app-card table-responsive p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Naziv</th>
+                    <th>OIB</th>
+                    <th>Grad</th>
+                    <th class="text-end">Broj clanova</th>
+                    <th class="text-end pe-4">Akcije</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr data-id="@item.IdPlaninarskaUdruga">
+                        <td class="ps-4 fw-medium">@item.Naziv</td>
+                        <td class="text-muted font-monospace small">@item.OIB</td>
+                        <td>@(string.IsNullOrWhiteSpace(item.Grad) ? "N/A" : item.Grad)</td>
+                        <td class="text-end">@(item.BrojClanova.HasValue ? item.BrojClanova.Value.ToString() : "-")</td>
+                        <td class="text-end pe-4">
+                            <a asp-action="Details" asp-route-id="@item.IdPlaninarskaUdruga" class="btn btn-sm btn-outline-primary">Detalji</a>
+                            <a asp-action="Edit" asp-route-id="@item.IdPlaninarskaUdruga" class="btn btn-sm btn-outline-secondary">Uredi</a>
+                            <a asp-action="Delete" asp-route-id="@item.IdPlaninarskaUdruga" class="btn btn-sm btn-outline-danger">Obrisi</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

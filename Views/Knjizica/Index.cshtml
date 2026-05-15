@@ -1,6 +1,6 @@
 @model List<planinarenje.Models.KnjizicaIndexViewModel>
 @{
-    ViewData["Title"] = "Planinarske Knjižice";
+    ViewData["Title"] = "Planinarske Knjizice";
 }
 
 @section Breadcrumbs {
@@ -12,66 +12,66 @@
     </nav>
 }
 
-<div class="row align-items-center mt-3 mb-4">
-    <div class="col-md-8">
-        <h1 class="h3 mb-1 text-primary-dark">Planinarske knjižice</h1>
-        <p class="text-muted mb-0">Popis svih evidencijskih knjižica planinara i njihov trenutni status.</p>
+<section class="mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <h1 class="section-title mb-2">Planinarske knjizice</h1>
+            <p class="text-muted mb-0">Popis evidencijskih knjizica planinara i njihov status.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">Nova knjizica</a>
     </div>
+</section>
+
+<div class="app-card mb-4">
+    <input type="text" id="searchInput" class="form-control" placeholder="Pretrazi knjizice..." />
 </div>
 
-<div class="app-card shadow-sm border-0 mb-4 overflow-hidden">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th scope="col" class="ps-4">ID evidencije</th>
-                    <th scope="col">Vlasnik knjižice</th>
-                    <th scope="col">Datum otvaranja</th>
-                    <th scope="col">Status</th>
-                    <th scope="col" class="text-end pe-4">Akcije</th>
-                </tr>
-            </thead>
-            <tbody class="border-top-0">
-                @foreach (var knjizica in Model)
-                {
-                    <tr>
-                        <td class="ps-4 font-monospace text-muted">#@knjizica.IdKnjizica</td>
-                        <td>
-                            <a asp-controller="Korisnik" asp-action="Details" asp-route-id="@knjizica.IdKorisnik" class="text-decoration-none fw-bold text-dark">
-                                <i class="bi bi-person-badge text-primary opacity-75 me-2"></i>@knjizica.ImePrezimeKorisnika
-                            </a>
-                        </td>
-                        <td>
-                            <i class="bi bi-calendar-event opacity-50 me-2"></i>@knjizica.DatumKreiranja.ToString("dd.MM.yyyy. HH:mm")
-                        </td>
-                        <td>
-                            @if (knjizica.StatusAktivna)
-                            {
-                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">Aktivna</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1">Završena / Zatvorena</span>
-                            }
-                        </td>
-                        <td class="text-end pe-4">
-                            <a asp-action="Details" asp-route-id="@knjizica.IdKnjizica" class="btn btn-sm btn-outline-primary shadow-sm rounded-pill">
-                                Otvori knjižicu <i class="bi bi-chevron-right ms-1 small"></i>
-                            </a>
-                        </td>
-                    </tr>
-                }
-                
-                @if (!Model.Any())
-                {
-                    <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">
-                            <i class="bi bi-journal-x fs-1 opacity-25 d-block mb-3"></i>
-                            Nema evidentiranih planinarskih knjižica u sustavu.
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+<div id="searchSpinner" class="text-center py-2 d-none">
+    <div class="spinner-border spinner-border-sm text-success" role="status"></div>
 </div>
+
+<div id="resultsContainer">
+    @await Html.PartialAsync("_KnjizicaListPartial", Model)
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('#searchInput').on('input', function () {
+                const term = $(this).val();
+                $('#searchSpinner').removeClass('d-none');
+                $.ajax({
+                    url: '@Url.Action("Search", "Knjizica")',
+                    data: { searchTerm: term },
+                    success: function (html) {
+                        $('#searchSpinner').addClass('d-none');
+                        $('#resultsContainer').fadeOut(150, function () {
+                            $(this).html(html).fadeIn(200);
+                        });
+                    },
+                    error: function () {
+                        $('#searchSpinner').addClass('d-none');
+                        showToast('Greska pri pretrazi. Pokusaj ponovo.', 'error');
+                    }
+                });
+            });
+        });
+    </script>
+
+    @if (TempData["NewId"] != null)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const newId = @TempData["NewId"];
+                const row = document.querySelector('tr[data-id="' + newId + '"]');
+                if (row) {
+                    row.style.transition = 'background 0.4s ease';
+                    row.style.background = '#d1fae5';
+                    setTimeout(function () {
+                        row.style.background = '';
+                    }, 2500);
+                }
+            });
+        </script>
+    }
+}

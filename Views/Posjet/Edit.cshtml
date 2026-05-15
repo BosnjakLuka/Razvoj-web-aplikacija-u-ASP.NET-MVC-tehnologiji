@@ -1,0 +1,181 @@
+@model planinarenje.Models.ViewModels.PosjetEditModel
+
+<section class="mb-4">
+    <h1 class="section-title mb-2">Uredi posjet</h1>
+    <p class="text-muted mb-0">Azurirajte podatke o posjetu.</p>
+</section>
+
+<div class="app-card">
+    <form asp-action="Edit" method="post">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="IdKorisnik" class="form-label">Korisnik</label>
+                @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+                {
+                    { "FieldName", "IdKorisnik" },
+                    { "DisplayName", "Korisnik" },
+                    { "SearchUrl", Url.Action("AutocompleteSearch", "Korisnik") },
+                    { "CurrentId", Model?.IdKorisnik.ToString() },
+                    { "CurrentText", ViewData["KorisnikText"]?.ToString() },
+                    { "Placeholder", "Pretrazi korisnike..." },
+                    { "IsRequired", true }
+                })
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="IdKnjizica" class="form-label">Knjizica</label>
+                @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+                {
+                    { "FieldName", "IdKnjizica" },
+                    { "DisplayName", "Knjizica" },
+                    { "SearchUrl", Url.Action("AutocompleteSearch", "Knjizica") },
+                    { "CurrentId", Model?.IdKnjizica.ToString() },
+                    { "CurrentText", ViewData["KnjizicaText"]?.ToString() },
+                    { "Placeholder", "Pretrazi knjizice..." },
+                    { "IsRequired", true }
+                })
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="IdKontrolnaTocka" class="form-label">Kontrolna tocka</label>
+                @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+                {
+                    { "FieldName", "IdKontrolnaTocka" },
+                    { "DisplayName", "Kontrolna tocka" },
+                    { "SearchUrl", Url.Action("AutocompleteSearch", "KontrolnaTocka") },
+                    { "CurrentId", Model?.IdKontrolnaTocka.ToString() },
+                    { "CurrentText", ViewData["KontrolnaTockaText"]?.ToString() },
+                    { "Placeholder", "Pretrazi kontrolne tocke..." },
+                    { "IsRequired", true }
+                })
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="IdRuta" class="form-label">Ruta</label>
+                <select asp-for="IdRuta" class="form-select" asp-items="ViewBag.RuteOptions">
+                    <option value="">Odaberi kontrolnu tocku prvo</option>
+                </select>
+                <span asp-validation-for="IdRuta" class="text-danger small"></span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                @await Html.PartialAsync("_DateTimePicker", null, new ViewDataDictionary(ViewData)
+                {
+                    { "FieldName", "DatumVrijemePosjeta" },
+                    { "Label", "Datum i vrijeme posjeta" },
+                    { "Value", Model.DatumVrijemePosjeta.ToString("o") },
+                    { "IncludeTime", true },
+                    { "Required", true }
+                })
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="VrijemeUsponaMin" class="form-label"></label>
+                <input asp-for="VrijemeUsponaMin" class="form-control" />
+                <span asp-validation-for="VrijemeUsponaMin" class="text-danger small"></span>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label asp-for="DozivljajPosjeta" class="form-label"></label>
+            <select asp-for="DozivljajPosjeta" asp-items="Html.GetEnumSelectList<planinarenje.Entiteti.DozivljajPosjeta>()" class="form-select"></select>
+            <span asp-validation-for="DozivljajPosjeta" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="UneseniGUID" class="form-label">GUID vrha</label>
+            <input asp-for="UneseniGUID" class="form-control" placeholder="Rucno unesi GUID vrha" />
+            <span asp-validation-for="UneseniGUID" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="OpisIskustva" class="form-label"></label>
+            <textarea asp-for="OpisIskustva" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="OpisIskustva" class="text-danger small"></span>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Spremi</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Odustani</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            const mapData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.KnjiziceByKorisnik ?? new List<object>()));
+            const korisnikToKnjizica = new Map(mapData.map(x => [String(x.IdKorisnik), { id: String(x.IdKnjizica), label: x.Label }]));
+            const korisnikHidden = $('#hidden_IdKorisnik');
+            const knjizicaHidden = $('#hidden_IdKnjizica');
+            const knjizicaDisplay = $('#display_IdKnjizica');
+            const routeUrl = '@Url.Action("RuteZaKontrolnuTocku", "Posjet")';
+            const kontrolnaHidden = document.getElementById('hidden_IdKontrolnaTocka');
+            const routeSelect = document.getElementById('IdRuta');
+
+            function resetRoutes() {
+                if (!routeSelect) return;
+                routeSelect.innerHTML = '<option value="">Odaberi kontrolnu tocku prvo</option>';
+                routeSelect.value = '';
+            }
+
+            function loadRoutes(kontrolnaTockaId, selectedRutaId) {
+                if (!routeSelect) return;
+
+                if (!kontrolnaTockaId) {
+                    resetRoutes();
+                    return;
+                }
+
+                $.ajax({
+                    url: routeUrl,
+                    data: { kontrolnaTockaId: kontrolnaTockaId },
+                    success: function (results) {
+                        routeSelect.innerHTML = '<option value="">Odaberi rutu</option>';
+                        (results || []).forEach(function (item) {
+                            const option = document.createElement('option');
+                            option.value = item.value;
+                            option.textContent = item.label;
+                            if (selectedRutaId && String(selectedRutaId) === String(item.value)) {
+                                option.selected = true;
+                            }
+                            routeSelect.appendChild(option);
+                        });
+                    },
+                    error: function () {
+                        resetRoutes();
+                    }
+                });
+            }
+
+            function applyKnjizica(korisnikId) {
+                if (!korisnikId) {
+                    knjizicaHidden.val('');
+                    knjizicaDisplay.val('');
+                    return;
+                }
+
+                const data = korisnikToKnjizica.get(String(korisnikId));
+                if (!data) return;
+
+                knjizicaHidden.val(data.id).trigger('change');
+                knjizicaDisplay.val(data.label);
+            }
+
+            korisnikHidden.on('change', function () {
+                applyKnjizica($(this).val());
+            });
+
+            if (kontrolnaHidden) {
+                kontrolnaHidden.addEventListener('autocomplete:selected', function (e) {
+                    const data = e.detail || {};
+                    loadRoutes(data.value || '', '');
+                });
+
+                kontrolnaHidden.addEventListener('change', function () {
+                    if (!kontrolnaHidden.value) {
+                        resetRoutes();
+                    }
+                });
+            }
+
+            loadRoutes(kontrolnaHidden ? kontrolnaHidden.value : '', $('#IdRuta').val());
+            applyKnjizica(korisnikHidden.val());
+        });
+    </script>
+}

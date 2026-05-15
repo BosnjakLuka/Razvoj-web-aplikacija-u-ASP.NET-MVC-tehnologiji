@@ -40,8 +40,16 @@
 
         <div class="mb-3">
             <label asp-for="IdKorisnik" class="form-label">Autor</label>
-            <select asp-for="IdKorisnik" class="form-select" asp-items="ViewBag.Korisnici"></select>
-            <span asp-validation-for="IdKorisnik" class="text-danger"></span>
+            @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
+            {
+                { "FieldName", "IdKorisnik" },
+                { "DisplayName", "Autor" },
+                { "SearchUrl", Url.Action("AutocompleteSearch", "Korisnik") },
+                { "CurrentId", Model?.IdKorisnik.ToString() },
+                { "CurrentText", ViewData["KorisnikText"]?.ToString() },
+                { "Placeholder", "Pretrazi korisnike..." },
+                { "IsRequired", true }
+            })
         </div>
 
         <div class="form-check mb-4">

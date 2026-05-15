@@ -14,77 +14,65 @@
 }
 
 <section class="mb-4">
-    <h1 class="section-title mb-3">Obavijesti</h1>
-    <p class="text-muted mb-0">
-        Službene obavijesti i novosti u aplikaciji.
-    </p>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <h1 class="section-title mb-2">Obavijesti</h1>
+            <p class="text-muted mb-0">Službene obavijesti i novosti u aplikaciji.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">Nova obavijest</a>
+    </div>
 </section>
 
-<div class="d-flex justify-content-end mb-4">
-    <a asp-controller="Obavijest" asp-action="Create" class="btn btn-outline-primary">
-        Nova obavijest
-    </a>
+<div class="app-card mb-4">
+    <input type="text" id="searchInput" class="form-control" placeholder="Pretrazi obavijesti..." />
 </div>
 
-@if (!Model.Any())
-{
-    <div class="app-card">
-        <h2 class="h5 mb-2">Nema dostupnih obavijesti</h2>
-        <p class="text-muted mb-0">Trenutno nisu pronađene obavijesti za prikaz.</p>
-    </div>
-}
-else
-{
-    <section class="row g-4">
-        @foreach (var obavijest in Model)
-        {
-            <article class="col-12 col-md-6 col-xl-4">
-                <div class="app-card h-100 d-flex flex-column">
-                    <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
-                        <h2 class="h5 mb-0">@obavijest.Naslov</h2>
-                        <span class="app-badge badge-subtle text-uppercase">
-                            @(obavijest.JeAktivna ? "Aktivna" : "Neaktivna")
-                        </span>
-                    </div>
+<div id="searchSpinner" class="text-center py-2 d-none">
+    <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+</div>
 
-                    <div class="d-flex flex-wrap gap-2 mb-3">
-                        <span class="app-badge badge-subtle text-uppercase">
-                            @obavijest.DatumObjave.ToString("dd.MM.yyyy.")
-                        </span>
-                        <span class="app-badge badge-subtle text-uppercase">
-                            @(obavijest.Korisnik != null ? $"{obavijest.Korisnik.Ime} {obavijest.Korisnik.Prezime}" : "Nepoznato")
-                        </span>
-                    </div>
+<div id="resultsContainer">
+    @await Html.PartialAsync("_ObavijestListPartial", Model)
+</div>
 
-                    @if (!string.IsNullOrWhiteSpace(obavijest.Sadrzaj))
-                    {
-                        <p class="text-muted mb-4 flex-grow-1">@TrimOpis(obavijest.Sadrzaj, 150)</p>
+@section Scripts {
+    <script>
+        $(function () {
+            $('#searchInput').on('input', function () {
+                const term = $(this).val();
+                $('#searchSpinner').removeClass('d-none');
+                $.ajax({
+                    url: '@Url.Action("Search", "Obavijest")',
+                    data: { searchTerm: term },
+                    success: function (html) {
+                        $('#searchSpinner').addClass('d-none');
+                        $('#resultsContainer').fadeOut(150, function () {
+                            $(this).html(html).fadeIn(200);
+                        });
+                    },
+                    error: function () {
+                        $('#searchSpinner').addClass('d-none');
+                        showToast('Greska pri pretrazi. Pokusaj ponovo.', 'error');
                     }
-                    else
-                    {
-                        <p class="text-muted mb-4 flex-grow-1 fst-italic">Sadržaj obavijesti nije dostupan.</p>
-                    }
+                });
+            });
+        });
+    </script>
 
-                    <div class="mt-auto d-grid">
-                        <a asp-controller="Obavijest"
-                           asp-action="Details"
-                           asp-route-id="@obavijest.IdObavijest"
-                           class="btn btn-primary">
-                            Detalji obavijesti
-                        </a>
-                    </div>
-                </div>
-            </article>
-        }
-    </section>
-}
-
-@functions {
-    private static string? TrimOpis(string? opis, int max)
+    @if (TempData["NewId"] != null)
     {
-        if (string.IsNullOrWhiteSpace(opis)) return null;
-        var o = opis.Trim();
-        if (o.Length <= max) return o;
-        return o[..max].TrimEnd() + "...";
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const newId = @TempData["NewId"];
+                const row = document.querySelector('tr[data-id="' + newId + '"]');
+                if (row) {
+                    row.style.transition = 'background 0.4s ease';
+                    row.style.background = '#d1fae5';
+                    setTimeout(function () {
+                        row.style.background = '';
+                    }, 2500);
+                }
+            });
+        </script>
     }
 }

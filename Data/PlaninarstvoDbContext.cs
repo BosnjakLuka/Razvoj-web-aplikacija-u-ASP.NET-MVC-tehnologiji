@@ -433,7 +433,8 @@ public class PlaninarstvoDbContext : DbContext
             }
         );
 
-        modelBuilder.Entity<KontrolnaTocka>().HasData(
+        var kontrolnaTockaSeed = new KontrolnaTocka[]
+        {
             new KontrolnaTocka
             {
                 IdKontrolnaTocka = 1,
@@ -494,9 +495,14 @@ public class PlaninarstvoDbContext : DbContext
                 Koordinate = "N/A",
                 OpisZiga = "Žig kontrolne točke nalazi se na vrhu ili u blizini planinarskog doma Zavižan."
             }
+        };
+
+        modelBuilder.Entity<KontrolnaTocka>().HasData(
+            kontrolnaTockaSeed.Concat(PlaninarstvoSeedData.NoveKontrolneTocke).ToArray()
         );
 
-        modelBuilder.Entity<Ruta>().HasData(
+        var rutaSeed = new Ruta[]
+        {
             new Ruta
             {
                 IdRuta = 1,
@@ -582,6 +588,10 @@ public class PlaninarstvoDbContext : DbContext
                 TezinaRute = TezinaRute.Teska,
                 GPXPath = "C:\\GPX\\ruta_zavizan.gpx"
             }
+        };
+
+        modelBuilder.Entity<Ruta>().HasData(
+            rutaSeed.Concat(PlaninarstvoSeedData.NoveRute).ToArray()
         );
 
         modelBuilder.Entity<Korisnik>().HasData(

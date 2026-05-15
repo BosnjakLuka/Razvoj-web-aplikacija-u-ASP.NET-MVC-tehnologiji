@@ -33,6 +33,9 @@ namespace planinarenje.Migrations
                     b.Property<DateTime>("DatumUploada")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("IdPosjet")
                         .HasColumnType("int");
 
@@ -165,6 +168,9 @@ namespace planinarenje.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdKontrolnaTocka"));
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("GUIDOznaka")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -263,6 +269,654 @@ namespace planinarenje.Migrations
                             Opis = "Jedan od najpoznatijih vrhova Sjevernog Velebita s vrlo atraktivnim pogledima.",
                             OpisZiga = "Žig kontrolne točke nalazi se na vrhu ili u blizini planinarskog doma Zavižan.",
                             TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 7,
+                            GUIDOznaka = "KAP8371",
+                            IdPodrucje = 1,
+                            Koordinate = "N 45° 28' 12.0'' E 17° 52' 30.0''",
+                            NadmorskaVisina = 790,
+                            Naziv = "Krndija – vrh Kapovac",
+                            Opis = "Najviši vrh Krndije u slavonskom gorju; šumoviti vrh s markiranim pristupom.",
+                            OpisZiga = "Metalni žig na vršnoj oznaci.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 8,
+                            GUIDOznaka = "IVA5629",
+                            IdPodrucje = 1,
+                            Koordinate = "N 45° 31' 10.0'' E 17° 40' 15.0''",
+                            NadmorskaVisina = 913,
+                            Naziv = "Papuk – vrh Ivačka glava",
+                            Opis = "Najviši vrh Papuka i cijele Slavonije; dostupan s više strana.",
+                            OpisZiga = "Metalni žig na vrhu kod geodetskog stupa.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 9,
+                            GUIDOznaka = "BRE7412",
+                            IdPodrucje = 1,
+                            Koordinate = "N 45° 16' 45.0'' E 17° 18' 20.0''",
+                            NadmorskaVisina = 984,
+                            Naziv = "Psunj – vrh Brezovo polje",
+                            Opis = "Najviši vrh Psunja i jedan od najviših slavonskih vrhova; šumovit i miran.",
+                            OpisZiga = "Metalni žig na oznaci vrha.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 10,
+                            GUIDOznaka = "STA2087",
+                            IdPodrucje = 2,
+                            Koordinate = "N 45° 53' 00.0'' E 17° 07' 30.0''",
+                            NadmorskaVisina = 309,
+                            Naziv = "Bilogora – Stankov vrh",
+                            Opis = "Najviši vrh Bilogore s vidikovcem i planinarskim putom kroz šumu.",
+                            OpisZiga = "Metalni žig na drvenom stupu kod vidikovca.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 11,
+                            GUIDOznaka = "MOH6243",
+                            IdPodrucje = 3,
+                            Koordinate = "N 46° 24' 50.0'' E 16° 22' 10.0''",
+                            NadmorskaVisina = 344,
+                            Naziv = "Međimurske gorice – vrh Mohokos",
+                            Opis = "Najviši vrh Međimurja; lagani pristup i lijep pogled prema Alpama i Zagorju.",
+                            OpisZiga = "Metalni žig na oznaci vrha.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 12,
+                            GUIDOznaka = "IVN3815",
+                            IdPodrucje = 3,
+                            Koordinate = "N 46° 10' 55.0'' E 16° 06' 45.0''",
+                            NadmorskaVisina = 1060,
+                            Naziv = "Ivanščica – vrh Ivanščica",
+                            Opis = "Najviši vrh Hrvatskog zagorja i najistaknutiji zagorski vrh s panoramskim vidicima.",
+                            OpisZiga = "Metalni žig na vršnom stupu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 13,
+                            GUIDOznaka = "RAV9174",
+                            IdPodrucje = 3,
+                            Koordinate = "N 46° 04' 20.0'' E 15° 56' 30.0''",
+                            NadmorskaVisina = 680,
+                            Naziv = "Ravna gora – vrh (piramida)",
+                            Opis = "Šumoviti vrh s geodetskom piramidom i markiranim pristupom iz Gornje Stubice.",
+                            OpisZiga = "Metalni žig na piramidi.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 14,
+                            GUIDOznaka = "SUS4538",
+                            IdPodrucje = 3,
+                            Koordinate = "N 46° 11' 40.0'' E 15° 54' 20.0''",
+                            NadmorskaVisina = 846,
+                            Naziv = "Strahinjščica – vrh Sušec",
+                            Opis = "Najviši vrh Strahinjščice s pogledom prema Ivanščici i Krapinskoj dolini.",
+                            OpisZiga = "Metalni žig na kamenoj oznaci vrha.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 15,
+                            GUIDOznaka = "GRH7260",
+                            IdPodrucje = 4,
+                            Koordinate = "N 45° 52' 30.0'' E 16° 03' 10.0''",
+                            NadmorskaVisina = 492,
+                            Naziv = "Grohot – vrh",
+                            Opis = "Niži vrh Medvednice s vidikovcem i starim hrastovima; pogodan za kraće ture.",
+                            OpisZiga = "Metalni žig na drvenoj oznaci vrha.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 16,
+                            GUIDOznaka = "LIP3492",
+                            IdPodrucje = 4,
+                            Koordinate = "N 45° 54' 10.0'' E 15° 55' 40.0''",
+                            NadmorskaVisina = 709,
+                            Naziv = "Lipa – vrh",
+                            Opis = "Šumoviti vrh Medvednice na sjevernom grebenu; miran i manje posjećen.",
+                            OpisZiga = "Metalni žig na vršnom stupu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 17,
+                            GUIDOznaka = "MEG8156",
+                            IdPodrucje = 4,
+                            Koordinate = "N 45° 51' 45.0'' E 15° 56' 50.0''",
+                            NadmorskaVisina = 579,
+                            Naziv = "Medvedgrad",
+                            Opis = "Srednjovjekovna utvrda na južnim padinama Medvednice; kontrolna točka HPO-a.",
+                            OpisZiga = "Metalni žig na ulaznom zidu utvrde.",
+                            TipKontrolneTocke = 2
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 18,
+                            GUIDOznaka = "PLE6703",
+                            IdPodrucje = 5,
+                            Koordinate = "N 45° 43' 30.0'' E 15° 39' 20.0''",
+                            NadmorskaVisina = 779,
+                            Naziv = "Plešivica – vrh",
+                            Opis = "Vrh Samoborskog gorja s pogledom na vinograde i Žumberak; blizu planinarskog doma.",
+                            OpisZiga = "Metalni žig na kamenoj oznaci.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 19,
+                            GUIDOznaka = "OST5281",
+                            IdPodrucje = 5,
+                            Koordinate = "N 45° 44' 10.0'' E 15° 40' 55.0''",
+                            NadmorskaVisina = 752,
+                            Naziv = "Oštrc – vrh",
+                            Opis = "Popularan vrh s kapelom Sv. Ane na vrhu i panoramskim vidicima.",
+                            OpisZiga = "Metalni žig na kapelici na vrhu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 20,
+                            GUIDOznaka = "TUS9047",
+                            IdPodrucje = 6,
+                            Koordinate = "N 45° 44' 00.0'' E 15° 30' 10.0''",
+                            NadmorskaVisina = 585,
+                            Naziv = "Tuščak – gradina",
+                            Opis = "Stara gradina na zapadnom dijelu Žumberačke gore; pogled prema Žumberku.",
+                            OpisZiga = "Metalni žig na ruševini gradine.",
+                            TipKontrolneTocke = 2
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 21,
+                            GUIDOznaka = "SGE2634",
+                            IdPodrucje = 6,
+                            Koordinate = "N 45° 42' 45.0'' E 15° 22' 30.0''",
+                            NadmorskaVisina = 1178,
+                            Naziv = "Sveta Gera – vrh",
+                            Opis = "Najviši vrh Žumberačke gore i cijele Žumberačko-samoborske regije.",
+                            OpisZiga = "Metalni žig na vršnom stupu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 22,
+                            GUIDOznaka = "PLI7819",
+                            IdPodrucje = 6,
+                            Koordinate = "N 45° 43' 20.0'' E 15° 25' 50.0''",
+                            NadmorskaVisina = 977,
+                            Naziv = "Pliješ – vrh",
+                            Opis = "Šumoviti vrh Žumberačke gore s markiranim putom iz Budinjaka.",
+                            OpisZiga = "Metalni žig na oznaci vrha.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 23,
+                            GUIDOznaka = "VOD4153",
+                            IdPodrucje = 7,
+                            Koordinate = "N 45° 27' 10.0'' E 15° 32' 20.0''",
+                            NadmorskaVisina = 538,
+                            Naziv = "Vodenica – vrh",
+                            Opis = "Najviši vrh Pokuplja; miran vrh s pogledom na Kupu i okolne šume.",
+                            OpisZiga = "Metalni žig na drvenoj oznaci.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 24,
+                            GUIDOznaka = "PET6928",
+                            IdPodrucje = 7,
+                            Koordinate = "N 45° 19' 20.0'' E 15° 47' 00.0''",
+                            NadmorskaVisina = 512,
+                            Naziv = "Petrova gora – vrh Petrovac",
+                            Opis = "Vrh Petrove gore s poznatim spomenikom i vidikovcem prema Kordunu.",
+                            OpisZiga = "Metalni žig na spomeniku kod vrha.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 25,
+                            GUIDOznaka = "KLE3047",
+                            IdPodrucje = 8,
+                            Koordinate = "N 45° 17' 55.0'' E 15° 10' 40.0''",
+                            NadmorskaVisina = 1181,
+                            Naziv = "Klek – vrh",
+                            Opis = "Karakteristična stijena iznad Ogulina; simbol hrvatskog planinarstva od 1874. godine.",
+                            OpisZiga = "Metalni žig na vršnom stupu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 26,
+                            GUIDOznaka = "BJE8592",
+                            IdPodrucje = 8,
+                            Koordinate = "N 45° 15' 50.0'' E 14° 58' 30.0''",
+                            NadmorskaVisina = 1534,
+                            Naziv = "Bjelolasica – vrh Kula",
+                            Opis = "Najviši vrh Gorskog kotara i hrvatski vrh izvan Velebita i Dinare.",
+                            OpisZiga = "Metalni žig na geodetskom stupu na vrhu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 27,
+                            GUIDOznaka = "SAM1736",
+                            IdPodrucje = 8,
+                            Koordinate = "N 45° 16' 20.0'' E 14° 55' 10.0''",
+                            NadmorskaVisina = 1302,
+                            Naziv = "Samarske stijene – vrh",
+                            Opis = "Spektakularne stjenovite formacije u srcu Gorskog kotara; zahtjevan pristup.",
+                            OpisZiga = "Metalni žig na stijeni kod vrha.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 28,
+                            GUIDOznaka = "RIS4208",
+                            IdPodrucje = 9,
+                            Koordinate = "N 45° 25' 35.0'' E 14° 45' 20.0''",
+                            NadmorskaVisina = 1528,
+                            Naziv = "Risnjak – vrh",
+                            Opis = "Najviši vrh istoimenog nacionalnog parka; panoramski pogled od Alpa do mora.",
+                            OpisZiga = "Metalni žig na vršnom stupu kod kapelice.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 29,
+                            GUIDOznaka = "SNJ6371",
+                            IdPodrucje = 9,
+                            Koordinate = "N 45° 26' 10.0'' E 14° 35' 40.0''",
+                            NadmorskaVisina = 1505,
+                            Naziv = "Snježnik – vrh",
+                            Opis = "Drugi najviši vrh Gorskog kotara; poznat po kasnom snijegu i alpskim livadama.",
+                            OpisZiga = "Metalni žig na kamenoj oznaci vrha.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 30,
+                            GUIDOznaka = "SKR2845",
+                            IdPodrucje = 9,
+                            Koordinate = "N 45° 24' 05.0'' E 15° 02' 15.0''",
+                            NadmorskaVisina = 1043,
+                            Naziv = "Skradski vrh",
+                            Opis = "Popularan izletnički vrh u sjevernom Gorskom kotaru s planinarskim domom.",
+                            OpisZiga = "Metalni žig na vršnom stupu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 31,
+                            GUIDOznaka = "VOJ7164",
+                            IdPodrucje = 10,
+                            Koordinate = "N 45° 17' 10.0'' E 14° 11' 55.0''",
+                            NadmorskaVisina = 1396,
+                            Naziv = "Učka – vrh Vojak",
+                            Opis = "Najviši vrh Istre s kamenim tornjem na vrhu i pogledom na Kvarner i Alpe.",
+                            OpisZiga = "Metalni žig na kamenom tornju na vrhu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 32,
+                            GUIDOznaka = "VPL3920",
+                            IdPodrucje = 10,
+                            Koordinate = "N 45° 27' 20.0'' E 14° 13' 30.0''",
+                            NadmorskaVisina = 1272,
+                            Naziv = "Ćićarija – vrh Veliki Planik",
+                            Opis = "Najviši vrh Ćićarije s travnatim vršnim područjem i pogledom prema Učki.",
+                            OpisZiga = "Metalni žig na kamenoj oznaci.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 33,
+                            GUIDOznaka = "MRA8451",
+                            IdPodrucje = 11,
+                            Koordinate = "N 44° 46' 30.0'' E 14° 58' 50.0''",
+                            NadmorskaVisina = 1699,
+                            Naziv = "Mali Rajinac – vrh",
+                            Opis = "Jedan od najviših velebitskih vrhova na sjevernom dijelu; krški vrh s divljim pogledom.",
+                            OpisZiga = "Metalni žig na vrhu stijene.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 34,
+                            GUIDOznaka = "ZEC6237",
+                            IdPodrucje = 12,
+                            Koordinate = "N 44° 36' 15.0'' E 15° 03' 40.0''",
+                            NadmorskaVisina = 1622,
+                            Naziv = "Zečjak – vrh",
+                            Opis = "Najviši vrh Srednjeg Velebita; stjenovit i zahtjevan teren.",
+                            OpisZiga = "Metalni žig na kamenoj piramidi.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 35,
+                            GUIDOznaka = "SAT1584",
+                            IdPodrucje = 12,
+                            Koordinate = "N 44° 34' 50.0'' E 15° 05' 10.0''",
+                            NadmorskaVisina = 1622,
+                            Naziv = "Šatorina – vrh",
+                            Opis = "Karakteristični vrh Srednjeg Velebita s oblikom šatora; divlji krški krajolik.",
+                            OpisZiga = "Metalni žig na oznaci vrha.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 36,
+                            GUIDOznaka = "VAG7302",
+                            IdPodrucje = 13,
+                            Koordinate = "N 44° 21' 50.0'' E 15° 30' 20.0''",
+                            NadmorskaVisina = 1757,
+                            Naziv = "Vaganski vrh",
+                            Opis = "Najviši vrh Velebita i treći najviši vrh Hrvatske; zahtjevan pristup iz Paklenice.",
+                            OpisZiga = "Metalni žig na geodetskom stupu na vrhu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 37,
+                            GUIDOznaka = "SVB4916",
+                            IdPodrucje = 13,
+                            Koordinate = "N 44° 19' 40.0'' E 15° 30' 55.0''",
+                            NadmorskaVisina = 1751,
+                            Naziv = "Sveto brdo – vrh",
+                            Opis = "Drugi najviši vrh Velebita s kapelom na vrhu; pogled na more i Liku.",
+                            OpisZiga = "Metalni žig na kapeli na vrhu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 38,
+                            GUIDOznaka = "ANI2058",
+                            IdPodrucje = 13,
+                            Koordinate = "N 44° 18' 15.0'' E 15° 27' 40.0''",
+                            NadmorskaVisina = 712,
+                            Naziv = "Anića kuk – vrh",
+                            Opis = "Impozantna stijena u klancu Velike Paklenice; alpinistički značajan vrh.",
+                            OpisZiga = "Metalni žig na vršnom stupu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 39,
+                            GUIDOznaka = "OZE8743",
+                            IdPodrucje = 14,
+                            Koordinate = "N 44° 46' 10.0'' E 15° 44' 30.0''",
+                            NadmorskaVisina = 1657,
+                            Naziv = "Lička Plješivica – vrh Ozeblin",
+                            Opis = "Najviši vrh Ličke Plješivice i Like; zahtjevan pristup šumskim putovima.",
+                            OpisZiga = "Metalni žig na vrhu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 40,
+                            GUIDOznaka = "POT5261",
+                            IdPodrucje = 14,
+                            Koordinate = "N 44° 10' 55.0'' E 16° 10' 20.0''",
+                            NadmorskaVisina = 1425,
+                            Naziv = "Poštak – vrh",
+                            Opis = "Istaknuti lički vrh na granici prema Dalmaciji s otvorenim pogledom.",
+                            OpisZiga = "Metalni žig na vršnoj oznaci.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 41,
+                            GUIDOznaka = "OBZ3179",
+                            IdPodrucje = 15,
+                            Koordinate = "N 45° 01' 20.0'' E 14° 37' 50.0''",
+                            NadmorskaVisina = 569,
+                            Naziv = "Krk – vrh Obzova",
+                            Opis = "Najviši vrh otoka Krka s pogledom na Kvarner i okolne otoke.",
+                            OpisZiga = "Metalni žig na vršnom stupu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 42,
+                            GUIDOznaka = "SIS6420",
+                            IdPodrucje = 15,
+                            Koordinate = "N 44° 52' 30.0'' E 14° 22' 10.0''",
+                            NadmorskaVisina = 639,
+                            Naziv = "Cres – vrh Sis",
+                            Opis = "Najviši vrh otoka Cresa; divlji otočni krajolik s pogledom na Jadran.",
+                            OpisZiga = "Metalni žig na kamenoj oznaci.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 43,
+                            GUIDOznaka = "VID8537",
+                            IdPodrucje = 16,
+                            Koordinate = "N 43° 18' 40.0'' E 16° 37' 20.0''",
+                            NadmorskaVisina = 780,
+                            Naziv = "Brač – vrh Vidova gora",
+                            Opis = "Najviši vrh jadranskih otoka; spektakularan pogled na Zlatni rat i Hvar.",
+                            OpisZiga = "Metalni žig na vršnom stupu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 44,
+                            GUIDOznaka = "SNK2074",
+                            IdPodrucje = 16,
+                            Koordinate = "N 43° 10' 35.0'' E 16° 39' 50.0''",
+                            NadmorskaVisina = 626,
+                            Naziv = "Hvar – vrh Sv. Nikola",
+                            Opis = "Najviši vrh otoka Hvara s pogledom na paklinske otoke i pelješku obalu.",
+                            OpisZiga = "Metalni žig na kapelici Sv. Nikole.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 45,
+                            GUIDOznaka = "KOM9361",
+                            IdPodrucje = 16,
+                            Koordinate = "N 42° 57' 30.0'' E 16° 53' 15.0''",
+                            NadmorskaVisina = 508,
+                            Naziv = "Korčula – vrh Kom",
+                            Opis = "Najviši vrh otoka Korčule s gustim makijama i pogledom na Pelješac.",
+                            OpisZiga = "Metalni žig na kamenoj oznaci.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 46,
+                            GUIDOznaka = "DIN4728",
+                            IdPodrucje = 17,
+                            Koordinate = "N 43° 59' 25.0'' E 16° 22' 50.0''",
+                            NadmorskaVisina = 1831,
+                            Naziv = "Dinara – vrh Dinara (Sinjal)",
+                            Opis = "Najviši vrh Republike Hrvatske; obavezna kontrolna točka za srebrnu značku HPO-a.",
+                            OpisZiga = "Metalni žig na geodetskom stupu na vrhu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 47,
+                            GUIDOznaka = "SVL5839",
+                            IdPodrucje = 17,
+                            Koordinate = "N 43° 44' 10.0'' E 16° 28' 30.0''",
+                            NadmorskaVisina = 1508,
+                            Naziv = "Svilaja – vrh Svilaja",
+                            Opis = "Najviši vrh planine Svilaje u dalmatinskom zaleđu; zahtjevan pristup.",
+                            OpisZiga = "Metalni žig na vršnom stupu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 48,
+                            GUIDOznaka = "CAV7162",
+                            IdPodrucje = 17,
+                            Koordinate = "N 43° 51' 40.0'' E 16° 05' 20.0''",
+                            NadmorskaVisina = 1147,
+                            Naziv = "Promina – vrh Čavnovka",
+                            Opis = "Najviši vrh planine Promine iznad Drniša; pogled na Krku i Zagoru.",
+                            OpisZiga = "Metalni žig na kamenoj oznaci.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 49,
+                            GUIDOznaka = "LJU3084",
+                            IdPodrucje = 18,
+                            Koordinate = "N 43° 31' 20.0'' E 16° 31' 50.0''",
+                            NadmorskaVisina = 1262,
+                            Naziv = "Mosor – vrh Ljubljan",
+                            Opis = "Istaknuti vrh Mosora iznad Splita; markiran pristup iz Dugopolja.",
+                            OpisZiga = "Metalni žig na vrhu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 50,
+                            GUIDOznaka = "BIR6597",
+                            IdPodrucje = 18,
+                            Koordinate = "N 43° 33' 50.0'' E 16° 24' 10.0''",
+                            NadmorskaVisina = 631,
+                            Naziv = "Kozjak – vrh Biranj",
+                            Opis = "Vrh planine Kozjak iznad Kaštela s pogledom na Split i otoke.",
+                            OpisZiga = "Metalni žig na kamenoj oznaci.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 51,
+                            GUIDOznaka = "SJU4213",
+                            IdPodrucje = 19,
+                            Koordinate = "N 43° 20' 10.0'' E 17° 03' 00.0''",
+                            NadmorskaVisina = 1762,
+                            Naziv = "Sv. Jure – vrh",
+                            Opis = "Najviši vrh Biokova i drugi najviši vrh uz obalu; pristup cestom ili pješice.",
+                            OpisZiga = "Metalni žig na kapeli Sv. Jure.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 52,
+                            GUIDOznaka = "VOS8746",
+                            IdPodrucje = 19,
+                            Koordinate = "N 43° 18' 55.0'' E 17° 04' 20.0''",
+                            NadmorskaVisina = 1421,
+                            Naziv = "Vošac – vrh",
+                            Opis = "Popularan biokovački vrh s pogledom na makarsku rivijeru i otoke.",
+                            OpisZiga = "Metalni žig na vršnom stupu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 53,
+                            GUIDOznaka = "KIM3509",
+                            IdPodrucje = 19,
+                            Koordinate = "N 43° 19' 30.0'' E 17° 04' 50.0''",
+                            NadmorskaVisina = 1536,
+                            Naziv = "Kimet – vrh",
+                            Opis = "Zahtjevniji biokovački vrh; stjenovit i izložen vjetru.",
+                            OpisZiga = "Metalni žig na stijeni.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 54,
+                            GUIDOznaka = "SIL2871",
+                            IdPodrucje = 20,
+                            Koordinate = "N 42° 55' 20.0'' E 17° 07' 30.0''",
+                            NadmorskaVisina = 960,
+                            Naziv = "Pelješac – vrh Sv. Ilija",
+                            Opis = "Najviši vrh poluotoka Pelješca; zahtjevna staza s pogledom na Korčulu i Mljet.",
+                            OpisZiga = "Metalni žig na vršnom stupu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 55,
+                            GUIDOznaka = "ILJ6034",
+                            IdPodrucje = 20,
+                            Koordinate = "N 42° 38' 40.0'' E 18° 15' 10.0''",
+                            NadmorskaVisina = 1234,
+                            Naziv = "Sniježnica – Ilijin vrh",
+                            Opis = "Najviši vrh dubrovačkog zaleđa; panoramski pogled od Dubrovnika do crnogorskih planina.",
+                            OpisZiga = "Metalni žig na vrhu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 56,
+                            GUIDOznaka = "VSV7283",
+                            IdPodrucje = 8,
+                            Koordinate = "N 45° 18' 40.0'' E 14° 39' 50.0''",
+                            NadmorskaVisina = 1428,
+                            Naziv = "Viševica – vrh",
+                            Opis = "Istaknuti vrh južnog Gorskog kotara s pogledom na Kvarner i otoke.",
+                            OpisZiga = "Metalni žig na vršnom stupu.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 57,
+                            GUIDOznaka = "CAR5190",
+                            IdPodrucje = 1,
+                            Koordinate = "N 45° 14' 30.0'' E 18° 07' 20.0''",
+                            NadmorskaVisina = 421,
+                            Naziv = "Dilj gora – vrh Čardak",
+                            Opis = "Najviši vrh Dilj gore kod Slavonskog Broda; blag i pristupačan vrh.",
+                            OpisZiga = "Metalni žig na vršnoj oznaci.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 58,
+                            GUIDOznaka = "ZBE8416",
+                            IdPodrucje = 10,
+                            Koordinate = "N 45° 29' 10.0'' E 14° 08' 40.0''",
+                            NadmorskaVisina = 1014,
+                            Naziv = "Ćićarija – vrh Žbevnica",
+                            Opis = "Vrh Ćićarije s travnatim vršnim područjem i pogledom prema slovenskoj granici.",
+                            OpisZiga = "Metalni žig na kamenoj oznaci.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 59,
+                            GUIDOznaka = "VRA2758",
+                            IdPodrucje = 3,
+                            Koordinate = "N 46° 09' 00.0'' E 16° 27' 30.0''",
+                            NadmorskaVisina = 643,
+                            Naziv = "Kalnik – vrh Vranilac",
+                            Opis = "Najviši vrh Kalnika sa stijenama i pogledom na Podravinu; zahtjevniji pristup.",
+                            OpisZiga = "Metalni žig na stijeni kod vrha.",
+                            TipKontrolneTocke = 0
+                        },
+                        new
+                        {
+                            IdKontrolnaTocka = 60,
+                            GUIDOznaka = "HOR6391",
+                            IdPodrucje = 4,
+                            Koordinate = "N 45° 52' 10.0'' E 15° 57' 20.0''",
+                            NadmorskaVisina = 450,
+                            Naziv = "Horvatovih 500 stuba",
+                            Opis = "Poznate stube na Medvednici; jedna od dvije kontrolne točke HPO-a koje nisu vrhovi.",
+                            OpisZiga = "Metalni žig na oznaci kod stuba.",
+                            TipKontrolneTocke = 2
                         });
                 });
 
@@ -367,6 +1021,9 @@ namespace planinarenje.Migrations
                     b.Property<DateTime>("DatumDodjele")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("IdKorisnik")
                         .HasColumnType("int");
 
@@ -410,6 +1067,9 @@ namespace planinarenje.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdMedalja"));
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("MinimalanBrojKontrolnihTocaka")
                         .HasColumnType("int");
@@ -568,6 +1228,9 @@ namespace planinarenje.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("varchar(30)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Email")
                         .HasMaxLength(150)
                         .HasColumnType("varchar(150)");
@@ -676,6 +1339,9 @@ namespace planinarenje.Migrations
                     b.Property<string>("Adresa")
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Email")
                         .HasMaxLength(150)
@@ -825,6 +1491,9 @@ namespace planinarenje.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdPodrucje"));
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("MinimalanBrojKTZaObilazak")
                         .HasColumnType("int");
@@ -1022,6 +1691,9 @@ namespace planinarenje.Migrations
                     b.Property<DateTime>("DatumVrijemePosjeta")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("DozivljajPosjeta")
                         .HasColumnType("int");
 
@@ -1148,6 +1820,9 @@ namespace planinarenje.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdRuta"));
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<decimal>("DuljinaKm")
                         .HasPrecision(5, 2)
@@ -1288,6 +1963,516 @@ namespace planinarenje.Migrations
                             TezinaRute = 2,
                             VisinskaRazlikaM = 320,
                             VrijemeHodaMin = 150
+                        },
+                        new
+                        {
+                            IdRuta = 6,
+                            DuljinaKm = 5.5m,
+                            GPXPath = "C:\\GPX\\ruta_ivacka.gpx",
+                            GodinaObnove = 2023,
+                            IdKontrolnaTocka = 8,
+                            Kraj = "Ivačka glava",
+                            Napomena = "Dobro markiran put kroz park prirode Papuk.",
+                            Naziv = "Jankovac – Ivačka glava",
+                            Opis = "Pristup Papuku od planinarskog doma Jankovac kroz bukovu šumu do najvišeg slavonskog vrha.",
+                            OznakaNaTerenu = "PP-01",
+                            Pocetak = "Jankovac",
+                            TezinaRute = 1,
+                            VisinskaRazlikaM = 530,
+                            VrijemeHodaMin = 120
+                        },
+                        new
+                        {
+                            IdRuta = 7,
+                            DuljinaKm = 7.2m,
+                            GPXPath = "C:\\GPX\\ruta_psunj.gpx",
+                            GodinaObnove = 2022,
+                            IdKontrolnaTocka = 9,
+                            Kraj = "Brezovo polje",
+                            Napomena = "Slabije markiran u gornjem dijelu.",
+                            Naziv = "Brestovac – Brezovo polje",
+                            Opis = "Duži pristup Psunju iz sela Brestovac kroz šumu; pogodan za iskusnije planinare.",
+                            OznakaNaTerenu = "PS-01",
+                            Pocetak = "Brestovac",
+                            TezinaRute = 1,
+                            VisinskaRazlikaM = 620,
+                            VrijemeHodaMin = 150
+                        },
+                        new
+                        {
+                            IdRuta = 8,
+                            DuljinaKm = 9.0m,
+                            GPXPath = "C:\\GPX\\ruta_ivanscica.gpx",
+                            GodinaObnove = 2023,
+                            IdKontrolnaTocka = 12,
+                            Kraj = "Ivanščica",
+                            Napomena = "Dug, ali dobro markiran put.",
+                            Naziv = "Ivanec – Ivanščica vrh",
+                            Opis = "Klasičan pristup najvišem vrhu Zagorja iz Ivanca preko planinarske kuće.",
+                            OznakaNaTerenu = "IZ-02",
+                            Pocetak = "Ivanec",
+                            TezinaRute = 1,
+                            VisinskaRazlikaM = 780,
+                            VrijemeHodaMin = 180
+                        },
+                        new
+                        {
+                            IdRuta = 9,
+                            DuljinaKm = 4.0m,
+                            GPXPath = "C:\\GPX\\ruta_susec.gpx",
+                            GodinaObnove = 2021,
+                            IdKontrolnaTocka = 14,
+                            Kraj = "Sušec",
+                            Napomena = "Pogodan za poluizlete.",
+                            Naziv = "Radoboj – Sušec",
+                            Opis = "Kraći pristup vrhu Strahinjščice iz Radoboja kroz šumu.",
+                            OznakaNaTerenu = "SH-01",
+                            Pocetak = "Radoboj",
+                            TezinaRute = 0,
+                            VisinskaRazlikaM = 450,
+                            VrijemeHodaMin = 90
+                        },
+                        new
+                        {
+                            IdRuta = 10,
+                            DuljinaKm = 3.2m,
+                            GPXPath = "C:\\GPX\\ruta_grohot.gpx",
+                            GodinaObnove = 2024,
+                            IdKontrolnaTocka = 15,
+                            Kraj = "Grohot",
+                            Napomena = "Idealan za kratke popodnevne ture.",
+                            Naziv = "Šestine – Grohot",
+                            Opis = "Kratak uspon od Šestina do vrha Grohot na Medvednici.",
+                            OznakaNaTerenu = "MED-07",
+                            Pocetak = "Šestine",
+                            TezinaRute = 0,
+                            VisinskaRazlikaM = 280,
+                            VrijemeHodaMin = 60
+                        },
+                        new
+                        {
+                            IdRuta = 11,
+                            DuljinaKm = 2.5m,
+                            GPXPath = "C:\\GPX\\ruta_medvedgrad.gpx",
+                            GodinaObnove = 2024,
+                            IdKontrolnaTocka = 17,
+                            Kraj = "Medvedgrad",
+                            Napomena = "Popularna obiteljska ruta.",
+                            Naziv = "Šestinski dol – Medvedgrad",
+                            Opis = "Kratak ali strm pristup utvrdi Medvedgrad s južne strane.",
+                            OznakaNaTerenu = "MED-02",
+                            Pocetak = "Šestinski dol",
+                            TezinaRute = 0,
+                            VisinskaRazlikaM = 300,
+                            VrijemeHodaMin = 45
+                        },
+                        new
+                        {
+                            IdRuta = 12,
+                            DuljinaKm = 4.0m,
+                            GPXPath = "C:\\GPX\\ruta_plesivica.gpx",
+                            GodinaObnove = 2021,
+                            IdKontrolnaTocka = 18,
+                            Kraj = "Plešivica – vrh",
+                            Napomena = "Lijep pogled na vinograde tijekom uspona.",
+                            Naziv = "Poljanica – Plešivica",
+                            Opis = "Pristup Plešivici s južne strane iz Poljanice kroz vinograde i šumu.",
+                            OznakaNaTerenu = "SG-02",
+                            Pocetak = "Poljanica Samoborska",
+                            TezinaRute = 0,
+                            VisinskaRazlikaM = 420,
+                            VrijemeHodaMin = 75
+                        },
+                        new
+                        {
+                            IdRuta = 13,
+                            DuljinaKm = 3.0m,
+                            GPXPath = "C:\\GPX\\ruta_ostrc.gpx",
+                            GodinaObnove = 2022,
+                            IdKontrolnaTocka = 19,
+                            Kraj = "Oštrc – vrh",
+                            Napomena = "Atraktivan grebenski put s pogledima.",
+                            Naziv = "Japetić dom – Oštrc",
+                            Opis = "Grebenski prijelaz od doma Žitnica kod Japetića do vrha Oštrc preko kapele Sv. Ane.",
+                            OznakaNaTerenu = "SG-03",
+                            Pocetak = "Planinarski dom Žitnica",
+                            TezinaRute = 1,
+                            VisinskaRazlikaM = 280,
+                            VrijemeHodaMin = 60
+                        },
+                        new
+                        {
+                            IdRuta = 14,
+                            DuljinaKm = 8.5m,
+                            GPXPath = "C:\\GPX\\ruta_svetagera.gpx",
+                            GodinaObnove = 2021,
+                            IdKontrolnaTocka = 21,
+                            Kraj = "Sveta Gera",
+                            Napomena = "Potrebna dobra kondicija za dulji uspon.",
+                            Naziv = "Budinjak – Sveta Gera",
+                            Opis = "Dugačak pristup najvišem vrhu Žumberačke gore iz Budinjaka.",
+                            OznakaNaTerenu = "ZG-01",
+                            Pocetak = "Budinjak",
+                            TezinaRute = 2,
+                            VisinskaRazlikaM = 650,
+                            VrijemeHodaMin = 180
+                        },
+                        new
+                        {
+                            IdRuta = 15,
+                            DuljinaKm = 4.5m,
+                            GPXPath = "C:\\GPX\\ruta_klek.gpx",
+                            GodinaObnove = 2023,
+                            IdKontrolnaTocka = 25,
+                            Kraj = "Klek – vrh",
+                            Napomena = "Završni dio zahtijeva osnovnu opremu i iskustvo.",
+                            Naziv = "Bjelsko – Klek",
+                            Opis = "Klasičan pristup Kleku iz sela Bjelsko; strm završni dio uz pomoć sajli.",
+                            OznakaNaTerenu = "GK-01",
+                            Pocetak = "Bjelsko",
+                            TezinaRute = 2,
+                            VisinskaRazlikaM = 780,
+                            VrijemeHodaMin = 120
+                        },
+                        new
+                        {
+                            IdRuta = 16,
+                            DuljinaKm = 5.0m,
+                            GPXPath = "C:\\GPX\\ruta_bjelolasica.gpx",
+                            GodinaObnove = 2024,
+                            IdKontrolnaTocka = 26,
+                            Kraj = "Bjelolasica – Kula",
+                            Napomena = "Relativno lagodan pristup s makadama.",
+                            Naziv = "Begovo Razdolje – Bjelolasica",
+                            Opis = "Pristup najvišem vrhu Gorskog kotara iz Begovog Razdolja.",
+                            OznakaNaTerenu = "GK-05",
+                            Pocetak = "Begovo Razdolje",
+                            TezinaRute = 1,
+                            VisinskaRazlikaM = 430,
+                            VrijemeHodaMin = 90
+                        },
+                        new
+                        {
+                            IdRuta = 17,
+                            DuljinaKm = 7.0m,
+                            GPXPath = "C:\\GPX\\ruta_risnjak.gpx",
+                            GodinaObnove = 2024,
+                            IdKontrolnaTocka = 28,
+                            Kraj = "Risnjak – vrh",
+                            Napomena = "Prolaz kroz NP Risnjak; plaćanje ulaznice.",
+                            Naziv = "Crni Lug – Risnjak",
+                            Opis = "Klasičan pristup Risnjaku iz Crnog Luga kroz nacionalni park.",
+                            OznakaNaTerenu = "GK-08",
+                            Pocetak = "Crni Lug",
+                            TezinaRute = 1,
+                            VisinskaRazlikaM = 680,
+                            VrijemeHodaMin = 150
+                        },
+                        new
+                        {
+                            IdRuta = 18,
+                            DuljinaKm = 5.5m,
+                            GPXPath = "C:\\GPX\\ruta_snjeznik.gpx",
+                            GodinaObnove = 2023,
+                            IdKontrolnaTocka = 29,
+                            Kraj = "Snježnik – vrh",
+                            Napomena = "Može imati snijega do kasnog proljeća.",
+                            Naziv = "Platak – Snježnik",
+                            Opis = "Pristup Snježniku s Platka preko planinskog doma.",
+                            OznakaNaTerenu = "GK-10",
+                            Pocetak = "Platak",
+                            TezinaRute = 1,
+                            VisinskaRazlikaM = 510,
+                            VrijemeHodaMin = 120
+                        },
+                        new
+                        {
+                            IdRuta = 19,
+                            DuljinaKm = 4.2m,
+                            GPXPath = "C:\\GPX\\ruta_vojak.gpx",
+                            GodinaObnove = 2024,
+                            IdKontrolnaTocka = 31,
+                            Kraj = "Učka – Vojak",
+                            Napomena = "Najpopularnija ruta na Učki.",
+                            Naziv = "Poklon – Vojak",
+                            Opis = "Najpopularniji pristup Vojaku s prijevoja Poklon; dobro markiran.",
+                            OznakaNaTerenu = "IS-01",
+                            Pocetak = "Poklon",
+                            TezinaRute = 0,
+                            VisinskaRazlikaM = 520,
+                            VrijemeHodaMin = 90
+                        },
+                        new
+                        {
+                            IdRuta = 20,
+                            DuljinaKm = 8.0m,
+                            GPXPath = "C:\\GPX\\ruta_mrajinac.gpx",
+                            GodinaObnove = 2023,
+                            IdKontrolnaTocka = 33,
+                            Kraj = "Mali Rajinac",
+                            Napomena = "Ozbiljan krški teren; potrebna dobra oprema.",
+                            Naziv = "Alan – Mali Rajinac",
+                            Opis = "Zahtjevan pristup jednom od najviših velebitskih vrhova iz doma Alan.",
+                            OznakaNaTerenu = "SV-03",
+                            Pocetak = "Planinarski dom Alan",
+                            TezinaRute = 2,
+                            VisinskaRazlikaM = 650,
+                            VrijemeHodaMin = 180
+                        },
+                        new
+                        {
+                            IdRuta = 21,
+                            DuljinaKm = 14.0m,
+                            GPXPath = "C:\\GPX\\ruta_vaganski.gpx",
+                            GodinaObnove = 2024,
+                            IdKontrolnaTocka = 36,
+                            Kraj = "Vaganski vrh",
+                            Napomena = "Cijeli dan hoda; potrebna odlična kondicija.",
+                            Naziv = "Starigrad Paklenica – Vaganski vrh",
+                            Opis = "Dugi i zahtjevni uspon na najviši vrh Velebita kroz NP Paklenica.",
+                            OznakaNaTerenu = "JV-01",
+                            Pocetak = "Starigrad-Paklenica",
+                            TezinaRute = 2,
+                            VisinskaRazlikaM = 1550,
+                            VrijemeHodaMin = 360
+                        },
+                        new
+                        {
+                            IdRuta = 22,
+                            DuljinaKm = 3.5m,
+                            GPXPath = "C:\\GPX\\ruta_anicakuk.gpx",
+                            GodinaObnove = 2022,
+                            IdKontrolnaTocka = 38,
+                            Kraj = "Anića kuk – vrh",
+                            Napomena = "Završni dio tehnički zahtjevan.",
+                            Naziv = "Velika Paklenica – Anića kuk",
+                            Opis = "Pristup Anića kuku iz klanca Velike Paklenice; alpinistički značajan vrh.",
+                            OznakaNaTerenu = "JV-04",
+                            Pocetak = "Velika Paklenica ulaz",
+                            TezinaRute = 2,
+                            VisinskaRazlikaM = 500,
+                            VrijemeHodaMin = 120
+                        },
+                        new
+                        {
+                            IdRuta = 23,
+                            DuljinaKm = 10.0m,
+                            GPXPath = "C:\\GPX\\ruta_ozeblin.gpx",
+                            GodinaObnove = 2021,
+                            IdKontrolnaTocka = 39,
+                            Kraj = "Ozeblin",
+                            Napomena = "Slabije markiran gornji dio; potrebna navigacija.",
+                            Naziv = "Glogovac – Ozeblin",
+                            Opis = "Dugačak pristup najvišem vrhu Like iz sela Glogovac.",
+                            OznakaNaTerenu = "LI-01",
+                            Pocetak = "Glogovac",
+                            TezinaRute = 2,
+                            VisinskaRazlikaM = 900,
+                            VrijemeHodaMin = 240
+                        },
+                        new
+                        {
+                            IdRuta = 24,
+                            DuljinaKm = 5.5m,
+                            GPXPath = "C:\\GPX\\ruta_obzova.gpx",
+                            GodinaObnove = 2023,
+                            IdKontrolnaTocka = 41,
+                            Kraj = "Obzova – vrh",
+                            Napomena = "Ljeti ponijeti dovoljno vode.",
+                            Naziv = "Baška – Obzova",
+                            Opis = "Pristup najvišem vrhu Krka iz Baške; otočni krški teren.",
+                            OznakaNaTerenu = "OT-01",
+                            Pocetak = "Baška",
+                            TezinaRute = 1,
+                            VisinskaRazlikaM = 500,
+                            VrijemeHodaMin = 120
+                        },
+                        new
+                        {
+                            IdRuta = 25,
+                            DuljinaKm = 4.5m,
+                            GPXPath = "C:\\GPX\\ruta_vidovagora.gpx",
+                            GodinaObnove = 2024,
+                            IdKontrolnaTocka = 43,
+                            Kraj = "Vidova gora",
+                            Napomena = "Popularna turistička ruta s izvrsnim vidikom.",
+                            Naziv = "Nerežišća – Vidova gora",
+                            Opis = "Pristup najvišem otočnom vrhu iz mjesta Nerežišća; pogled na Zlatni rat.",
+                            OznakaNaTerenu = "OT-05",
+                            Pocetak = "Nerežišća",
+                            TezinaRute = 0,
+                            VisinskaRazlikaM = 480,
+                            VrijemeHodaMin = 90
+                        },
+                        new
+                        {
+                            IdRuta = 26,
+                            DuljinaKm = 9.0m,
+                            GPXPath = "C:\\GPX\\ruta_dinara.gpx",
+                            GodinaObnove = 2024,
+                            IdKontrolnaTocka = 46,
+                            Kraj = "Dinara (Sinjal)",
+                            Napomena = "Obavezna točka za srebrnu značku HPO-a. Zahtjevan pristup.",
+                            Naziv = "Glavaš – Dinara (Sinjal)",
+                            Opis = "Klasičan pristup najvišem vrhu Hrvatske iz zaseoka Glavaš iznad Vrlike.",
+                            OznakaNaTerenu = "DZ-01",
+                            Pocetak = "Glavaš",
+                            TezinaRute = 2,
+                            VisinskaRazlikaM = 950,
+                            VrijemeHodaMin = 240
+                        },
+                        new
+                        {
+                            IdRuta = 27,
+                            DuljinaKm = 9.5m,
+                            GPXPath = "C:\\GPX\\ruta_svilaja.gpx",
+                            GodinaObnove = 2022,
+                            IdKontrolnaTocka = 47,
+                            Kraj = "Svilaja – vrh",
+                            Napomena = "Zahtjevan uspon po toplom vremenu.",
+                            Naziv = "Muć – Svilaja",
+                            Opis = "Dugi pristup vrhu Svilaje iz Muća kroz dalmatinsko zaleđe.",
+                            OznakaNaTerenu = "DZ-03",
+                            Pocetak = "Muć",
+                            TezinaRute = 2,
+                            VisinskaRazlikaM = 1050,
+                            VrijemeHodaMin = 210
+                        },
+                        new
+                        {
+                            IdRuta = 28,
+                            DuljinaKm = 6.5m,
+                            GPXPath = "C:\\GPX\\ruta_mosor.gpx",
+                            GodinaObnove = 2023,
+                            IdKontrolnaTocka = 49,
+                            Kraj = "Mosor – Ljubljan",
+                            Napomena = "Popularna splitska planinarska ruta.",
+                            Naziv = "Dugopolje – Ljubljan",
+                            Opis = "Pristup Mosoru iz Dugopolja s markiranim putom prema vrhu Ljubljan.",
+                            OznakaNaTerenu = "DA-02",
+                            Pocetak = "Dugopolje",
+                            TezinaRute = 1,
+                            VisinskaRazlikaM = 860,
+                            VrijemeHodaMin = 150
+                        },
+                        new
+                        {
+                            IdRuta = 29,
+                            DuljinaKm = 11.0m,
+                            GPXPath = "C:\\GPX\\ruta_svjure_biokovo.gpx",
+                            GodinaObnove = 2024,
+                            IdKontrolnaTocka = 51,
+                            Kraj = "Sv. Jure",
+                            Napomena = "Iznimno zahtjevna ruta; cijeli dan hoda.",
+                            Naziv = "Bast – Sv. Jure Biokovo",
+                            Opis = "Najzahtjevniji pristup Biokovu iz Basta na obali; ogromna visinska razlika.",
+                            OznakaNaTerenu = "BI-01",
+                            Pocetak = "Bast",
+                            TezinaRute = 2,
+                            VisinskaRazlikaM = 1600,
+                            VrijemeHodaMin = 300
+                        },
+                        new
+                        {
+                            IdRuta = 30,
+                            DuljinaKm = 6.0m,
+                            GPXPath = "C:\\GPX\\ruta_vosac.gpx",
+                            GodinaObnove = 2023,
+                            IdKontrolnaTocka = 52,
+                            Kraj = "Vošac – vrh",
+                            Napomena = "Strm, ali dobro markiran pristup.",
+                            Naziv = "Makarska – Vošac",
+                            Opis = "Popularan uspon na Biokovo iz Makarske s pogledom na rivijeru.",
+                            OznakaNaTerenu = "BI-03",
+                            Pocetak = "Makarska",
+                            TezinaRute = 2,
+                            VisinskaRazlikaM = 1300,
+                            VrijemeHodaMin = 180
+                        },
+                        new
+                        {
+                            IdRuta = 31,
+                            DuljinaKm = 6.5m,
+                            GPXPath = "C:\\GPX\\ruta_svilija_peljesac.gpx",
+                            GodinaObnove = 2022,
+                            IdKontrolnaTocka = 54,
+                            Kraj = "Sv. Ilija Pelješac",
+                            Napomena = "Zahtjevan uspon, posebno ljeti.",
+                            Naziv = "Orebić – Sv. Ilija Pelješac",
+                            Opis = "Pristup najvišem pelješkom vrhu iz Orebića; pogled na Korčulu.",
+                            OznakaNaTerenu = "DU-01",
+                            Pocetak = "Orebić",
+                            TezinaRute = 2,
+                            VisinskaRazlikaM = 900,
+                            VrijemeHodaMin = 180
+                        },
+                        new
+                        {
+                            IdRuta = 32,
+                            DuljinaKm = 6.0m,
+                            GPXPath = "C:\\GPX\\ruta_snijeznica.gpx",
+                            GodinaObnove = 2021,
+                            IdKontrolnaTocka = 55,
+                            Kraj = "Sniježnica – Ilijin vrh",
+                            Napomena = "Ljeti ponijeti dovoljno vode; manje markacija.",
+                            Naziv = "Pridvorje – Sniježnica",
+                            Opis = "Pristup najvišem vrhu dubrovačkog zaleđa iz Pridvorja.",
+                            OznakaNaTerenu = "DU-02",
+                            Pocetak = "Pridvorje",
+                            TezinaRute = 1,
+                            VisinskaRazlikaM = 750,
+                            VrijemeHodaMin = 150
+                        },
+                        new
+                        {
+                            IdRuta = 33,
+                            DuljinaKm = 7.0m,
+                            GPXPath = "C:\\GPX\\ruta_kapovac.gpx",
+                            GodinaObnove = 2022,
+                            IdKontrolnaTocka = 7,
+                            Kraj = "Kapovac",
+                            Napomena = "Dulji pristup kroz slavonsku šumu.",
+                            Naziv = "Našice – Kapovac",
+                            Opis = "Pristup vrhu Krndije iz Našica preko šumskih putova.",
+                            OznakaNaTerenu = "SL-01",
+                            Pocetak = "Našice",
+                            TezinaRute = 1,
+                            VisinskaRazlikaM = 540,
+                            VrijemeHodaMin = 150
+                        },
+                        new
+                        {
+                            IdRuta = 34,
+                            DuljinaKm = 5.5m,
+                            GPXPath = "C:\\GPX\\ruta_plijes.gpx",
+                            GodinaObnove = 2023,
+                            IdKontrolnaTocka = 22,
+                            Kraj = "Pliješ – vrh",
+                            Napomena = "Umjeren pristup šumskim putevima.",
+                            Naziv = "Budinjak – Pliješ",
+                            Opis = "Pristup Pliješu iz Budinjaka kroz Žumberačku goru.",
+                            OznakaNaTerenu = "ZG-02",
+                            Pocetak = "Budinjak",
+                            TezinaRute = 1,
+                            VisinskaRazlikaM = 500,
+                            VrijemeHodaMin = 120
+                        },
+                        new
+                        {
+                            IdRuta = 35,
+                            DuljinaKm = 3.5m,
+                            GPXPath = "C:\\GPX\\ruta_vranilac.gpx",
+                            GodinaObnove = 2022,
+                            IdKontrolnaTocka = 59,
+                            Kraj = "Vranilac – vrh",
+                            Napomena = "Završni dio zahtijeva pažnju.",
+                            Naziv = "Kalnik selo – Vranilac",
+                            Opis = "Pristup Kalniku iz istoimenog sela; strm završni dio uz stijene.",
+                            OznakaNaTerenu = "ZA-03",
+                            Pocetak = "Kalnik (selo)",
+                            TezinaRute = 1,
+                            VisinskaRazlikaM = 340,
+                            VrijemeHodaMin = 90
                         });
                 });
 

@@ -10,59 +10,65 @@
 }
 
 <section class="mb-4">
-    <h1 class="section-title mb-3">Priznanja i medalje</h1>
-    <p class="text-muted mb-0">
-        Sustav priznanja nagraduje obilazak kontrolnih tocaka i podrucja. Usporedi uvjete i odaberi svoj sljedeci planinarski cilj.
-    </p>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <h1 class="section-title mb-2">Priznanja i medalje</h1>
+            <p class="text-muted mb-0">Pregled medalja s brzim pretrazivanjem i CRUD akcijama.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">Nova medalja</a>
+    </div>
 </section>
 
-@if (!Model.Any())
-{
-    <div class="app-card">
-        <h2 class="h5 mb-2">Nema dostupnih medalja</h2>
-        <p class="text-muted mb-0">Trenutno nisu pronadeni podaci za prikaz planinarskih priznanja.</p>
-    </div>
-}
-else
-{
-    <section class="row g-4">
-        @foreach (var medalja in Model)
-        {
-            <article class="col-12 col-md-6 col-xl-4">
-                <div class="app-card h-100 d-flex flex-column">
-                    <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
-                        <h2 class="h5 mb-0">@medalja.Naziv</h2>
-                        <span class="app-badge badge-subtle text-uppercase">Priznanje</span>
-                    </div>
+<div class="app-card mb-4">
+    <input type="text" id="searchInput" class="form-control" placeholder="Pretrazi medalje..." />
+</div>
 
-                    <div class="d-flex flex-wrap gap-2 mb-3">
-                        <span class="app-badge badge-subtle text-uppercase">
-                            MINIMALNO @medalja.MinimalanBrojKontrolnihTocaka KT
-                        </span>
-                        <span class="app-badge badge-subtle text-uppercase">
-                            MINIMALNO @medalja.MinimalanBrojPodrucja PODRUCJA
-                        </span>
-                    </div>
+<div id="searchSpinner" class="text-center py-2 d-none">
+    <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+</div>
 
-                    @if (!string.IsNullOrWhiteSpace(medalja.OpisPreview))
-                    {
-                        <p class="text-muted mb-4 flex-grow-1">@medalja.OpisPreview</p>
+<div id="resultsContainer">
+    @await Html.PartialAsync("_MedaljaListPartial", Model)
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('#searchInput').on('input', function () {
+                const term = $(this).val();
+                $('#searchSpinner').removeClass('d-none');
+                $.ajax({
+                    url: '@Url.Action("Search", "Medalja")',
+                    data: { searchTerm: term },
+                    success: function (html) {
+                        $('#searchSpinner').addClass('d-none');
+                        $('#resultsContainer').fadeOut(150, function () {
+                            $(this).html(html).fadeIn(200);
+                        });
+                    },
+                    error: function () {
+                        $('#searchSpinner').addClass('d-none');
+                        showToast('Greska pri pretrazi. Pokusaj ponovo.', 'error');
                     }
-                    else
-                    {
-                        <p class="text-muted mb-4 flex-grow-1 fst-italic">Opis kriterija nije dostupan.</p>
-                    }
+                });
+            });
+        });
+    </script>
 
-                    <div class="mt-auto d-grid">
-                        <a asp-controller="Medalja"
-                           asp-action="Details"
-                           asp-route-id="@medalja.IdMedalja"
-                           class="btn btn-primary">
-                            Detalji priznanja
-                        </a>
-                    </div>
-                </div>
-            </article>
-        }
-    </section>
+    @if (TempData["NewId"] != null)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const newId = @TempData["NewId"];
+                const row = document.querySelector('tr[data-id="' + newId + '"]');
+                if (row) {
+                    row.style.transition = 'background 0.4s ease';
+                    row.style.background = '#d1fae5';
+                    setTimeout(function () {
+                        row.style.background = '';
+                    }, 2500);
+                }
+            });
+        </script>
+    }
 }

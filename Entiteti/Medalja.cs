@@ -15,5 +15,7 @@ public class Medalja
     public int MinimalanBrojKontrolnihTocaka { get; set; }
     public int MinimalanBrojPodrucja { get; set; }
 
+    public DateTime? DeletedAt { get; set; }
+
     public virtual ICollection<KorisnikMedalja> KorisnikMedalje { get; set; } = new List<KorisnikMedalja>();
 }

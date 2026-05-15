@@ -1,0 +1,53 @@
+@model IReadOnlyList<planinarenje.Models.KorisnikIndexCardViewModel>
+
+@if (!Model.Any())
+{
+    <div class="app-card">
+        <h2 class="h5 mb-2">Nema registriranih korisnika</h2>
+        <p class="text-muted mb-0">Trenutno nisu pronađeni podatci za prikaz.</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive app-card p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Korisnik</th>
+                    <th>Email</th>
+                    <th>Datum registracije</th>
+                    <th>Status</th>
+                    <th class="text-end">Akcije</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var korisnik in Model)
+                {
+                    <tr data-id="@korisnik.IdKorisnik">
+                        <td>
+                            <div class="fw-bold">@korisnik.Ime @korisnik.Prezime</div>
+                            <small class="text-muted">@korisnik.KorisnickoIme</small>
+                        </td>
+                        <td class="align-middle">@korisnik.Email</td>
+                        <td class="align-middle">@korisnik.DatumRegistracije.ToString("dd.MM.yyyy.")</td>
+                        <td class="align-middle">
+                            @if (korisnik.StatusAktivan)
+                            {
+                                <span class="badge bg-success-subtle text-success">Aktivan</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary-subtle text-secondary">Neaktivan</span>
+                            }
+                        </td>
+                        <td class="text-end align-middle">
+                            <a asp-action="Details" asp-route-id="@korisnik.IdKorisnik" class="btn btn-outline-primary btn-sm">Detalji</a>
+                            <a asp-action="Edit" asp-route-id="@korisnik.IdKorisnik" class="btn btn-outline-secondary btn-sm">Uredi</a>
+                            <a asp-action="Delete" asp-route-id="@korisnik.IdKorisnik" class="btn btn-outline-danger btn-sm">Obrisi</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

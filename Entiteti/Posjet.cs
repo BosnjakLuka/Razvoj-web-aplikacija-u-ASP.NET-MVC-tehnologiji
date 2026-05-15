@@ -32,6 +32,8 @@ public class Posjet
     public bool JeLiPotvrdenPosjet { get; set; }
     public DateTime DatumKreiranjaZapisa { get; set; }
 
+    public DateTime? DeletedAt { get; set; }
+
     public virtual Korisnik Korisnik { get; set; } = null!;
     public virtual Knjizica Knjizica { get; set; } = null!;
     public virtual KontrolnaTocka KontrolnaTocka { get; set; } = null!;

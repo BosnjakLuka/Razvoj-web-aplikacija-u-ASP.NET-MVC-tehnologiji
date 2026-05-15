@@ -18,6 +18,8 @@ public class Podrucje
 
     public int MinimalanBrojKTZaObilazak { get; set; }
 
+    public DateTime? DeletedAt { get; set; }
+
     public virtual ICollection<KontrolnaTocka> KontrolneTocke { get; set; } = new List<KontrolnaTocka>();
     public virtual ICollection<PlaninarskiObjekt> PlaninarskiObjekti { get; set; } = new List<PlaninarskiObjekt>();
 }
