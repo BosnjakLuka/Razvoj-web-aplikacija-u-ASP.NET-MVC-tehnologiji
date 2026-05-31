@@ -37,6 +37,27 @@ namespace planinarenje.Controllers
             return absolutePath;
         }
 
+        private bool DodajGreskeZaDuplikatKorisnika(string email, string korisnickoIme, int? excludeId = null)
+        {
+            var postojiEmail = _dbContext.Korisnici.Any(k =>
+                k.Email == email && (!excludeId.HasValue || k.IdKorisnik != excludeId.Value));
+
+            var postojiKorisnickoIme = _dbContext.Korisnici.Any(k =>
+                k.KorisnickoIme == korisnickoIme && (!excludeId.HasValue || k.IdKorisnik != excludeId.Value));
+
+            if (postojiEmail)
+            {
+                ModelState.AddModelError(nameof(KorisnikCreateModel.Email), "Korisnik s ovim emailom već postoji.");
+            }
+
+            if (postojiKorisnickoIme)
+            {
+                ModelState.AddModelError(nameof(KorisnikCreateModel.KorisnickoIme), "Korisnik s ovim korisničkim imenom već postoji.");
+            }
+
+            return postojiEmail || postojiKorisnickoIme;
+        }
+
         public IActionResult Index()
         {
             var model = BuildIndexModel(null);
@@ -86,6 +107,13 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
+            if (DodajGreskeZaDuplikatKorisnika(model.Email, model.KorisnickoIme))
+            {
+                ViewData["PopupWarning"] = "Korisnik s ovim podacima već postoji. Promijeni email adresu i korisničko ime.";
+                ViewData["Title"] = "Novi korisnik";
+                return View(model);
+            }
+
             var korisnik = new Korisnik
             {
                 Ime = model.Ime,
@@ -99,8 +127,23 @@ namespace planinarenje.Controllers
                 StatusAktivan = true
             };
 
-            _dbContext.Korisnici.Add(korisnik);
-            _dbContext.SaveChanges();
+            try
+            {
+                _dbContext.Korisnici.Add(korisnik);
+                _dbContext.SaveChanges();
+            }
+            catch (DbUpdateException)
+            {
+                if (!DodajGreskeZaDuplikatKorisnika(model.Email, model.KorisnickoIme))
+                {
+                    ViewData["PopupWarning"] = "Došlo je do pogreške pri spremanju korisnika.";
+                    ModelState.AddModelError(string.Empty, "Došlo je do pogreške pri spremanju korisnika.");
+                }
+
+                ViewData["Title"] = "Novi korisnik";
+                return View(model);
+            }
+
             TempData["NewId"] = korisnik.IdKorisnik;
             TempData["Success"] = "Korisnik je uspjesno dodan.";
             return RedirectToAction(nameof(Index));
@@ -147,6 +190,13 @@ namespace planinarenje.Controllers
                 return NotFound();
             }
 
+            if (DodajGreskeZaDuplikatKorisnika(model.Email, model.KorisnickoIme, id))
+            {
+                ViewData["PopupWarning"] = "Korisnik s ovim podacima već postoji. Promijeni email adresu i korisničko ime.";
+                ViewData["Title"] = "Uredi korisnika";
+                return View(model);
+            }
+
             korisnik.Ime = model.Ime;
             korisnik.Prezime = model.Prezime;
             korisnik.Email = model.Email;
@@ -154,7 +204,22 @@ namespace planinarenje.Controllers
             korisnik.BrojMobitela = model.BrojMobitela;
             korisnik.DatumRodenja = model.DatumRodenja;
 
-            _dbContext.SaveChanges();
+            try
+            {
+                _dbContext.SaveChanges();
+            }
+            catch (DbUpdateException)
+            {
+                if (!DodajGreskeZaDuplikatKorisnika(model.Email, model.KorisnickoIme, id))
+                {
+                    ViewData["PopupWarning"] = "Došlo je do pogreške pri spremanju korisnika.";
+                    ModelState.AddModelError(string.Empty, "Došlo je do pogreške pri spremanju korisnika.");
+                }
+
+                ViewData["Title"] = "Uredi korisnika";
+                return View(model);
+            }
+
             TempData["Success"] = "Korisnik je uspjesno azuriran.";
             return RedirectToAction(nameof(Index));
         }

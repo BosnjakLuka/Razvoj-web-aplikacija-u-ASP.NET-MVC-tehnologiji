@@ -7,6 +7,7 @@ function showToast(message, type) {
 	const colors = {
 		success: { bg: '#1b4332', icon: '✓' },
 		error: { bg: '#7f1d1d', icon: '✕' },
+		warning: { bg: '#9a6700', icon: '⚠' },
 		info: { bg: '#1e3a5f', icon: 'i' }
 	};
 	const c = colors[type] || colors.success;
@@ -15,23 +16,28 @@ function showToast(message, type) {
 	toast.style.cssText = [
 		'background:' + c.bg,
 		'color:#fff',
-		'padding:12px 18px',
-		'border-radius:8px',
-		'font-size:0.9rem',
+		'padding:18px 24px',
+		'border-radius:14px',
+		'font-size:1.05rem',
+		'font-weight:600',
 		'display:flex',
 		'align-items:center',
-		'gap:10px',
-		'min-width:260px',
-		'max-width:380px',
-		'box-shadow:0 4px 16px rgba(0,0,0,0.25)',
+		'gap:14px',
+		'min-width:340px',
+		'max-width:520px',
+		'box-shadow:0 18px 45px rgba(0,0,0,0.28)',
 		'opacity:0',
-		'transform:translateX(40px)',
+		'transform:translate(-50%, -50%) scale(0.96)',
 		'transition:opacity 0.25s ease, transform 0.25s ease',
-		'cursor:pointer'
+		'cursor:pointer',
+		'position:fixed',
+		'top:50%',
+		'left:50%',
+		'z-index:10000'
 	].join(';');
 
-	toast.innerHTML = '<span style="font-weight:700;font-size:1rem">' + c.icon + '</span>' +
-		'<span>' + message + '</span>';
+	toast.innerHTML = '<span style="font-weight:800;font-size:1.35rem;line-height:1">' + c.icon + '</span>' +
+		'<span style="line-height:1.4">' + message + '</span>';
 
 	const container = document.getElementById('toast-container');
 	if (!container) return;
@@ -41,7 +47,7 @@ function showToast(message, type) {
 	requestAnimationFrame(function () {
 		requestAnimationFrame(function () {
 			toast.style.opacity = '1';
-			toast.style.transform = 'translateX(0)';
+			toast.style.transform = 'translate(-50%, -50%) scale(1)';
 		});
 	});
 
@@ -51,7 +57,7 @@ function showToast(message, type) {
 
 function dismissToast(toast) {
 	toast.style.opacity = '0';
-	toast.style.transform = 'translateX(40px)';
+	toast.style.transform = 'translate(-50%, -50%) scale(0.96)';
 	setTimeout(function () {
 		if (toast.parentNode) toast.parentNode.removeChild(toast);
 	}, 280);
