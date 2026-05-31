@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
@@ -52,11 +53,37 @@ public class MedaljaController : Controller
         return View(new MedaljaCreateModel());
     }
 
+    private bool DodajGreskeZaDuplikatMedalje(string naziv, int minimalanBrojKontrolnihTocaka, int minimalanBrojPodrucja, int? excludeId = null)
+    {
+        var postoji = _dbContext.Medalje.Any(m =>
+            m.Naziv == naziv &&
+            m.MinimalanBrojKontrolnihTocaka == minimalanBrojKontrolnihTocaka &&
+            m.MinimalanBrojPodrucja == minimalanBrojPodrucja &&
+            (!excludeId.HasValue || m.IdMedalja != excludeId.Value) &&
+            m.DeletedAt == null);
+
+        if (!postoji)
+        {
+            return false;
+        }
+
+        var poruka = "Medalja s istim nazivom, minimalnim brojem KT i minimalnim brojem područja već postoji.";
+        ModelState.AddModelError(string.Empty, poruka);
+        ViewData["PopupWarning"] = poruka;
+        return true;
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Create(MedaljaCreateModel model)
     {
         if (!ModelState.IsValid)
+        {
+            ViewData["Title"] = "Nova medalja";
+            return View(model);
+        }
+
+        if (DodajGreskeZaDuplikatMedalje(model.Naziv, model.MinimalanBrojKontrolnihTocaka, model.MinimalanBrojPodrucja))
         {
             ViewData["Title"] = "Nova medalja";
             return View(model);
@@ -70,8 +97,18 @@ public class MedaljaController : Controller
             MinimalanBrojPodrucja = model.MinimalanBrojPodrucja
         };
 
-        _dbContext.Medalje.Add(entity);
-        _dbContext.SaveChanges();
+        try
+        {
+            _dbContext.Medalje.Add(entity);
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException)
+        {
+            ViewData["PopupWarning"] = "Medalja s istim nazivom, minimalnim brojem KT i minimalnim brojem područja već postoji.";
+            ViewData["Title"] = "Nova medalja";
+            return View(model);
+        }
+
         TempData["NewId"] = entity.IdMedalja;
         TempData["Success"] = "Medalja je uspjesno dodana.";
         return RedirectToAction(nameof(Index));
@@ -108,12 +145,28 @@ public class MedaljaController : Controller
         var entity = _dbContext.Medalje.FirstOrDefault(m => m.IdMedalja == id && m.DeletedAt == null);
         if (entity == null) return NotFound();
 
+        if (DodajGreskeZaDuplikatMedalje(model.Naziv, model.MinimalanBrojKontrolnihTocaka, model.MinimalanBrojPodrucja, id))
+        {
+            ViewData["Title"] = "Uredi medalju";
+            return View(model);
+        }
+
         entity.Naziv = model.Naziv;
         entity.Opis = model.Opis;
         entity.MinimalanBrojKontrolnihTocaka = model.MinimalanBrojKontrolnihTocaka;
         entity.MinimalanBrojPodrucja = model.MinimalanBrojPodrucja;
 
-        _dbContext.SaveChanges();
+        try
+        {
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException)
+        {
+            ViewData["PopupWarning"] = "Medalja s istim nazivom, minimalnim brojem KT i minimalnim brojem područja već postoji.";
+            ViewData["Title"] = "Uredi medalju";
+            return View(model);
+        }
+
         TempData["Success"] = "Medalja je uspjesno azurirana.";
         return RedirectToAction(nameof(Index));
     }

@@ -74,6 +74,13 @@ public class KnjizicaController : Controller
             return View(model);
         }
 
+        if (DodajGreskeZaDuplikatKnjizice(model.IdKorisnik))
+        {
+            ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
+            ViewData["Title"] = "Nova knjizica";
+            return View(model);
+        }
+
         var entity = new Knjizica
         {
             IdKorisnik = model.IdKorisnik,
@@ -82,8 +89,19 @@ public class KnjizicaController : Controller
             StatusAktivna = true
         };
 
-        _dbContext.Knjizice.Add(entity);
-        _dbContext.SaveChanges();
+        try
+        {
+            _dbContext.Knjizice.Add(entity);
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException)
+        {
+            ViewData["PopupWarning"] = "Knjizica za ovog korisnika već postoji. Odaberi drugog korisnika ili uređuj postojeću knjižicu.";
+            ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
+            ViewData["Title"] = "Nova knjizica";
+            return View(model);
+        }
+
         TempData["NewId"] = entity.IdKnjizica;
         TempData["Success"] = "Knjizica je uspjesno dodana.";
         return RedirectToAction(nameof(Index));
@@ -129,10 +147,28 @@ public class KnjizicaController : Controller
             return NotFound();
         }
 
+        if (DodajGreskeZaDuplikatKnjizice(model.IdKorisnik, id))
+        {
+            ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
+            ViewData["Title"] = "Uredi knjizicu";
+            return View(model);
+        }
+
         entity.IdKorisnik = model.IdKorisnik;
         entity.Napomena = model.Napomena;
 
-        _dbContext.SaveChanges();
+        try
+        {
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException)
+        {
+            ViewData["PopupWarning"] = "Knjizica za ovog korisnika već postoji. Odaberi drugog korisnika ili uređuj postojeću knjižicu.";
+            ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
+            ViewData["Title"] = "Uredi knjizicu";
+            return View(model);
+        }
+
         TempData["Success"] = "Knjizica je uspjesno azurirana.";
         return RedirectToAction(nameof(Index));
     }
@@ -221,6 +257,22 @@ public class KnjizicaController : Controller
         }
 
         return absolutePath;
+    }
+
+    private bool DodajGreskeZaDuplikatKnjizice(int idKorisnik, int? excludeId = null)
+    {
+        var postoji = _dbContext.Knjizice.Any(k =>
+            k.IdKorisnik == idKorisnik && (!excludeId.HasValue || k.IdKnjizica != excludeId.Value));
+
+        if (!postoji)
+        {
+            return false;
+        }
+
+        var poruka = "Knjizica za ovog korisnika već postoji. Odaberi drugog korisnika ili uređuj postojeću knjižicu.";
+        ModelState.AddModelError(nameof(KnjizicaCreateModel.IdKorisnik), poruka);
+        ViewData["PopupWarning"] = poruka;
+        return true;
     }
 
     private List<KnjizicaIndexViewModel> BuildIndexModel(string? searchTerm)

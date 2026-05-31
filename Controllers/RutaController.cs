@@ -54,11 +54,61 @@ public class RutaController : Controller
         return View(new RutaCreateModel());
     }
 
+    private bool ValidirajKontrolnuTocku(int idKontrolnaTocka)
+    {
+        var postoji = _dbContext.KontrolneTocke.Any(k => k.IdKontrolnaTocka == idKontrolnaTocka && k.DeletedAt == null);
+        if (postoji)
+        {
+            return true;
+        }
+
+        ModelState.AddModelError(nameof(RutaCreateModel.IdKontrolnaTocka), "Odabrana kontrolna točka više ne postoji ili je obrisana.");
+        ViewData["PopupWarning"] = "Odabrana kontrolna točka više ne postoji ili je obrisana.";
+        return false;
+    }
+
+    private bool DodajGreskeZaDuplikatRute(RutaCreateModel model, int? excludeId = null)
+    {
+        var postoji = _dbContext.Rute
+            .Where(r => r.DeletedAt == null)
+            .Any(r => r.Naziv == model.Naziv &&
+                      r.IdKontrolnaTocka == model.IdKontrolnaTocka &&
+                      r.Pocetak == model.Pocetak &&
+                      r.Kraj == model.Kraj &&
+                      r.VrijemeHodaMin == model.VrijemeHodaMin &&
+                      r.DuljinaKm == model.DuljinaKm &&
+                      (!excludeId.HasValue || r.IdRuta != excludeId.Value));
+
+        if (!postoji)
+        {
+            return false;
+        }
+
+        var poruka = "Ruta s istim nazivom, kontrolnom točkom, početkom, krajem, trajanjem hoda i duljinom km već postoji.";
+        ModelState.AddModelError(string.Empty, poruka);
+        ViewData["PopupWarning"] = poruka;
+        return true;
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Create(RutaCreateModel model)
     {
         if (!ModelState.IsValid)
+        {
+            ViewData["KontrolnaTockaText"] = GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
+            ViewData["Title"] = "Nova ruta";
+            return View(model);
+        }
+
+        if (!ValidirajKontrolnuTocku(model.IdKontrolnaTocka))
+        {
+            ViewData["KontrolnaTockaText"] = GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
+            ViewData["Title"] = "Nova ruta";
+            return View(model);
+        }
+
+        if (DodajGreskeZaDuplikatRute(model))
         {
             ViewData["KontrolnaTockaText"] = GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
             ViewData["Title"] = "Nova ruta";
@@ -82,8 +132,19 @@ public class RutaController : Controller
             GPXPath = model.GPXPath
         };
 
-        _dbContext.Rute.Add(entity);
-        _dbContext.SaveChanges();
+        try
+        {
+            _dbContext.Rute.Add(entity);
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException)
+        {
+            ViewData["PopupWarning"] = "Ruta s istim nazivom, kontrolnom točkom, početkom, krajem, trajanjem hoda i duljinom km već postoji.";
+            ViewData["KontrolnaTockaText"] = GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
+            ViewData["Title"] = "Nova ruta";
+            return View(model);
+        }
+
         TempData["NewId"] = entity.IdRuta;
         TempData["Success"] = "Ruta je uspjesno dodana.";
         return RedirectToAction(nameof(Index));
@@ -140,6 +201,20 @@ public class RutaController : Controller
             return NotFound();
         }
 
+        if (!ValidirajKontrolnuTocku(model.IdKontrolnaTocka))
+        {
+            ViewData["KontrolnaTockaText"] = GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
+            ViewData["Title"] = "Uredi rutu";
+            return View(model);
+        }
+
+        if (DodajGreskeZaDuplikatRute(model, id))
+        {
+            ViewData["KontrolnaTockaText"] = GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
+            ViewData["Title"] = "Uredi rutu";
+            return View(model);
+        }
+
         entity.IdKontrolnaTocka = model.IdKontrolnaTocka;
         entity.Naziv = model.Naziv;
         entity.Pocetak = model.Pocetak;
@@ -154,7 +229,18 @@ public class RutaController : Controller
         entity.TezinaRute = model.TezinaRute;
         entity.GPXPath = model.GPXPath;
 
-        _dbContext.SaveChanges();
+        try
+        {
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException)
+        {
+            ViewData["PopupWarning"] = "Ruta s istim nazivom, kontrolnom točkom, početkom, krajem, trajanjem hoda i duljinom km već postoji.";
+            ViewData["KontrolnaTockaText"] = GetKontrolnaTockaNaziv(model.IdKontrolnaTocka);
+            ViewData["Title"] = "Uredi rutu";
+            return View(model);
+        }
+
         TempData["Success"] = "Ruta je uspjesno azurirana.";
         return RedirectToAction(nameof(Index));
     }

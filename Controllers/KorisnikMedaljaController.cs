@@ -36,6 +36,24 @@ public class KorisnikMedaljaController : Controller
         return absolutePath;
     }
 
+    private bool DodajGreskeZaDuplikatDodjele(int idKorisnik, int idMedalja, int? excludeId = null)
+    {
+        var postoji = _dbContext.KorisnikMedalje.Any(km =>
+            km.IdKorisnik == idKorisnik &&
+            km.IdMedalja == idMedalja &&
+            (!excludeId.HasValue || km.IdKorisnikMedalja != excludeId.Value));
+
+        if (!postoji)
+        {
+            return false;
+        }
+
+        var poruka = "Korisnik već ima ovu medalju. Odaberi drugog korisnika ili drugu medalju.";
+        ModelState.AddModelError(string.Empty, poruka);
+        ViewData["PopupWarning"] = poruka;
+        return true;
+    }
+
     public IActionResult Index()
     {
         var model = BuildIndexModel(null);
@@ -80,6 +98,7 @@ public class KorisnikMedaljaController : Controller
             km.DeletedAt == null && km.IdKorisnik == korisnikId && km.IdMedalja == medaljaId);
         if (exists)
         {
+            TempData["PopupWarning"] = "Korisnik već ima ovu medalju. Odaberi drugog korisnika ili drugu medalju.";
             TempData["Error"] = "Korisnik već ima ovu medalju.";
             return RedirectToAction(nameof(Create));
         }
@@ -141,12 +160,32 @@ public class KorisnikMedaljaController : Controller
             .FirstOrDefault(km => km.IdKorisnikMedalja == id && km.DeletedAt == null);
         if (entity == null) return NotFound();
 
+        if (DodajGreskeZaDuplikatDodjele(model.IdKorisnik, model.IdMedalja, id))
+        {
+            ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
+            ViewData["MedaljaText"] = GetMedaljaNaziv(model.IdMedalja);
+            ViewData["Title"] = "Uredi dodjelu";
+            return View(model);
+        }
+
         entity.IdKorisnik = model.IdKorisnik;
         entity.IdMedalja = model.IdMedalja;
         entity.DatumDodjele = model.DatumDodjele;
         entity.Napomena = model.Napomena;
 
-        _dbContext.SaveChanges();
+        try
+        {
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException)
+        {
+            ViewData["PopupWarning"] = "Korisnik već ima ovu medalju. Odaberi drugog korisnika ili drugu medalju.";
+            ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
+            ViewData["MedaljaText"] = GetMedaljaNaziv(model.IdMedalja);
+            ViewData["Title"] = "Uredi dodjelu";
+            return View(model);
+        }
+
         TempData["Success"] = "Dodjela je uspjesno azurirana.";
         return RedirectToAction(nameof(Index));
     }

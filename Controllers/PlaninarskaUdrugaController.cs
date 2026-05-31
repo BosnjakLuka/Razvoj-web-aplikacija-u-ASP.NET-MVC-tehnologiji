@@ -65,11 +65,33 @@ public class PlaninarskaUdrugaController : Controller
         return View(new PlaninarskaUdrugaCreateModel());
     }
 
+    private bool DodajGreskeZaDuplikatUdruge(string oib, int? excludeId = null)
+    {
+        var postoji = _dbContext.PlaninarskeUdruge.Any(u =>
+            u.OIB == oib && (!excludeId.HasValue || u.IdPlaninarskaUdruga != excludeId.Value));
+
+        if (!postoji)
+        {
+            return false;
+        }
+
+        var poruka = "Udruga s ovim OIB-om već postoji. Promijeni OIB ili uređuj postojeću udrugu.";
+        ModelState.AddModelError(nameof(PlaninarskaUdrugaCreateModel.OIB), poruka);
+        ViewData["PopupWarning"] = poruka;
+        return true;
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Create(PlaninarskaUdrugaCreateModel model)
     {
         if (!ModelState.IsValid)
+        {
+            ViewData["Title"] = "Nova udruga";
+            return View(model);
+        }
+
+        if (DodajGreskeZaDuplikatUdruge(model.OIB))
         {
             ViewData["Title"] = "Nova udruga";
             return View(model);
@@ -88,8 +110,18 @@ public class PlaninarskaUdrugaController : Controller
             BrojClanova = model.BrojClanova
         };
 
-        _dbContext.PlaninarskeUdruge.Add(entity);
-        _dbContext.SaveChanges();
+        try
+        {
+            _dbContext.PlaninarskeUdruge.Add(entity);
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException)
+        {
+            ViewData["PopupWarning"] = "Udruga s ovim OIB-om već postoji. Promijeni OIB ili uređuj postojeću udrugu.";
+            ViewData["Title"] = "Nova udruga";
+            return View(model);
+        }
+
         TempData["NewId"] = entity.IdPlaninarskaUdruga;
         TempData["Success"] = "Udruga je uspjesno dodana.";
         return RedirectToAction(nameof(Index));
@@ -139,6 +171,12 @@ public class PlaninarskaUdrugaController : Controller
             return NotFound();
         }
 
+        if (DodajGreskeZaDuplikatUdruge(model.OIB, id))
+        {
+            ViewData["Title"] = "Uredi udrugu";
+            return View(model);
+        }
+
         entity.OIB = model.OIB;
         entity.Naziv = model.Naziv;
         entity.Email = model.Email;
@@ -149,7 +187,17 @@ public class PlaninarskaUdrugaController : Controller
         entity.Zupanija = model.Zupanija;
         entity.BrojClanova = model.BrojClanova;
 
-        _dbContext.SaveChanges();
+        try
+        {
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException)
+        {
+            ViewData["PopupWarning"] = "Udruga s ovim OIB-om već postoji. Promijeni OIB ili uređuj postojeću udrugu.";
+            ViewData["Title"] = "Uredi udrugu";
+            return View(model);
+        }
+
         TempData["Success"] = "Udruga je uspjesno azurirana.";
         return RedirectToAction(nameof(Index));
     }

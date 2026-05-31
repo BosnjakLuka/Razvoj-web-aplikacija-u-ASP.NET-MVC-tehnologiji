@@ -53,11 +53,52 @@ namespace planinarenje.Controllers
             return View(new PodrucjeCreateModel());
         }
 
+        private int DohvatiUkupnoKontrolnihTocaka(int idPodrucje)
+        {
+            return _dbContext.KontrolneTocke.Count(kt => kt.IdPodrucje == idPodrucje && kt.DeletedAt == null);
+        }
+
+        private bool DodajGreskeZaDuplikatPodrucja(string naziv, string? regija, int minimalanBrojKt, int ukupnoKt, int? excludeId = null)
+        {
+            var postoji = _dbContext.Podrucja
+                .Where(p => p.DeletedAt == null)
+                .Select(p => new
+                {
+                    p.IdPodrucje,
+                    p.Naziv,
+                    p.Regija,
+                    p.MinimalanBrojKTZaObilazak,
+                    UkupnoKT = _dbContext.KontrolneTocke.Count(kt => kt.IdPodrucje == p.IdPodrucje && kt.DeletedAt == null)
+                })
+                .AsEnumerable()
+                .Any(p => p.Naziv == naziv &&
+                          string.Equals((p.Regija ?? string.Empty).Trim(), (regija ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase) &&
+                          p.MinimalanBrojKTZaObilazak == minimalanBrojKt &&
+                          p.UkupnoKT == ukupnoKt &&
+                          (!excludeId.HasValue || p.IdPodrucje != excludeId.Value));
+
+            if (!postoji)
+            {
+                return false;
+            }
+
+            var poruka = "Područje s istim nazivom, minimalnim brojem KT i ukupnim brojem KT već postoji.";
+            ModelState.AddModelError(string.Empty, poruka);
+            ViewData["PopupWarning"] = poruka;
+            return true;
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(PodrucjeCreateModel model)
         {
             if (!ModelState.IsValid)
+            {
+                ViewData["Title"] = "Novo podrucje";
+                return View(model);
+            }
+
+            if (DodajGreskeZaDuplikatPodrucja(model.Naziv, model.Regija, model.MinimalanBrojKTZaObilazak, model.UkupanBrojKT ?? 0))
             {
                 ViewData["Title"] = "Novo podrucje";
                 return View(model);
@@ -71,8 +112,18 @@ namespace planinarenje.Controllers
                 MinimalanBrojKTZaObilazak = model.MinimalanBrojKTZaObilazak
             };
 
-            _dbContext.Podrucja.Add(podrucje);
-            _dbContext.SaveChanges();
+            try
+            {
+                _dbContext.Podrucja.Add(podrucje);
+                _dbContext.SaveChanges();
+            }
+            catch (DbUpdateException)
+            {
+                ViewData["PopupWarning"] = "Područje s istim nazivom, minimalnim brojem KT i ukupnim brojem KT već postoji.";
+                ViewData["Title"] = "Novo podrucje";
+                return View(model);
+            }
+
             TempData["NewId"] = podrucje.IdPodrucje;
             TempData["Success"] = "Podrucje je uspjesno dodano.";
             return RedirectToAction(nameof(Index));
@@ -92,7 +143,8 @@ namespace planinarenje.Controllers
                 Naziv = podrucje.Naziv,
                 Opis = podrucje.Opis,
                 Regija = podrucje.Regija,
-                MinimalanBrojKTZaObilazak = podrucje.MinimalanBrojKTZaObilazak
+                MinimalanBrojKTZaObilazak = podrucje.MinimalanBrojKTZaObilazak,
+                UkupanBrojKT = DohvatiUkupnoKontrolnihTocaka(id)
             };
 
             ViewData["Title"] = "Uredi podrucje";
@@ -115,12 +167,29 @@ namespace planinarenje.Controllers
                 return NotFound();
             }
 
+            var ukupnoKt = DohvatiUkupnoKontrolnihTocaka(id);
+            if (DodajGreskeZaDuplikatPodrucja(model.Naziv, model.Regija, model.MinimalanBrojKTZaObilazak, model.UkupanBrojKT ?? ukupnoKt, id))
+            {
+                ViewData["Title"] = "Uredi podrucje";
+                return View(model);
+            }
+
             podrucje.Naziv = model.Naziv;
             podrucje.Opis = model.Opis;
             podrucje.Regija = model.Regija;
             podrucje.MinimalanBrojKTZaObilazak = model.MinimalanBrojKTZaObilazak;
 
-            _dbContext.SaveChanges();
+            try
+            {
+                _dbContext.SaveChanges();
+            }
+            catch (DbUpdateException)
+            {
+                ViewData["PopupWarning"] = "Područje s istim nazivom, minimalnim brojem KT i ukupnim brojem KT već postoji.";
+                ViewData["Title"] = "Uredi podrucje";
+                return View(model);
+            }
+
             TempData["Success"] = "Podrucje je uspjesno azurirano.";
             return RedirectToAction(nameof(Index));
         }

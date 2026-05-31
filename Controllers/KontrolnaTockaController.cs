@@ -54,11 +54,81 @@ namespace planinarenje.Controllers
             return View(new KontrolnaTockaCreateModel());
         }
 
+        private bool ValidirajPodrucje(int idPodrucje)
+        {
+            var postoji = _dbContext.Podrucja.Any(p => p.IdPodrucje == idPodrucje && p.DeletedAt == null);
+            if (postoji)
+            {
+                return true;
+            }
+
+            ModelState.AddModelError(nameof(KontrolnaTockaCreateModel.IdPodrucje), "Odabrano područje više ne postoji ili je obrisano.");
+            ViewData["PopupWarning"] = "Odabrano područje više ne postoji ili je obrisano.";
+            return false;
+        }
+
+        private bool DodajGreskeZaDuplikatKontrolneTocke(string naziv, string guidOznaka, int idPodrucje, int? excludeId = null)
+        {
+            var postoji = _dbContext.KontrolneTocke.Any(k =>
+                k.Naziv == naziv &&
+                k.GUIDOznaka == guidOznaka &&
+                k.IdPodrucje == idPodrucje &&
+                (!excludeId.HasValue || k.IdKontrolnaTocka != excludeId.Value) &&
+                k.DeletedAt == null);
+
+            if (!postoji)
+            {
+                return false;
+            }
+
+            var poruka = "Kontrolna točka s istim nazivom, GUID oznakom i područjem već postoji.";
+            ModelState.AddModelError(string.Empty, poruka);
+            ViewData["PopupWarning"] = poruka;
+            return true;
+        }
+
+        private bool DodajGreskeZaZauzetGUID(string guidOznaka, int? excludeId = null)
+        {
+            var postoji = _dbContext.KontrolneTocke.Any(k =>
+                k.GUIDOznaka == guidOznaka && (!excludeId.HasValue || k.IdKontrolnaTocka != excludeId.Value) && k.DeletedAt == null);
+
+            if (!postoji)
+            {
+                return false;
+            }
+
+            var poruka = "Kontrolna točka s ovom GUID oznakom već postoji. Promijeni oznaku ili uređuj postojeću točku.";
+            ModelState.AddModelError(nameof(KontrolnaTockaCreateModel.GUIDOznaka), poruka);
+            ViewData["PopupWarning"] = poruka;
+            return true;
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(KontrolnaTockaCreateModel model)
         {
             if (!ModelState.IsValid)
+            {
+                ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+                ViewData["Title"] = "Nova kontrolna tocka";
+                return View(model);
+            }
+
+            if (!ValidirajPodrucje(model.IdPodrucje))
+            {
+                ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+                ViewData["Title"] = "Nova kontrolna tocka";
+                return View(model);
+            }
+
+            if (DodajGreskeZaDuplikatKontrolneTocke(model.Naziv, model.GUIDOznaka, model.IdPodrucje))
+            {
+                ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+                ViewData["Title"] = "Nova kontrolna tocka";
+                return View(model);
+            }
+
+            if (DodajGreskeZaZauzetGUID(model.GUIDOznaka))
             {
                 ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
                 ViewData["Title"] = "Nova kontrolna tocka";
@@ -77,8 +147,19 @@ namespace planinarenje.Controllers
                 OpisZiga = model.OpisZiga
             };
 
-            _dbContext.KontrolneTocke.Add(entity);
-            _dbContext.SaveChanges();
+            try
+            {
+                _dbContext.KontrolneTocke.Add(entity);
+                _dbContext.SaveChanges();
+            }
+            catch (DbUpdateException)
+            {
+                ViewData["PopupWarning"] = "Kontrolna točka s ovim nazivom, GUID oznakom i područjem već postoji ili je odabrano područje neispravno.";
+                ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+                ViewData["Title"] = "Nova kontrolna tocka";
+                return View(model);
+            }
+
             TempData["NewId"] = entity.IdKontrolnaTocka;
             TempData["Success"] = "Kontrolna tocka je uspjesno dodana.";
             return RedirectToAction(nameof(Index));
@@ -130,6 +211,27 @@ namespace planinarenje.Controllers
                 return NotFound();
             }
 
+            if (!ValidirajPodrucje(model.IdPodrucje))
+            {
+                ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+                ViewData["Title"] = "Uredi kontrolnu tocku";
+                return View(model);
+            }
+
+            if (DodajGreskeZaDuplikatKontrolneTocke(model.Naziv, model.GUIDOznaka, model.IdPodrucje, id))
+            {
+                ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+                ViewData["Title"] = "Uredi kontrolnu tocku";
+                return View(model);
+            }
+
+            if (DodajGreskeZaZauzetGUID(model.GUIDOznaka, id))
+            {
+                ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+                ViewData["Title"] = "Uredi kontrolnu tocku";
+                return View(model);
+            }
+
             entity.Naziv = model.Naziv;
             entity.GUIDOznaka = model.GUIDOznaka;
             entity.IdPodrucje = model.IdPodrucje;
@@ -139,7 +241,18 @@ namespace planinarenje.Controllers
             entity.Koordinate = model.Koordinate;
             entity.OpisZiga = model.OpisZiga;
 
-            _dbContext.SaveChanges();
+            try
+            {
+                _dbContext.SaveChanges();
+            }
+            catch (DbUpdateException)
+            {
+                ViewData["PopupWarning"] = "Kontrolna točka s ovim nazivom, GUID oznakom i područjem već postoji ili je odabrano područje neispravno.";
+                ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+                ViewData["Title"] = "Uredi kontrolnu tocku";
+                return View(model);
+            }
+
             TempData["Success"] = "Kontrolna tocka je uspjesno azurirana.";
             return RedirectToAction(nameof(Index));
         }

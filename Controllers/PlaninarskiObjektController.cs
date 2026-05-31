@@ -36,11 +36,71 @@ public class PlaninarskiObjektController : Controller
         return View(new PlaninarskiObjektCreateModel());
     }
 
+    private bool ValidirajUdruguIPodrucje(PlaninarskiObjektCreateModel model)
+    {
+        var imaPodrucje = _dbContext.Podrucja.Any(p => p.IdPodrucje == model.IdPodrucje && p.DeletedAt == null);
+        var imaUdrugu = _dbContext.PlaninarskeUdruge.Any(u => u.IdPlaninarskaUdruga == model.IdPlaninarskaUdruga && u.DeletedAt == null);
+
+        if (imaPodrucje && imaUdrugu)
+        {
+            return true;
+        }
+
+        if (!imaPodrucje)
+        {
+            ModelState.AddModelError(nameof(PlaninarskiObjektCreateModel.IdPodrucje), "Odabrano područje više ne postoji ili je obrisano.");
+        }
+
+        if (!imaUdrugu)
+        {
+            ModelState.AddModelError(nameof(PlaninarskiObjektCreateModel.IdPlaninarskaUdruga), "Odabrana udruga više ne postoji ili je obrisana.");
+        }
+
+        ViewData["PopupWarning"] = "Odabrana udruga ili područje nisu valjani. Provjeri unos i pokušaj ponovno.";
+        return false;
+    }
+
+    private bool DodajGreskeZaDuplikatObjekta(string naziv, int idPodrucje, int idPlaninarskaUdruga, int? excludeId = null)
+    {
+        var postoji = _dbContext.PlaninarskiObjekti.Any(po =>
+            po.Naziv == naziv &&
+            po.IdPodrucje == idPodrucje &&
+            po.IdPlaninarskaUdruga == idPlaninarskaUdruga &&
+            (!excludeId.HasValue || po.IdPlaninarskiObjekt != excludeId.Value) &&
+            po.DeletedAt == null);
+
+        if (!postoji)
+        {
+            return false;
+        }
+
+        var poruka = "Planinarski objekt s istim nazivom, područjem i udrugom već postoji.";
+        ModelState.AddModelError(nameof(PlaninarskiObjektCreateModel.Naziv), poruka);
+        ViewData["PopupWarning"] = poruka;
+        return true;
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Create(PlaninarskiObjektCreateModel model)
     {
         if (!ModelState.IsValid)
+        {
+            ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+            ViewData["UdrugaText"] = GetUdrugaNaziv(model.IdPlaninarskaUdruga);
+            ViewData["Title"] = "Novi objekt";
+            return View(model);
+        }
+
+        if (!ValidirajUdruguIPodrucje(model))
+        {
+            ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+            ViewData["UdrugaText"] = GetUdrugaNaziv(model.IdPlaninarskaUdruga);
+            ViewData["Title"] = "Novi objekt";
+            return View(model);
+        }
+
+        if (DodajGreskeZaDuplikatObjekta(model.Naziv, model.IdPodrucje, model.IdPlaninarskaUdruga))
         {
             ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
             ViewData["UdrugaText"] = GetUdrugaNaziv(model.IdPlaninarskaUdruga);
@@ -66,8 +126,20 @@ public class PlaninarskiObjektController : Controller
             RadnoVrijemeOpis = model.RadnoVrijemeOpis
         };
 
-        _dbContext.PlaninarskiObjekti.Add(entity);
-        _dbContext.SaveChanges();
+        try
+        {
+            _dbContext.PlaninarskiObjekti.Add(entity);
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException)
+        {
+            ViewData["PopupWarning"] = "Odabrana udruga ili područje nisu valjani ili objekt s istim podacima već postoji.";
+            ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+            ViewData["UdrugaText"] = GetUdrugaNaziv(model.IdPlaninarskaUdruga);
+            ViewData["Title"] = "Novi objekt";
+            return View(model);
+        }
+
         TempData["NewId"] = entity.IdPlaninarskiObjekt;
         TempData["Success"] = "Objekt je uspjesno dodan.";
         return RedirectToAction(nameof(Index));
@@ -128,6 +200,22 @@ public class PlaninarskiObjektController : Controller
             return NotFound();
         }
 
+        if (!ValidirajUdruguIPodrucje(model))
+        {
+            ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+            ViewData["UdrugaText"] = GetUdrugaNaziv(model.IdPlaninarskaUdruga);
+            ViewData["Title"] = "Uredi objekt";
+            return View(model);
+        }
+
+        if (DodajGreskeZaDuplikatObjekta(model.Naziv, model.IdPodrucje, model.IdPlaninarskaUdruga, id))
+        {
+            ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+            ViewData["UdrugaText"] = GetUdrugaNaziv(model.IdPlaninarskaUdruga);
+            ViewData["Title"] = "Uredi objekt";
+            return View(model);
+        }
+
         entity.IdPodrucje = model.IdPodrucje;
         entity.IdPlaninarskaUdruga = model.IdPlaninarskaUdruga;
         entity.Naziv = model.Naziv;
@@ -143,7 +231,19 @@ public class PlaninarskiObjektController : Controller
         entity.ImaHranu = model.ImaHranu;
         entity.RadnoVrijemeOpis = model.RadnoVrijemeOpis;
 
-        _dbContext.SaveChanges();
+        try
+        {
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException)
+        {
+            ViewData["PopupWarning"] = "Odabrana udruga ili područje nisu valjani ili objekt s istim podacima već postoji.";
+            ViewData["PodrucjeText"] = GetPodrucjeNaziv(model.IdPodrucje);
+            ViewData["UdrugaText"] = GetUdrugaNaziv(model.IdPlaninarskaUdruga);
+            ViewData["Title"] = "Uredi objekt";
+            return View(model);
+        }
+
         TempData["Success"] = "Objekt je uspjesno azuriran.";
         return RedirectToAction(nameof(Index));
     }
