@@ -123,7 +123,6 @@ namespace planinarenje.Controllers
                 BrojMobitela = model.BrojMobitela,
                 DatumRodenja = model.DatumRodenja,
                 DatumRegistracije = DateTime.UtcNow,
-                PasswordHash = "ChangeMe123!",
                 StatusAktivan = true
             };
 
