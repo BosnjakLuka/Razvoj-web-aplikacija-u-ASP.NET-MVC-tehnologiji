@@ -1,8 +1,10 @@
-using planinarenje.Data;
-using planinarenje.Entiteti;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using planinarenje.Data;
+using planinarenje.Entiteti;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -150,8 +152,30 @@ builder.Services.AddDbContext<PlaninarstvoDbContext>(options =>
         builder.Configuration.GetConnectionString("PlaninarstvoDbContext"),
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("PlaninarstvoDbContext"))
     ));
+builder.Services
+    .AddDefaultIdentity<AppUser>(options =>
+    {
+        options.SignIn.RequireConfirmedAccount = false;
+        options.User.RequireUniqueEmail = true;
+
+        options.Password.RequiredLength = 10;
+        options.Password.RequireDigit = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireNonAlphanumeric = true;
+    })
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<PlaninarstvoDbContext>();
+
+builder.Services.AddRazorPages();
+builder.Services.AddSingleton<IEmailSender, NoOpEmailSender>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    await IdentitySeed.SeedAsync(scope.ServiceProvider);
+}
 
 // Resolve project root robustly (works when launched from project root or bin/Debug).
 string ResolveProjectRoot(string startPath)
@@ -223,11 +247,14 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedUICultures = supportedCultures
 });
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapRazorPages();
 
 
 app.Run();
