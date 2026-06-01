@@ -6,23 +6,47 @@ using planinarenje.Models;
 using planinarenje.Models.ViewModels;
 using System.IO;
 using System.Linq;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace planinarenje.Controllers;
 
-public class KnjizicaController : Controller
+public class KnjizicaController : BaseController
 {
-    private readonly PlaninarstvoDbContext _dbContext;
-
-    public KnjizicaController(PlaninarstvoDbContext dbContext)
+    public KnjizicaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+        : base(userMgr, db)
     {
-        _dbContext = dbContext;
     }
 
-    public IActionResult Index()
+    [Authorize]
+    public async Task<IActionResult> Index()
     {
-        var model = BuildIndexModel(null);
+        if (IsAdmin)
+        {
+            var model = BuildIndexModel(null);
+            ViewData["Title"] = "E-Knjizica";
+            return View(model);
+        }
+
+        var current = await GetCurrentKorisnikAsync();
+        if (current == null) return Forbid();
+
+        var mine = Db.Knjizice
+            .Include(k => k.Korisnik)
+            .Where(k => k.StatusAktivna && k.IdKorisnik == current.IdKorisnik)
+            .Select(k => new KnjizicaIndexViewModel
+            {
+                IdKnjizica = k.IdKnjizica,
+                IdKorisnik = k.IdKorisnik,
+                ImePrezimeKorisnika = k.Korisnik != null ? k.Korisnik.Ime + " " + k.Korisnik.Prezime : "Nepoznat planer",
+                DatumKreiranja = k.DatumKreiranja,
+                StatusAktivna = k.StatusAktivna
+            })
+            .OrderByDescending(k => k.DatumKreiranja)
+            .ToList();
+
         ViewData["Title"] = "E-Knjizica";
-        return View(model);
+        return View(mine);
     }
 
     [HttpGet]
@@ -57,6 +81,7 @@ public class KnjizicaController : Controller
         return Json(results);
     }
 
+    [Authorize(Roles = "Admin,Planinar")]
     public IActionResult Create()
     {
         ViewData["Title"] = "Nova knjizica";
@@ -65,7 +90,8 @@ public class KnjizicaController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(KnjizicaCreateModel model)
+    [Authorize(Roles = "Admin,Planinar")]
+    public async Task<IActionResult> Create(KnjizicaCreateModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -81,6 +107,11 @@ public class KnjizicaController : Controller
             return View(model);
         }
 
+        // force owner to current korisnik
+        var current = await GetCurrentKorisnikAsync();
+        if (current == null) return Forbid();
+        model.IdKorisnik = current.IdKorisnik;
+
         var entity = new Knjizica
         {
             IdKorisnik = model.IdKorisnik,
@@ -91,8 +122,8 @@ public class KnjizicaController : Controller
 
         try
         {
-            _dbContext.Knjizice.Add(entity);
-            _dbContext.SaveChanges();
+            Db.Knjizice.Add(entity);
+            await Db.SaveChangesAsync();
         }
         catch (DbUpdateException)
         {
@@ -107,16 +138,20 @@ public class KnjizicaController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize]
     [ActionName("Edit")]
-    public IActionResult EditGet(int id)
+    public async Task<IActionResult> EditGet(int id)
     {
-        var entity = _dbContext.Knjizice
+        var entity = await Db.Knjizice
             .Include(k => k.Korisnik)
-            .FirstOrDefault(k => k.IdKnjizica == id && k.StatusAktivna);
+            .FirstOrDefaultAsync(k => k.IdKnjizica == id && k.StatusAktivna);
         if (entity == null)
         {
             return NotFound();
         }
+
+        if (!IsAdmin && !await IsOwnerAsync(entity.IdKorisnik))
+            return Forbid();
 
         var model = new KnjizicaEditModel
         {
@@ -131,7 +166,8 @@ public class KnjizicaController : Controller
 
     [HttpPost, ActionName("Edit")]
     [ValidateAntiForgeryToken]
-    public IActionResult EditPost(int id, KnjizicaEditModel model)
+    [Authorize]
+    public async Task<IActionResult> EditPost(int id, KnjizicaEditModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -140,8 +176,8 @@ public class KnjizicaController : Controller
             return View(model);
         }
 
-        var entity = _dbContext.Knjizice
-            .FirstOrDefault(k => k.IdKnjizica == id && k.StatusAktivna);
+        var entity = await Db.Knjizice
+            .FirstOrDefaultAsync(k => k.IdKnjizica == id && k.StatusAktivna);
         if (entity == null)
         {
             return NotFound();
@@ -154,12 +190,19 @@ public class KnjizicaController : Controller
             return View(model);
         }
 
+        // ownership check and force owner
+        var original = await Db.Knjizice.AsNoTracking().FirstOrDefaultAsync(k => k.IdKnjizica == id);
+        if (original == null) return NotFound();
+        if (!IsAdmin && !await IsOwnerAsync(original.IdKorisnik))
+            return Forbid();
+
+        model.IdKorisnik = original.IdKorisnik;
         entity.IdKorisnik = model.IdKorisnik;
         entity.Napomena = model.Napomena;
 
         try
         {
-            _dbContext.SaveChanges();
+            await Db.SaveChangesAsync();
         }
         catch (DbUpdateException)
         {
@@ -173,11 +216,12 @@ public class KnjizicaController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    public IActionResult Delete(int id)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
     {
-        var entity = _dbContext.Knjizice
+        var entity = await Db.Knjizice
             .Include(k => k.Korisnik)
-            .FirstOrDefault(k => k.IdKnjizica == id && k.StatusAktivna);
+            .FirstOrDefaultAsync(k => k.IdKnjizica == id && k.StatusAktivna);
         if (entity == null)
         {
             return NotFound();
@@ -189,29 +233,34 @@ public class KnjizicaController : Controller
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var entity = _dbContext.Knjizice
-            .FirstOrDefault(k => k.IdKnjizica == id && k.StatusAktivna);
+        var entity = await Db.Knjizice
+            .FirstOrDefaultAsync(k => k.IdKnjizica == id && k.StatusAktivna);
         if (entity == null)
         {
             return NotFound();
         }
 
         entity.StatusAktivna = false;
-        _dbContext.SaveChanges();
+        await Db.SaveChangesAsync();
         TempData["Success"] = "Knjizica je uspjesno obrisana.";
         return RedirectToAction(nameof(Index));
     }
 
-    public IActionResult Details(int id)
+    [Authorize]
+    public async Task<IActionResult> Details(int id)
     {
-        var kn = _dbContext.Knjizice
+        var kn = await Db.Knjizice
             .Include(k => k.Korisnik)
-            .FirstOrDefault(k => k.IdKnjizica == id && k.StatusAktivna);
+            .FirstOrDefaultAsync(k => k.IdKnjizica == id && k.StatusAktivna);
         if (kn == null) return NotFound();
 
-        var posjeti = _dbContext.Posjeti
+        if (!IsAdmin && !await IsOwnerAsync(kn.IdKorisnik))
+            return Forbid();
+
+        var posjeti = Db.Posjeti
             .Where(p => p.IdKnjizica == id && p.DeletedAt == null)
             .Include(p => p.KontrolnaTocka)
             .OrderByDescending(p => p.DatumVrijemePosjeta)
@@ -311,7 +360,7 @@ public class KnjizicaController : Controller
             return null;
         }
 
-        return _dbContext.Korisnici
+        return Db.Korisnici
             .Where(k => k.StatusAktivan && k.IdKorisnik == id.Value)
             .Select(k => k.Ime + " " + k.Prezime + " (@" + k.KorisnickoIme + ")")
             .FirstOrDefault();

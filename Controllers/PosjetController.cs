@@ -8,16 +8,15 @@ using planinarenje.Models.ViewModels;
 using System;
 using System.IO;
 using System.Linq;
+using Microsoft.AspNetCore.Identity;
 
 namespace planinarenje.Controllers
 {
-    public class PosjetController : Controller
+    public class PosjetController : BaseController
     {
-        private readonly PlaninarstvoDbContext _dbContext;
-
-        public PosjetController(PlaninarstvoDbContext dbContext)
+        public PosjetController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+            : base(userMgr, db)
         {
-            _dbContext = dbContext;
         }
 
         // Helper za hrvatski opis doživljaja
@@ -57,6 +56,7 @@ namespace planinarenje.Controllers
             return "/Slike/Dizajn/hpo.jpg";
         }
 
+        [AllowAnonymous]
         public IActionResult Index()
         {
             var model = BuildIndexModel(null);
@@ -118,6 +118,7 @@ namespace planinarenje.Controllers
             return Json(results);
         }
 
+        [Authorize(Roles = "Admin,Planinar")]
         public IActionResult Create()
         {
             PopulateKnjiziceByKorisnik();
@@ -131,7 +132,8 @@ namespace planinarenje.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(PosjetCreateModel model)
+        [Authorize(Roles = "Admin,Planinar")]
+        public async Task<IActionResult> Create(PosjetCreateModel model)
         {
             ValidatePosjetSelection(model);
 
@@ -144,7 +146,7 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
-            var kontrolnaTocka = _dbContext.KontrolneTocke
+            var kontrolnaTocka = Db.KontrolneTocke
                 .AsNoTracking()
                 .FirstOrDefault(k => k.DeletedAt == null && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
             if (kontrolnaTocka == null)
@@ -156,6 +158,11 @@ namespace planinarenje.Controllers
                 ViewData["Title"] = "Novi posjet";
                 return View(model);
             }
+
+            // force owner to current korisnik
+            var currentKorisnik = await GetCurrentKorisnikAsync();
+            if (currentKorisnik == null) return Forbid();
+            model.IdKorisnik = currentKorisnik.IdKorisnik;
 
             var entity = new Posjet
             {
@@ -172,27 +179,31 @@ namespace planinarenje.Controllers
                 DatumKreiranjaZapisa = DateTime.UtcNow
             };
 
-            _dbContext.Posjeti.Add(entity);
-            _dbContext.SaveChanges();
+            Db.Posjeti.Add(entity);
+            await Db.SaveChangesAsync();
             TempData["NewId"] = entity.IdPosjet;
             TempData["PosjetSuccess"] = true;
             TempData["Success"] = "Posjet je uspjesno dodan.";
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize]
         [ActionName("Edit")]
-        public IActionResult EditGet(int id)
+        public async Task<IActionResult> EditGet(int id)
         {
-            var entity = _dbContext.Posjeti
+            var entity = await Db.Posjeti
                 .Include(p => p.Korisnik)
                 .Include(p => p.Knjizica)
                 .Include(p => p.KontrolnaTocka)
                 .Include(p => p.Ruta)
-                .FirstOrDefault(p => p.IdPosjet == id && p.DeletedAt == null);
+                .FirstOrDefaultAsync(p => p.IdPosjet == id && p.DeletedAt == null);
             if (entity == null)
             {
                 return NotFound();
             }
+
+            if (!IsAdmin && !await IsOwnerAsync(entity.IdKorisnik))
+                return Forbid();
 
             var model = new PosjetEditModel
             {
@@ -216,7 +227,8 @@ namespace planinarenje.Controllers
 
         [HttpPost, ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        public IActionResult EditPost(int id, PosjetEditModel model)
+        [Authorize]
+        public async Task<IActionResult> EditPost(int id, PosjetEditModel model)
         {
             ValidatePosjetSelection(model);
 
@@ -229,7 +241,7 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
-            var kontrolnaTocka = _dbContext.KontrolneTocke
+            var kontrolnaTocka = Db.KontrolneTocke
                 .AsNoTracking()
                 .FirstOrDefault(k => k.DeletedAt == null && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
             if (kontrolnaTocka == null)
@@ -242,12 +254,21 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
-            var entity = _dbContext.Posjeti
-                .FirstOrDefault(p => p.IdPosjet == id && p.DeletedAt == null);
+            var entity = await Db.Posjeti
+                .FirstOrDefaultAsync(p => p.IdPosjet == id && p.DeletedAt == null);
             if (entity == null)
             {
                 return NotFound();
             }
+
+            // ownership check using original
+            var original = await Db.Posjeti.AsNoTracking().FirstOrDefaultAsync(p => p.IdPosjet == id);
+            if (original == null) return NotFound();
+            if (!IsAdmin && !await IsOwnerAsync(original.IdKorisnik))
+                return Forbid();
+
+            // force owner to original
+            model.IdKorisnik = original.IdKorisnik;
 
             entity.IdKorisnik = model.IdKorisnik;
             entity.IdKnjizica = model.IdKnjizica;
@@ -259,7 +280,7 @@ namespace planinarenje.Controllers
             entity.OpisIskustva = model.OpisIskustva;
             entity.UneseniGUID = kontrolnaTocka.GUIDOznaka;
 
-            _dbContext.SaveChanges();
+            await Db.SaveChangesAsync();
             TempData["Success"] = "Posjet je uspjesno azuriran.";
             return RedirectToAction(nameof(Index));
         }
@@ -393,17 +414,21 @@ namespace planinarenje.Controllers
             }
         }
 
-        public IActionResult Delete(int id)
+        [Authorize]
+        public async Task<IActionResult> Delete(int id)
         {
-            var entity = _dbContext.Posjeti
+            var entity = await Db.Posjeti
                 .Include(p => p.Korisnik)
                 .Include(p => p.KontrolnaTocka)
                 .Include(p => p.Ruta)
-                .FirstOrDefault(p => p.IdPosjet == id && p.DeletedAt == null);
+                .FirstOrDefaultAsync(p => p.IdPosjet == id && p.DeletedAt == null);
             if (entity == null)
             {
                 return NotFound();
             }
+
+            if (!IsAdmin && !await IsOwnerAsync(entity.IdKorisnik))
+                return Forbid();
 
             ViewData["Title"] = "Obrisi posjet";
             return View(entity);
@@ -411,24 +436,28 @@ namespace planinarenje.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(int id)
+        [Authorize]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var entity = _dbContext.Posjeti
-                .FirstOrDefault(p => p.IdPosjet == id && p.DeletedAt == null);
+            var entity = await Db.Posjeti
+                .FirstOrDefaultAsync(p => p.IdPosjet == id && p.DeletedAt == null);
             if (entity == null)
             {
                 return NotFound();
             }
 
+            if (!IsAdmin && !await IsOwnerAsync(entity.IdKorisnik))
+                return Forbid();
+
             entity.DeletedAt = DateTime.UtcNow;
-            _dbContext.SaveChanges();
+            await Db.SaveChangesAsync();
             TempData["Success"] = "Posjet je uspjesno obrisan.";
             return RedirectToAction(nameof(Index));
         }
 
         public IActionResult Details(int id)
         {
-            var p = _dbContext.Posjeti
+            var p = Db.Posjeti
                 .Include(x => x.Korisnik)
                 .Include(x => x.Knjizica)
                 .Include(x => x.KontrolnaTocka)

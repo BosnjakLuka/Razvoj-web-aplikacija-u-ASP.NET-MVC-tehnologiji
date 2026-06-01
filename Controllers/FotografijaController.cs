@@ -5,16 +5,16 @@ using planinarenje.Entiteti;
 using planinarenje.Models;
 using planinarenje.Models.ViewModels;
 using System.IO;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace planinarenje.Controllers;
 
-public class FotografijaController : Controller
+public class FotografijaController : BaseController
 {
-    private readonly PlaninarstvoDbContext _dbContext;
-
-    public FotografijaController(PlaninarstvoDbContext dbContext)
+    public FotografijaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+        : base(userMgr, db)
     {
-        _dbContext = dbContext;
     }
 
     private string FormatirajTipSlike(TipSlike tip)
@@ -49,6 +49,7 @@ public class FotografijaController : Controller
         return "/Slike/Dizajn/hpo.jpg";
     }
 
+    [AllowAnonymous]
     public IActionResult Index()
     {
         var model = BuildIndexModel(null);
@@ -63,6 +64,7 @@ public class FotografijaController : Controller
         return PartialView("_FotografijaListPartial", model);
     }
 
+    [Authorize]
     public IActionResult Create()
     {
         ViewData["Title"] = "Nova fotografija";
@@ -71,7 +73,8 @@ public class FotografijaController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(FotografijaCreateModel model)
+    [Authorize]
+    public async Task<IActionResult> Create(FotografijaCreateModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -79,6 +82,11 @@ public class FotografijaController : Controller
             ViewData["Title"] = "Nova fotografija";
             return View(model);
         }
+
+        // ownership check via posjet
+        var posjet = await Db.Posjeti.FindAsync(model.IdPosjet);
+        if (posjet == null) return NotFound();
+        if (!IsAdmin && !await IsOwnerAsync(posjet.IdKorisnik)) return Forbid();
 
         var entity = new Fotografija
         {
@@ -90,24 +98,28 @@ public class FotografijaController : Controller
             DatumUploada = DateTime.UtcNow
         };
 
-        _dbContext.Fotografije.Add(entity);
-        _dbContext.SaveChanges();
+        Db.Fotografije.Add(entity);
+        await Db.SaveChangesAsync();
         TempData["NewId"] = entity.IdFotografija;
         TempData["Success"] = "Fotografija je uspjesno dodana.";
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize]
     [ActionName("Edit")]
-    public IActionResult EditGet(int id)
+    public async Task<IActionResult> EditGet(int id)
     {
-        var entity = _dbContext.Fotografije
+        var entity = await Db.Fotografije
             .Include(f => f.Posjet)
                 .ThenInclude(p => p.KontrolnaTocka)
-            .FirstOrDefault(f => f.IdFotografija == id && f.DeletedAt == null);
+            .FirstOrDefaultAsync(f => f.IdFotografija == id && f.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
         }
+
+        if (!IsAdmin && !await IsOwnerAsync(entity.Posjet!.IdKorisnik))
+            return Forbid();
 
         var model = new FotografijaEditModel
         {
@@ -127,7 +139,8 @@ public class FotografijaController : Controller
 
     [HttpPost, ActionName("Edit")]
     [ValidateAntiForgeryToken]
-    public IActionResult EditPost(int id, FotografijaEditModel model)
+    [Authorize]
+    public async Task<IActionResult> EditPost(int id, FotografijaEditModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -136,12 +149,16 @@ public class FotografijaController : Controller
             return View(model);
         }
 
-        var entity = _dbContext.Fotografije
-            .FirstOrDefault(f => f.IdFotografija == id && f.DeletedAt == null);
+        var entity = await Db.Fotografije
+            .FirstOrDefaultAsync(f => f.IdFotografija == id && f.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
         }
+        // ownership via posjet
+        var posjet = await Db.Posjeti.FindAsync(model.IdPosjet);
+        if (posjet == null) return NotFound();
+        if (!IsAdmin && !await IsOwnerAsync(posjet.IdKorisnik)) return Forbid();
 
         entity.IdPosjet = model.IdPosjet;
         entity.NazivDatoteke = model.NazivDatoteke;
@@ -149,21 +166,25 @@ public class FotografijaController : Controller
         entity.TipSlike = model.TipSlike;
         entity.Opis = model.Opis;
 
-        _dbContext.SaveChanges();
+        await Db.SaveChangesAsync();
         TempData["Success"] = "Fotografija je uspjesno azurirana.";
         return RedirectToAction(nameof(Index));
     }
 
-    public IActionResult Delete(int id)
+    [Authorize]
+    public async Task<IActionResult> Delete(int id)
     {
-        var entity = _dbContext.Fotografije
+        var entity = await Db.Fotografije
             .Include(f => f.Posjet)
                 .ThenInclude(p => p.KontrolnaTocka)
-            .FirstOrDefault(f => f.IdFotografija == id && f.DeletedAt == null);
+            .FirstOrDefaultAsync(f => f.IdFotografija == id && f.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
         }
+
+        if (!IsAdmin && !await IsOwnerAsync(entity.Posjet!.IdKorisnik))
+            return Forbid();
 
         ViewData["Title"] = "Obrisi fotografiju";
         return View(entity);
@@ -171,24 +192,29 @@ public class FotografijaController : Controller
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
+    [Authorize]
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var entity = _dbContext.Fotografije
-            .FirstOrDefault(f => f.IdFotografija == id && f.DeletedAt == null);
+        var entity = await Db.Fotografije
+            .FirstOrDefaultAsync(f => f.IdFotografija == id && f.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
         }
 
+        if (!IsAdmin && !await IsOwnerAsync(entity.Posjet!.IdKorisnik))
+            return Forbid();
+
         entity.DeletedAt = DateTime.UtcNow;
-        _dbContext.SaveChanges();
+        await Db.SaveChangesAsync();
         TempData["Success"] = "Fotografija je uspjesno obrisana.";
         return RedirectToAction(nameof(Index));
     }
 
+    [AllowAnonymous]
     public IActionResult Details(int id)
     {
-        var f = _dbContext.Fotografije
+        var f = Db.Fotografije
             .Include(x => x.Posjet)
                 .ThenInclude(p => p.KontrolnaTocka)
             .FirstOrDefault(x => x.IdFotografija == id && x.DeletedAt == null);
@@ -214,7 +240,7 @@ public class FotografijaController : Controller
 
     private List<FotografijaIndexViewModel> BuildIndexModel(string? searchTerm)
     {
-        var query = _dbContext.Fotografije
+        var query = Db.Fotografije
             .Include(f => f.Posjet)
                 .ThenInclude(p => p.KontrolnaTocka)
             .Where(f => f.DeletedAt == null && (f.Posjet == null || f.Posjet.DeletedAt == null));
