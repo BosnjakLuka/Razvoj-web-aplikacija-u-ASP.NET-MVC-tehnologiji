@@ -35,6 +35,12 @@ public class FotografijaController : BaseController
     {
         if (string.IsNullOrWhiteSpace(apsolutnaPutanja)) return "/Slike/Dizajn/hpo.jpg";
 
+        // Lab5 Faza 4: Dropzone uploadi spremaju web-relativnu putanju pod /uploads/.
+        if (apsolutnaPutanja.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+        {
+            return apsolutnaPutanja;
+        }
+
         if (apsolutnaPutanja.StartsWith("/Slike/Fotografije/", StringComparison.OrdinalIgnoreCase))
         {
             return apsolutnaPutanja;

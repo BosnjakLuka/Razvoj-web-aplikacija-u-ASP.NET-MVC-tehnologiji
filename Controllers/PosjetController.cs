@@ -15,9 +15,16 @@ namespace planinarenje.Controllers
 {
     public class PosjetController : BaseController
     {
-        public PosjetController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+        private readonly IWebHostEnvironment _env;
+
+        // Lab5 Faza 4: dopuštene ekstenzije i maksimalna veličina za Dropzone upload.
+        private static readonly string[] DopusteneEkstenzije = { ".jpg", ".jpeg", ".png", ".webp" };
+        private const long MaxVelicinaDatoteke = 5 * 1024 * 1024; // 5 MB
+
+        public PosjetController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, IWebHostEnvironment env)
             : base(userMgr, db)
         {
+            _env = env;
         }
 
         // Helper za hrvatski opis doživljaja
@@ -42,6 +49,12 @@ namespace planinarenje.Controllers
         private string FormatirajSliku(string? absolutePath)
         {
             if (string.IsNullOrWhiteSpace(absolutePath)) return "/Slike/Dizajn/hpo.jpg";
+
+            // Lab5 Faza 4: Dropzone uploadi spremaju web-relativnu putanju pod /uploads/.
+            if (absolutePath.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+            {
+                return absolutePath;
+            }
 
             if (absolutePath.StartsWith("/Slike/Fotografije/", StringComparison.OrdinalIgnoreCase))
             {
@@ -456,17 +469,20 @@ namespace planinarenje.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public IActionResult Details(int id)
+        public async Task<IActionResult> Details(int id)
         {
-            var p = Db.Posjeti
+            var p = await Db.Posjeti
                 .Include(x => x.Korisnik)
                 .Include(x => x.Knjizica)
                 .Include(x => x.KontrolnaTocka)
                 .Include(x => x.Ruta)
                 .Include(x => x.Fotografije)
-                .FirstOrDefault(x => x.IdPosjet == id && x.DeletedAt == null);
+                .FirstOrDefaultAsync(x => x.IdPosjet == id && x.DeletedAt == null);
 
             if (p == null) return NotFound();
+
+            // Lab5 Faza 4: samo vlasnik posjeta ili Admin smiju uploadati/brisati fotografije.
+            var mozeUredivati = IsAdmin || await IsOwnerAsync(p.IdKorisnik);
 
             var fotografijePosjeta = p.Fotografije
                 .Where(f => f.DeletedAt == null)
@@ -497,10 +513,165 @@ namespace planinarenje.Controllers
                 UneseniGUID = string.IsNullOrEmpty(p.UneseniGUID) ? "Nije evidentiran" : p.UneseniGUID,
                 JeLiPotvrdenPosjet = p.JeLiPotvrdenPosjet,
                 DatumKreiranjaZapisa = p.DatumKreiranjaZapisa,
-                Fotografije = fotografijePosjeta
+                Fotografije = fotografijePosjeta,
+                MozeUredivati = mozeUredivati
             };
 
             return View(model);
+        }
+
+        // ---------------------------------------------------------------------
+        // Lab5 Faza 4 — Dropzone upload fotografija na Posjet
+        // ---------------------------------------------------------------------
+
+        // POST /Posjet/UploadFoto — prima jednu datoteku iz Dropzonea.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> UploadFoto(int idPosjet, IFormFile? file, TipSlike? tip)
+        {
+            var posjet = await Db.Posjeti
+                .FirstOrDefaultAsync(p => p.IdPosjet == idPosjet && p.DeletedAt == null);
+            if (posjet == null)
+            {
+                return NotFound();
+            }
+
+            // Vlasništvo: fotografije smije dodavati samo vlasnik posjeta ili Admin.
+            if (!IsAdmin && !await IsOwnerAsync(posjet.IdKorisnik))
+            {
+                return Forbid();
+            }
+
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { success = false, error = "Datoteka nije priložena." });
+            }
+
+            if (file.Length > MaxVelicinaDatoteke)
+            {
+                return BadRequest(new { success = false, error = "Datoteka je prevelika (maksimalno 5 MB)." });
+            }
+
+            var ekstenzija = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!DopusteneEkstenzije.Contains(ekstenzija))
+            {
+                return BadRequest(new { success = false, error = "Dopušteni su samo formati: JPG, PNG, WEBP." });
+            }
+
+            if (string.IsNullOrEmpty(file.ContentType) ||
+                !file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { success = false, error = "Datoteka mora biti slika." });
+            }
+
+            var webRoot = ResolveWebRoot();
+            var apsolutniFolder = Path.Combine(webRoot, "uploads", "posjeti", idPosjet.ToString());
+            Directory.CreateDirectory(apsolutniFolder);
+
+            var spremljenoIme = $"{Guid.NewGuid()}{ekstenzija}";
+            var apsolutnaPutanja = Path.Combine(apsolutniFolder, spremljenoIme);
+
+            using (var stream = new FileStream(apsolutnaPutanja, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var entity = new Fotografija
+            {
+                IdPosjet = idPosjet,
+                NazivDatoteke = Path.GetFileName(file.FileName),
+                PutanjaDatoteke = $"/uploads/posjeti/{idPosjet}/{spremljenoIme}",
+                TipSlike = tip ?? TipSlike.Krajolik,
+                ContentType = file.ContentType,
+                FileSize = file.Length,
+                DatumUploada = DateTime.UtcNow
+            };
+
+            Db.Fotografije.Add(entity);
+            await Db.SaveChangesAsync();
+
+            return Json(new { success = true, id = entity.IdFotografija });
+        }
+
+        // GET /Posjet/GetFotografije — AJAX popis fotografija jednog posjeta (partial).
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetFotografije(int idPosjet)
+        {
+            var posjet = await Db.Posjeti
+                .FirstOrDefaultAsync(p => p.IdPosjet == idPosjet && p.DeletedAt == null);
+            if (posjet == null)
+            {
+                return NotFound();
+            }
+
+            var fotografije = await Db.Fotografije
+                .Where(f => f.IdPosjet == idPosjet && f.DeletedAt == null)
+                .OrderByDescending(f => f.DatumUploada)
+                .ToListAsync();
+
+            var model = fotografije
+                .Select(f => new FotografijaPosjetaViewModel
+                {
+                    IdFotografija = f.IdFotografija,
+                    NazivDatoteke = f.NazivDatoteke,
+                    PutanjaUrl = FormatirajSliku(f.PutanjaDatoteke),
+                    Opis = f.Opis
+                })
+                .ToList();
+
+            ViewBag.MozeUredivati = IsAdmin || await IsOwnerAsync(posjet.IdKorisnik);
+            return PartialView("_PosjetFotografijeListPartial", model);
+        }
+
+        // POST /Posjet/DeleteFoto — brisanje fotografije (s diska + soft delete u bazi).
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> DeleteFoto(int id)
+        {
+            var foto = await Db.Fotografije
+                .Include(f => f.Posjet)
+                .FirstOrDefaultAsync(f => f.IdFotografija == id && f.DeletedAt == null);
+            if (foto == null)
+            {
+                return NotFound();
+            }
+
+            if (!IsAdmin && !await IsOwnerAsync(foto.Posjet.IdKorisnik))
+            {
+                return Forbid();
+            }
+
+            // Fizički ukloni datoteku s diska samo za Dropzone uploade (web putanja pod /uploads/).
+            if (foto.PutanjaDatoteke.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+            {
+                var webRoot = ResolveWebRoot();
+                var relativni = foto.PutanjaDatoteke.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+                var apsolutna = Path.Combine(webRoot, relativni);
+                if (System.IO.File.Exists(apsolutna))
+                {
+                    System.IO.File.Delete(apsolutna);
+                }
+            }
+
+            // U bazi koristimo soft delete (konvencija iz CLAUDE.md) — zapis ostaje kao trag.
+            foto.DeletedAt = DateTime.UtcNow;
+            await Db.SaveChangesAsync();
+
+            return Json(new { success = true });
+        }
+
+        // Robustno razrješava wwwroot i kad se app pokreće iz bin/Debug.
+        private string ResolveWebRoot()
+        {
+            if (!string.IsNullOrEmpty(_env.WebRootPath))
+            {
+                return _env.WebRootPath;
+            }
+
+            return Path.Combine(_env.ContentRootPath, "wwwroot");
         }
 
         private List<PosjetIndexViewModel> BuildIndexModel(string? searchTerm)

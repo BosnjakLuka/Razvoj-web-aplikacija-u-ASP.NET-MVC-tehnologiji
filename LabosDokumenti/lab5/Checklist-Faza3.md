@@ -19,11 +19,11 @@
 
 ## B) Build i pokretanje
 
-- [ ] `dotnet build` prolazi bez **grešaka** (postojećih 8 warninga je iz starijih labova, ne iz API koda)
-- [ ] Aplikacija se pokreće (`dotnet run`) bez rušenja na startu
-- [ ] `/swagger` se otvara i prikazuje svih 11 API grupa
-- [ ] `/swagger/v1/swagger.json` vraća **HTTP 200** (ne 500)
-- [ ] Postojeći Lab1–4 MVC ekrani (Posjet, KontrolnaTocka, …) **i dalje rade** kao prije
+- [x] `dotnet build` prolazi bez **grešaka** (postojećih 8 warninga je iz starijih labova, ne iz API koda)
+- [x] Aplikacija se pokreće (`dotnet run`) bez rušenja na startu
+- [X] `/swagger` se otvara i prikazuje svih 11 API grupa
+- [X] `/swagger/v1/swagger.json` vraća **HTTP 200** (ne 500)
+- [X] Postojeći Lab1–4 MVC ekrani (Posjet, KontrolnaTocka, …) **i dalje rade** kao prije
 
 > ℹ️ Tijekom izrade provjereno automatski: build 0 grešaka, swagger.json = 200, svih 11 `/api/*` ruta prisutno.
 
@@ -33,70 +33,70 @@
 
 Za svaki kontroler postoji 5 osnovnih metoda + query parametri:
 
-- [ ] `api/posjet` — query: `korisnikId, kontrolnaTockaId, datumOd, datumDo, dozivljaj`
-- [ ] `api/kontrolnatocka` — query: `podrucjeId, tip, naziv`
-- [ ] `api/ruta` — query: `tezina, kontrolnaTockaId, naziv`
-- [ ] `api/podrucje` — query: `naziv`
-- [ ] `api/planinarskiobjekt` — query: `podrucjeId, udrugaId, tip, naziv`
-- [ ] `api/planinarskaudruga` — query: `naziv, grad`
-- [ ] `api/medalja` — query: `naziv`
-- [ ] `api/korisnik` — query: `query` (ime/prezime/korisničko ime)
-- [ ] `api/knjizica` — (vlasnik vidi svoje, Admin sve)
-- [ ] `api/korisnikmedalja` — query: `korisnikId, medaljaId`
-- [ ] `api/fotografija` — query: `posjetId, tip`
+- [x] `api/posjet` — query: `korisnikId, kontrolnaTockaId, datumOd, datumDo, dozivljaj`
+- [x] `api/kontrolnatocka` — query: `podrucjeId, tip, naziv`
+- [x] `api/ruta` — query: `tezina, kontrolnaTockaId, naziv`
+- [x] `api/podrucje` — query: `naziv`
+- [x] `api/planinarskiobjekt` — query: `podrucjeId, udrugaId, tip, naziv`
+- [x] `api/planinarskaudruga` — query: `naziv, grad`
+- [x] `api/medalja` — query: `naziv`
+- [x] `api/korisnik` — query: `query` (ime/prezime/korisničko ime)
+- [x] `api/knjizica` — (vlasnik vidi svoje, Admin sve)
+- [x] `api/korisnikmedalja` — query: `korisnikId, medaljaId`
+- [x] `api/fotografija` — query: `posjetId, tip`
 
 ---
 
 ## D) Status kodovi (testirati u Swaggeru)
 
-- [ ] `GET /api/posjet` → **200** + lista nije prazna (ima seed podataka)
-- [ ] `GET /api/posjet/1` → **200**
-- [ ] `GET /api/posjet/99999` → **404**
-- [ ] `POST /api/podrucje` **bez prijave** → **401** *(automatski provjereno: vraća 401)*
-- [ ] `POST /api/podrucje` prijavljen kao **Planinar** (ne Admin) → **403**
-- [ ] `POST /api/podrucje` prijavljen kao **Admin** s validnim tijelom → **201** (+ `Location` header)
-- [ ] `POST /api/podrucje` s nevaljanim tijelom (npr. prazan `naziv`) → **400** + poruke na hrvatskom
-- [ ] `PUT /api/podrucje/{id}` Admin → **200**; nepostojeći id → **404**
-- [ ] `DELETE /api/podrucje/{id}` Admin → **204**
+- [x] `GET /api/posjet` → **200** + lista nije prazna (ima seed podataka)
+- [x] `GET /api/posjet/1` → **200**
+- [x] `GET /api/posjet/99999` → **404**
+- [x] `POST /api/podrucje` **bez prijave** → **401** *(automatski provjereno: vraća 401)*
+- [x] `POST /api/podrucje` prijavljen kao **Planinar** (ne Admin) → **403**
+- [x] `POST /api/podrucje` prijavljen kao **Admin** s validnim tijelom → **201** (+ `Location` header)
+- [x] `POST /api/podrucje` s nevaljanim tijelom (npr. prazan `naziv`) → **400** + poruke na hrvatskom
+- [x] `PUT /api/podrucje/{id}` Admin → **200**; nepostojeći id → **404**
+- [x] `DELETE /api/podrucje/{id}` Admin → **204**
 
 ---
 
 ## E) Autorizacija i vlasništvo
 
-- [ ] Javni GET-ovi rade **anonimno** (Posjet, KontrolnaTocka, Ruta, Podrucje, Objekt, Udruga, Medalja, KorisnikMedalja, Fotografija, Korisnik)
-- [ ] `GET /api/knjizica` **bez prijave** → **401** *(automatski provjereno)*
-- [ ] `POST /api/posjet` kao Planinar kreira posjet, a `IdKorisnik` se uzima iz **prijavljenog korisnika** (ne iz tijela zahtjeva)
-- [ ] `PUT /api/posjet/{tuđi}` kao Planinar koji **nije vlasnik** → **403**
-- [ ] `DELETE /api/posjet/{vlastiti}` kao vlasnik → **204** (soft delete — `DeletedAt`, zapis ostaje u bazi)
-- [ ] Admin može uređivati/brisati tuđe posjete
+- [x] Javni GET-ovi rade **anonimno** (Posjet, KontrolnaTocka, Ruta, Podrucje, Objekt, Udruga, Medalja, KorisnikMedalja, Fotografija, Korisnik)
+- [x] `GET /api/knjizica` **bez prijave** → **401** *(automatski provjereno)*
+- [x] `POST /api/posjet` kao Planinar kreira posjet, a `IdKorisnik` se uzima iz **prijavljenog korisnika** (ne iz tijela zahtjeva)
+- [x] `PUT /api/posjet/{tuđi}` kao Planinar koji **nije vlasnik** → **403**
+- [x] `DELETE /api/posjet/{vlastiti}` kao vlasnik → **204** (soft delete — `DeletedAt`, zapis ostaje u bazi)
+- [x] Admin može uređivati/brisati tuđe posjete
 
 ---
 
 ## F) DTO i sigurnost podataka (R3)
 
-- [ ] Nijedan endpoint **ne izlaže EF entitet direktno** — uvijek ide kroz DTO
-- [ ] `GET /api/korisnik` **anoniman** vraća samo: `idKorisnik, ime, prezime, korisnickoIme, profilnaSlika, datumRegistracije` *(automatski provjereno — nema email/OIB/JMBG)*
-- [ ] `GET /api/korisnik` kao **Admin** dodatno vraća `email, brojMobitela, datumRodenja, statusAktivan`
-- [ ] **Nigdje** se ne izlaže `OIB` korisnika, `JMBG`, `AppUserId` ni `PasswordHash`
+- [x] Nijedan endpoint **ne izlaže EF entitet direktno** — uvijek ide kroz DTO
+- [x] `GET /api/korisnik` **anoniman** vraća samo: `idKorisnik, ime, prezime, korisnickoIme, profilnaSlika, datumRegistracije` *(automatski provjereno — nema email/OIB/JMBG)*
+- [x] `GET /api/korisnik` kao **Admin** dodatno vraća `email, brojMobitela, datumRodenja, statusAktivan`
+- [x] **Nigdje** se ne izlaže `OIB` korisnika, `JMBG`, `AppUserId` ni `PasswordHash`
       *(napomena: `OIB` planinarske **udruge** je javni poslovni podatak i namjerno je izložen)*
-- [ ] Create/Update DTO sadrže samo primitivne tipove + FK ID-eve (bez ugniježđenih objekata)
-- [ ] Read DTO denormalizirano prikazuje nazive vezanih entiteta (npr. `nazivKontrolneTocke`, `imePrezimeKorisnika`)
+- [x] Create/Update DTO sadrže samo primitivne tipove + FK ID-eve (bez ugniježđenih objekata)
+- [x] Read DTO denormalizirano prikazuje nazive vezanih entiteta (npr. `nazivKontrolneTocke`, `imePrezimeKorisnika`)
 
 ---
 
 ## G) Soft delete u API-ju (R8)
 
-- [ ] Soft-deletani zapisi (`DeletedAt != null`) **ne pojavljuju se** ni u jednoj GET listi (globalni query filter aktivan)
-- [ ] DELETE na entitetima s `DeletedAt` postavlja `DeletedAt` (ne briše fizički)
-- [ ] DELETE na `Korisnik` / `Knjizica` (nemaju `DeletedAt`) postavlja `StatusAktivan/StatusAktivna = false`
+- [x] Soft-deletani zapisi (`DeletedAt != null`) **ne pojavljuju se** ni u jednoj GET listi (globalni query filter aktivan)
+- [x] DELETE na entitetima s `DeletedAt` postavlja `DeletedAt` (ne briše fizički)
+- [x] DELETE na `Korisnik` / `Knjizica` (nemaju `DeletedAt`) postavlja `StatusAktivan/StatusAktivna = false`
 
 ---
 
 ## H) Konvencije (CLAUDE.md)
 
-- [ ] API kontroleri su u `Controllers/Api/`, naziv `XyzApiController`, `[ApiController]`, `[Route("api/xyz")]`
-- [ ] Hrvatski nazivi entiteta/polja zadržani; `ErrorMessage` validacija na hrvatskom
-- [ ] Standardni status kodovi 200/201/204/400/401/403/404
+- [x] API kontroleri su u `Controllers/Api/`, naziv `XyzApiController`, `[ApiController]`, `[Route("api/xyz")]`
+- [x] Hrvatski nazivi entiteta/polja zadržani; `ErrorMessage` validacija na hrvatskom
+- [x] Standardni status kodovi 200/201/204/400/401/403/404
 
 ---
 

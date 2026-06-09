@@ -120,35 +120,105 @@
                 </div>
             </div>
 
-            <!-- Fotografije izleta -->
-            <h3 class="h5 mb-3 mt-4 pt-2"><i class="bi bi-camera me-2 text-primary"></i>Fotografije s posjeta (@Model.Fotografije.Count)</h3>
-            
-            @if (!Model.Fotografije.Any())
+            <!-- Fotografije izleta (Lab5 Faza 4 — Dropzone upload + AJAX popis) -->
+            @if (Model.MozeUredivati)
             {
-                <div class="app-card h-auto bg-light text-center py-4 text-muted">
-                    <i class="bi bi-image fs-1 d-block mb-3 opacity-50"></i>
-                    <p class="mb-0">Aplikacija ne bilježi ni jednu fotografiju za ovaj posjet.</p>
-                </div>
-            }
-            else
-            {
-                <div class="row g-3">
-                    @foreach (var foto in Model.Fotografije)
-                    {
-                        <div class="col-md-6 col-lg-4">
-                            <div class="app-card h-100 p-2 shadow-sm rounded overflow-hidden border">
-                                <a asp-controller="Fotografija" asp-action="Details" asp-route-id="@foto.IdFotografija" title="Otvori fotografiju @foto.NazivDatoteke">
-                                     <img src="@foto.PutanjaUrl" class="img-fluid rounded border-bottom w-100 mb-2 mb-lg-0" style="object-fit: cover; aspect-ratio: 4/3;" alt="@foto.NazivDatoteke" />
-                                </a>
-                                @if (!string.IsNullOrEmpty(foto.Opis))
-                                {
-                                    <p class="text-muted small mb-0 mt-2 text-truncate px-1" title="@foto.Opis">@foto.Opis</p>
-                                }
-                            </div>
+                @Html.AntiForgeryToken()
+                <div class="app-card h-auto mb-3 mt-4 pt-2 border-top border-4 border-success">
+                    <h3 class="h5 mb-3"><i class="bi bi-cloud-arrow-up me-2 text-success"></i>Dodaj fotografije</h3>
+                    <div class="row g-2 align-items-end mb-3">
+                        <div class="col-sm-6">
+                            <label for="tipSlikeUpload" class="form-label small text-muted mb-1">Tip fotografije</label>
+                            <select id="tipSlikeUpload" class="form-select form-select-sm" asp-items="Html.GetEnumSelectList<planinarenje.Entiteti.TipSlike>()"></select>
                         </div>
-                    }
+                    </div>
+                    <form id="fotoDropzone" class="dropzone border rounded" action="@Url.Action("UploadFoto", "Posjet")"></form>
+                    <p class="text-muted small mb-0 mt-2">
+                        <i class="bi bi-info-circle me-1"></i>Dopušteni formati: JPG, PNG, WEBP — maksimalno 5 MB po datoteci.
+                    </p>
                 </div>
             }
+
+            <div id="fotoList" class="mt-4 pt-2">
+                <div class="text-center text-muted py-4">
+                    <span class="spinner-border spinner-border-sm me-2"></span>Učitavanje fotografija…
+                </div>
+            </div>
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dropzone@5/dist/min/dropzone.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/dropzone@5/dist/min/dropzone.min.js"></script>
+    <script>
+        // Ručna inicijalizacija (bez auto-discovera) zbog kontrole nad headerima/parametrima.
+        Dropzone.autoDiscover = false;
+
+        const idPosjet = @Model.IdPosjet;
+        const fotoListUrl = '@Url.Action("GetFotografije", "Posjet")';
+        const deleteFotoUrl = '@Url.Action("DeleteFoto", "Posjet")';
+
+        function antiForgeryToken() {
+            const el = document.querySelector('input[name="__RequestVerificationToken"]');
+            return el ? el.value : '';
+        }
+
+        function loadFotografije() {
+            $('#fotoList').load(fotoListUrl + '?idPosjet=' + idPosjet);
+        }
+
+        $(function () {
+            loadFotografije();
+
+            // Dropzone se prikazuje samo vlasniku/Adminu (forma postoji samo tada).
+            const dzEl = document.getElementById('fotoDropzone');
+            if (dzEl) {
+                new Dropzone('#fotoDropzone', {
+                    paramName: 'file',
+                    maxFilesize: 5, // MB
+                    acceptedFiles: '.jpg,.jpeg,.png,.webp',
+                    addRemoveLinks: true,
+                    dictDefaultMessage: 'Povucite fotografije ovdje ili kliknite za odabir',
+                    dictRemoveFile: 'Ukloni',
+                    dictFileTooBig: 'Datoteka je prevelika ({{filesize}} MB). Maksimalno: {{maxFilesize}} MB.',
+                    dictInvalidFileType: 'Dopušteni su samo JPG, PNG i WEBP.',
+                    // R9: antiforgery token u headeru da POST ne padne na 400.
+                    headers: { 'RequestVerificationToken': antiForgeryToken() },
+                    sending: function (file, xhr, formData) {
+                        formData.append('idPosjet', idPosjet);
+                        formData.append('tip', document.getElementById('tipSlikeUpload').value);
+                    },
+                    success: function (file) {
+                        file._uploadSuccess = true;
+                    },
+                    // Kad cijeli red završi (radi i za pojedinačni upload i za drag-and-drop više slika).
+                    queuecomplete: function () {
+                        this.removeAllFiles();
+                        loadFotografije();
+                    },
+                    error: function (file, message) {
+                        const msg = (message && message.error) ? message.error
+                            : (typeof message === 'string' ? message : 'Greška pri uploadu.');
+                        alert(msg);
+                        this.removeFile(file);
+                    }
+                });
+            }
+
+            // Brisanje pojedine fotografije (delegirano jer se popis učitava AJAX-om).
+            $('#fotoList').on('click', '.js-foto-delete', function () {
+                if (!confirm('Sigurno obrisati ovu fotografiju?')) return;
+                const id = $(this).data('id');
+                $.ajax({
+                    url: deleteFotoUrl,
+                    type: 'POST',
+                    data: { id: id },
+                    headers: { 'RequestVerificationToken': antiForgeryToken() },
+                    success: function () { loadFotografije(); },
+                    error: function () { alert('Brisanje fotografije nije uspjelo.'); }
+                });
+            });
+        });
+    </script>
+}
