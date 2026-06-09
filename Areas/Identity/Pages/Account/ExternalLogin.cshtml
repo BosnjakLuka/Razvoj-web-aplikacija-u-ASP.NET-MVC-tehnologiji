@@ -1,17 +1,17 @@
 ﻿@page
 @model ExternalLoginModel
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Dovrši registraciju";
 }
 
 <h1>@ViewData["Title"]</h1>
-<h2 id="external-login-title">Associate your @Model.ProviderDisplayName account.</h2>
+<h2 id="external-login-title">Povezivanje računa: @Model.ProviderDisplayName.</h2>
 <hr />
 
 <p id="external-login-description" class="text-info">
-    You've successfully authenticated with <strong>@Model.ProviderDisplayName</strong>.
-    Please enter an email address for this site below and click the Register button to finish
-    logging in.
+    Uspješno ste se autentificirali putem <strong>@Model.ProviderDisplayName</strong>.
+    Molimo dovršite profil ispod (ime, prezime, OIB i JMBG) i kliknite „Dovrši registraciju"
+    kako biste se prijavili.
 </p>
 
 <div class="row">
@@ -43,7 +43,7 @@
                 <label asp-for="Input.JMBG"></label>
                 <span asp-validation-for="Input.JMBG" class="text-danger"></span>
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Dovrši registraciju</button>
         </form>
     </div>
 </div>

@@ -167,6 +167,22 @@ builder.Services
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<PlaninarstvoDbContext>();
 
+// Lab5 Faza 5: Google OAuth vanjska prijava.
+// ClientId/ClientSecret se NE drže u kodu — čitaju se iz user secrets (development)
+// ili konfiguracije okruženja. Registriramo provider samo ako su oba ključa postavljena,
+// inače aplikacija normalno radi s lokalnom prijavom (bez pada na startupu).
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+{
+    builder.Services.AddAuthentication()
+        .AddGoogle(options =>
+        {
+            options.ClientId = googleClientId;
+            options.ClientSecret = googleClientSecret;
+        });
+}
+
 builder.Services.AddRazorPages();
 builder.Services.AddSingleton<IEmailSender, NoOpEmailSender>();
 
