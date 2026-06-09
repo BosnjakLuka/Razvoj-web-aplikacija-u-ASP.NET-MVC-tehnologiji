@@ -30,8 +30,11 @@ else
                         <td>@item.TipSlike</td>
                         <td class="text-end pe-4">
                             <a asp-action="Details" asp-route-id="@item.IdFotografija" class="btn btn-sm btn-outline-primary">Detalji</a>
-                            <a asp-action="Edit" asp-route-id="@item.IdFotografija" class="btn btn-sm btn-outline-secondary">Uredi</a>
-                            <a asp-action="Delete" asp-route-id="@item.IdFotografija" class="btn btn-sm btn-outline-danger">Obrisi</a>
+                            @if (User.IsInRole("Admin") || User.Identity!.IsAuthenticated)
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.IdFotografija" class="btn btn-sm btn-outline-secondary">Uredi</a>
+                                <a asp-action="Delete" asp-route-id="@item.IdFotografija" class="btn btn-sm btn-outline-danger">Obrisi</a>
+                            }
                         </td>
                     </tr>
                 }

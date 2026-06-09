@@ -34,7 +34,7 @@ namespace planinarenje.Controllers
         [HttpGet]
         public IActionResult AutocompleteSearch(string term)
         {
-            var results = _dbContext.Podrucja
+            var results = Db.Podrucja
                 .Where(p => p.DeletedAt == null && p.Naziv.Contains(term))
                 .OrderBy(p => p.Naziv)
                 .Take(15)
@@ -57,12 +57,12 @@ namespace planinarenje.Controllers
 
         private int DohvatiUkupnoKontrolnihTocaka(int idPodrucje)
         {
-            return _dbContext.KontrolneTocke.Count(kt => kt.IdPodrucje == idPodrucje && kt.DeletedAt == null);
+            return Db.KontrolneTocke.Count(kt => kt.IdPodrucje == idPodrucje && kt.DeletedAt == null);
         }
 
         private bool DodajGreskeZaDuplikatPodrucja(string naziv, string? regija, int minimalanBrojKt, int ukupnoKt, int? excludeId = null)
         {
-            var postoji = _dbContext.Podrucja
+            var postoji = Db.Podrucja
                 .Where(p => p.DeletedAt == null)
                 .Select(p => new
                 {
@@ -70,7 +70,7 @@ namespace planinarenje.Controllers
                     p.Naziv,
                     p.Regija,
                     p.MinimalanBrojKTZaObilazak,
-                    UkupnoKT = _dbContext.KontrolneTocke.Count(kt => kt.IdPodrucje == p.IdPodrucje && kt.DeletedAt == null)
+                    UkupnoKT = Db.KontrolneTocke.Count(kt => kt.IdPodrucje == p.IdPodrucje && kt.DeletedAt == null)
                 })
                 .AsEnumerable()
                 .Any(p => p.Naziv == naziv &&
@@ -255,10 +255,10 @@ namespace planinarenje.Controllers
         [Route("podrucje/{id:int}/tocke")]
         public IActionResult KontrolneTockePodrucja(int id)
         {
-            var podrucje = _dbContext.Podrucja.FirstOrDefault(p => p.IdPodrucje == id && p.DeletedAt == null);
+            var podrucje = Db.Podrucja.FirstOrDefault(p => p.IdPodrucje == id && p.DeletedAt == null);
             if (podrucje == null) return NotFound();
 
-            var tocke = _dbContext.KontrolneTocke
+            var tocke = Db.KontrolneTocke
                 .Include(kt => kt.Podrucje)
                 .Where(kt => kt.IdPodrucje == id && kt.DeletedAt == null)
                 .OrderBy(kt => kt.Naziv)
@@ -286,7 +286,7 @@ namespace planinarenje.Controllers
 
         private List<PodrucjeIndexCardViewModel> BuildIndexModel(string? searchTerm)
         {
-            var filteredPodrucja = _dbContext.Podrucja
+            var filteredPodrucja = Db.Podrucja
                 .Where(p => p.DeletedAt == null);
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -298,7 +298,7 @@ namespace planinarenje.Controllers
                     (p.Opis != null && p.Opis.Contains(term)));
             }
 
-            var ktCountByPodrucje = _dbContext.KontrolneTocke
+            var ktCountByPodrucje = Db.KontrolneTocke
                 .Where(kt => kt.DeletedAt == null)
                 .GroupBy(kt => kt.IdPodrucje)
                 .Select(g => new { g.Key, Count = g.Count() })

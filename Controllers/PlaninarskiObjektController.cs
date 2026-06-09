@@ -40,8 +40,8 @@ public class PlaninarskiObjektController : BaseController
 
     private bool ValidirajUdruguIPodrucje(PlaninarskiObjektCreateModel model)
     {
-        var imaPodrucje = _dbContext.Podrucja.Any(p => p.IdPodrucje == model.IdPodrucje && p.DeletedAt == null);
-        var imaUdrugu = _dbContext.PlaninarskeUdruge.Any(u => u.IdPlaninarskaUdruga == model.IdPlaninarskaUdruga && u.DeletedAt == null);
+        var imaPodrucje = Db.Podrucja.Any(p => p.IdPodrucje == model.IdPodrucje && p.DeletedAt == null);
+        var imaUdrugu = Db.PlaninarskeUdruge.Any(u => u.IdPlaninarskaUdruga == model.IdPlaninarskaUdruga && u.DeletedAt == null);
 
         if (imaPodrucje && imaUdrugu)
         {
@@ -64,7 +64,7 @@ public class PlaninarskiObjektController : BaseController
 
     private bool DodajGreskeZaDuplikatObjekta(string naziv, int idPodrucje, int idPlaninarskaUdruga, int? excludeId = null)
     {
-        var postoji = _dbContext.PlaninarskiObjekti.Any(po =>
+        var postoji = Db.PlaninarskiObjekti.Any(po =>
             po.Naziv == naziv &&
             po.IdPodrucje == idPodrucje &&
             po.IdPlaninarskaUdruga == idPlaninarskaUdruga &&
@@ -366,7 +366,7 @@ public class PlaninarskiObjektController : BaseController
             return null;
         }
 
-        return _dbContext.Podrucja
+        return Db.Podrucja
             .Where(p => p.DeletedAt == null && p.IdPodrucje == id.Value)
             .Select(p => p.Naziv)
             .FirstOrDefault();
@@ -379,7 +379,7 @@ public class PlaninarskiObjektController : BaseController
             return null;
         }
 
-        return _dbContext.PlaninarskeUdruge
+        return Db.PlaninarskeUdruge
             .Where(u => u.DeletedAt == null && u.IdPlaninarskaUdruga == id.Value)
             .Select(u => u.Naziv)
             .FirstOrDefault();

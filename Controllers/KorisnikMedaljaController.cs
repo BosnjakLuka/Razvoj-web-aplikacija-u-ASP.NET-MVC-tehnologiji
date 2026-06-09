@@ -38,7 +38,7 @@ public class KorisnikMedaljaController : BaseController
 
     private bool DodajGreskeZaDuplikatDodjele(int idKorisnik, int idMedalja, int? excludeId = null)
     {
-        var postoji = _dbContext.KorisnikMedalje.Any(km =>
+        var postoji = Db.KorisnikMedalje.Any(km =>
             km.IdKorisnik == idKorisnik &&
             km.IdMedalja == idMedalja &&
             (!excludeId.HasValue || km.IdKorisnikMedalja != excludeId.Value));
@@ -225,7 +225,7 @@ public class KorisnikMedaljaController : BaseController
 
     public IActionResult Details(int id)
     {
-        var km = _dbContext.KorisnikMedalje
+        var km = Db.KorisnikMedalje
             .Include(x => x.Korisnik)
             .Include(x => x.Medalja)
             .FirstOrDefault(x => x.IdKorisnikMedalja == id && x.DeletedAt == null);
@@ -288,7 +288,7 @@ public class KorisnikMedaljaController : BaseController
             return null;
         }
 
-        return _dbContext.Korisnici
+        return Db.Korisnici
             .Where(k => k.StatusAktivan && k.IdKorisnik == id.Value)
             .Select(k => k.Ime + " " + k.Prezime + " (@" + k.KorisnickoIme + ")")
             .FirstOrDefault();
@@ -301,7 +301,7 @@ public class KorisnikMedaljaController : BaseController
             return null;
         }
 
-        return _dbContext.Medalje
+        return Db.Medalje
             .Where(m => m.DeletedAt == null && m.IdMedalja == id.Value)
             .Select(m => m.Naziv)
             .FirstOrDefault();
@@ -310,7 +310,7 @@ public class KorisnikMedaljaController : BaseController
     private KorisnikMedaljaEligibilityPageViewModel BuildEligibilityPageModel()
     {
         var userStats = GetEligibleUsersBaseQuery();
-        var medals = _dbContext.Medalje
+        var medals = Db.Medalje
             .Where(m => m.DeletedAt == null)
             .OrderBy(m => m.MinimalanBrojKontrolnihTocaka)
             .ThenBy(m => m.Naziv)
@@ -334,19 +334,19 @@ public class KorisnikMedaljaController : BaseController
 
     private List<KorisnikMedaljaEligibleUserViewModel> GetEligibleUsersBaseQuery()
     {
-        return _dbContext.Korisnici
+        return Db.Korisnici
             .Where(k => k.StatusAktivan)
             .Select(k => new KorisnikMedaljaEligibleUserViewModel
             {
                 IdKorisnik = k.IdKorisnik,
                 ImePrezimeKorisnika = k.Ime + " " + k.Prezime,
                 KorisnickoIme = k.KorisnickoIme,
-                BrojKontrolnihTocaka = _dbContext.Posjeti
+                BrojKontrolnihTocaka = Db.Posjeti
                     .Where(p => p.DeletedAt == null && p.IdKorisnik == k.IdKorisnik)
                     .Select(p => p.IdKontrolnaTocka)
                     .Distinct()
                     .Count(),
-                BrojPodrucja = _dbContext.Posjeti
+                BrojPodrucja = Db.Posjeti
                     .Where(p => p.DeletedAt == null && p.IdKorisnik == k.IdKorisnik)
                     .Select(p => p.KontrolnaTocka != null ? p.KontrolnaTocka.IdPodrucje : 0)
                     .Where(id => id > 0)
@@ -360,7 +360,7 @@ public class KorisnikMedaljaController : BaseController
     {
         var stats = cachedStats ?? GetEligibleUsersBaseQuery();
 
-        var awardedUserIds = _dbContext.KorisnikMedalje
+        var awardedUserIds = Db.KorisnikMedalje
             .Where(km => km.DeletedAt == null && km.IdMedalja == medalja.IdMedalja)
             .Select(km => km.IdKorisnik)
             .ToHashSet();

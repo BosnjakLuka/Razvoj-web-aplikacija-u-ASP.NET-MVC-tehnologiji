@@ -46,7 +46,7 @@ public class PlaninarskaUdrugaController : BaseController
     [HttpGet]
     public IActionResult AutocompleteSearch(string term)
     {
-        var results = _dbContext.PlaninarskeUdruge
+        var results = Db.PlaninarskeUdruge
             .Where(u => u.DeletedAt == null && u.Naziv.Contains(term))
             .OrderBy(u => u.Naziv)
             .Take(15)
@@ -69,7 +69,7 @@ public class PlaninarskaUdrugaController : BaseController
 
     private bool DodajGreskeZaDuplikatUdruge(string oib, int? excludeId = null)
     {
-        var postoji = _dbContext.PlaninarskeUdruge.Any(u =>
+        var postoji = Db.PlaninarskeUdruge.Any(u =>
             u.OIB == oib && (!excludeId.HasValue || u.IdPlaninarskaUdruga != excludeId.Value));
 
         if (!postoji)
@@ -279,7 +279,7 @@ public class PlaninarskaUdrugaController : BaseController
 
     private List<PlaninarskaUdrugaIndexViewModel> BuildIndexModel(string? searchTerm)
     {
-        var query = _dbContext.PlaninarskeUdruge
+        var query = Db.PlaninarskeUdruge
             .Where(u => u.DeletedAt == null);
 
         if (!string.IsNullOrWhiteSpace(searchTerm))

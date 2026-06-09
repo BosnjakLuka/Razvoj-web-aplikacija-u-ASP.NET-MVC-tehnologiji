@@ -7,7 +7,7 @@
 ## 1. O projektu
 
 **Naziv:** Razvoj web aplikacija u ASP.NET MVC tehnologiji — projekt *Planinarenje*
-**Tip:** ASP.NET MVC web aplikacija (.NET 8), single-project solution
+**Tip:** ASP.NET MVC web aplikacija (.NET 9), single-project solution
 **Kolegij:** Razvoj web aplikacija u ASP.NET MVC tehnologiji (prof. Ivan Cesar)
 **Repo:** https://github.com/BosnjakLuka/Razvoj-web-aplikacija-u-ASP.NET-MVC-tehnologiji
 **Branch:** rad ide na `main` (sve što se ocjenjuje mora biti na `main`)
@@ -34,7 +34,7 @@ Aplikacija je **digitalna planinarska knjižica** — zamjena za papirnatu bilje
 
 | Sloj | Tehnologija |
 |---|---|
-| Runtime | **.NET 8** |
+| Runtime | **.NET 9** |
 | Framework | **ASP.NET Core MVC** (Razor Views, klasični MVC pattern — ne Razor Pages) |
 | ORM | **Entity Framework Core** (code-first) |
 | Baza | **MySQL** preko **Pomelo.EntityFrameworkCore.MySql** |

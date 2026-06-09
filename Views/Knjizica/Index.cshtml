@@ -18,7 +18,10 @@
             <h1 class="section-title mb-2">Planinarske knjizice</h1>
             <p class="text-muted mb-0">Popis evidencijskih knjizica planinara i njihov status.</p>
         </div>
-        <a asp-action="Create" class="btn btn-primary">Nova knjizica</a>
+        @if (User.IsInRole("Admin") || User.IsInRole("Planinar"))
+        {
+            <a asp-action="Create" class="btn btn-primary">Nova knjizica</a>
+        }
     </div>
 </section>
 

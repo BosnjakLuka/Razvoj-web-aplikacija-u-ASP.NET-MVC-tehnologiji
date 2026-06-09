@@ -59,7 +59,7 @@ public class KnjizicaController : BaseController
     [HttpGet]
     public IActionResult AutocompleteSearch(string term)
     {
-        var query = _dbContext.Knjizice
+        var query = Db.Knjizice
             .Include(k => k.Korisnik)
             .Where(k => k.StatusAktivna && k.Korisnik != null && k.Korisnik.StatusAktivan);
 
@@ -310,7 +310,7 @@ public class KnjizicaController : BaseController
 
     private bool DodajGreskeZaDuplikatKnjizice(int idKorisnik, int? excludeId = null)
     {
-        var postoji = _dbContext.Knjizice.Any(k =>
+        var postoji = Db.Knjizice.Any(k =>
             k.IdKorisnik == idKorisnik && (!excludeId.HasValue || k.IdKnjizica != excludeId.Value));
 
         if (!postoji)
@@ -326,7 +326,7 @@ public class KnjizicaController : BaseController
 
     private List<KnjizicaIndexViewModel> BuildIndexModel(string? searchTerm)
     {
-        var query = _dbContext.Knjizice
+        var query = Db.Knjizice
             .Include(k => k.Korisnik)
             .Where(k => k.StatusAktivna && k.Korisnik != null && k.Korisnik.StatusAktivan);
 

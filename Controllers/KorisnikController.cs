@@ -39,10 +39,10 @@ namespace planinarenje.Controllers
 
         private bool DodajGreskeZaDuplikatKorisnika(string email, string korisnickoIme, int? excludeId = null)
         {
-            var postojiEmail = _dbContext.Korisnici.Any(k =>
+            var postojiEmail = Db.Korisnici.Any(k =>
                 k.Email == email && (!excludeId.HasValue || k.IdKorisnik != excludeId.Value));
 
-            var postojiKorisnickoIme = _dbContext.Korisnici.Any(k =>
+            var postojiKorisnickoIme = Db.Korisnici.Any(k =>
                 k.KorisnickoIme == korisnickoIme && (!excludeId.HasValue || k.IdKorisnik != excludeId.Value));
 
             if (postojiEmail)
@@ -76,7 +76,7 @@ namespace planinarenje.Controllers
         [HttpGet]
         public IActionResult AutocompleteSearch(string term)
         {
-            var results = _dbContext.Korisnici
+            var results = Db.Korisnici
                 .Where(k => k.StatusAktivan &&
                             (k.Ime.Contains(term) || k.Prezime.Contains(term) || k.KorisnickoIme.Contains(term)))
                 .OrderBy(k => k.Prezime)
@@ -340,7 +340,7 @@ namespace planinarenje.Controllers
 
         private List<KorisnikIndexCardViewModel> BuildIndexModel(string? searchTerm)
         {
-            var query = _dbContext.Korisnici
+            var query = Db.Korisnici
                 .Where(k => k.StatusAktivan);
 
             if (!string.IsNullOrWhiteSpace(searchTerm))

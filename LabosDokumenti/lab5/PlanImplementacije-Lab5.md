@@ -68,7 +68,7 @@ Prema repozitoriju i Lab1–Lab4 dokumentaciji, projekt već sadrži:
 3. **Backup baze** (export schema + podaci) prije bilo kakve Identity migracije.
 4. **Empty DB test setup:** kreirati lokalno drugu MySQL bazu (`planinarstvo_test`) za prvo trčanje Identity migracije. Ako prođe → tek onda na dev bazu.
 5. Provjeriti je li HTTPS aktivan u `Properties/launchSettings.json` (treba za OAuth).
-6. Provjeriti verziju Pomelo paketa (mora biti kompatibilan s `Microsoft.AspNetCore.Identity.EntityFrameworkCore` za .NET 8).
+6. Provjeriti verziju Pomelo paketa (mora biti kompatibilan s `Microsoft.AspNetCore.Identity.EntityFrameworkCore` za .NET 9).
 
 ---
 

@@ -13,6 +13,7 @@ namespace planinarenje.Models
         public DateTime DatumVrijemePosjeta { get; set; }
         public string Dozivljaj { get; set; } = string.Empty;
         public bool JeLiPotvrdenPosjet { get; set; }
+        public string? AppUserId { get; set; }
     }
 
     public class PosjetDetailsViewModel

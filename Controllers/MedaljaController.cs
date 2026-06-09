@@ -34,7 +34,7 @@ public class MedaljaController : BaseController
     [HttpGet]
     public IActionResult AutocompleteSearch(string term)
     {
-        var results = _dbContext.Medalje
+        var results = Db.Medalje
             .Where(m => m.DeletedAt == null && m.Naziv.Contains(term))
             .OrderBy(m => m.Naziv)
             .Take(15)
@@ -57,7 +57,7 @@ public class MedaljaController : BaseController
 
     private bool DodajGreskeZaDuplikatMedalje(string naziv, int minimalanBrojKontrolnihTocaka, int minimalanBrojPodrucja, int? excludeId = null)
     {
-        var postoji = _dbContext.Medalje.Any(m =>
+        var postoji = Db.Medalje.Any(m =>
             m.Naziv == naziv &&
             m.MinimalanBrojKontrolnihTocaka == minimalanBrojKontrolnihTocaka &&
             m.MinimalanBrojPodrucja == minimalanBrojPodrucja &&

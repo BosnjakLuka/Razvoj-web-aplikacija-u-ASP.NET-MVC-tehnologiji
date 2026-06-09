@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -74,7 +75,7 @@ namespace planinarenje.Controllers
         [HttpGet]
         public IActionResult AutocompleteSearch(string term)
         {
-            var query = _dbContext.Posjeti
+            var query = Db.Posjeti
                 .Include(p => p.KontrolnaTocka)
                 .Where(p => p.DeletedAt == null);
 
@@ -105,7 +106,7 @@ namespace planinarenje.Controllers
         [HttpGet]
         public IActionResult RuteZaKontrolnuTocku(int kontrolnaTockaId)
         {
-            var results = _dbContext.Rute
+            var results = Db.Rute
                 .Where(r => r.DeletedAt == null && r.IdKontrolnaTocka == kontrolnaTockaId)
                 .OrderBy(r => r.Naziv)
                 .Select(r => new
@@ -292,7 +293,7 @@ namespace planinarenje.Controllers
                 return null;
             }
 
-            return _dbContext.KontrolneTocke
+            return Db.KontrolneTocke
                 .Where(k => k.DeletedAt == null && k.IdKontrolnaTocka == id.Value)
                 .Select(k => k.Naziv)
                 .FirstOrDefault();
@@ -305,7 +306,7 @@ namespace planinarenje.Controllers
                 return null;
             }
 
-            return _dbContext.Korisnici
+            return Db.Korisnici
                 .Where(k => k.StatusAktivan && k.IdKorisnik == id.Value)
                 .Select(k => k.Ime + " " + k.Prezime + " (@" + k.KorisnickoIme + ")")
                 .FirstOrDefault();
@@ -318,7 +319,7 @@ namespace planinarenje.Controllers
                 return null;
             }
 
-            return _dbContext.Knjizice
+            return Db.Knjizice
                 .Include(k => k.Korisnik)
                 .Where(k => k.StatusAktivna && k.IdKnjizica == id.Value)
                 .Select(k => "Knjizica #" + k.IdKnjizica + " - " +
@@ -333,7 +334,7 @@ namespace planinarenje.Controllers
                 return null;
             }
 
-            return _dbContext.Rute
+            return Db.Rute
                 .Where(r => r.DeletedAt == null && r.IdRuta == id.Value)
                 .Select(r => r.Naziv + " (" + r.Pocetak + " -> " + r.Kraj + ")")
                 .FirstOrDefault();
@@ -346,7 +347,7 @@ namespace planinarenje.Controllers
                 return null;
             }
 
-            return _dbContext.KontrolneTocke
+            return Db.KontrolneTocke
                 .Where(k => k.DeletedAt == null && k.IdKontrolnaTocka == id.Value)
                 .Select(k => k.GUIDOznaka)
                 .FirstOrDefault();
@@ -358,7 +359,7 @@ namespace planinarenje.Controllers
 
             if (kontrolnaTockaId.HasValue)
             {
-                routes = _dbContext.Rute
+                routes = Db.Rute
                     .Where(r => r.DeletedAt == null && r.IdKontrolnaTocka == kontrolnaTockaId.Value)
                     .OrderBy(r => r.Naziv)
                     .Select(r => new SelectListItem
@@ -383,7 +384,7 @@ namespace planinarenje.Controllers
 
         private void ValidatePosjetSelection(PosjetCreateModel model)
         {
-            var kontrolnaTocka = _dbContext.KontrolneTocke
+            var kontrolnaTocka = Db.KontrolneTocke
                 .AsNoTracking()
                 .FirstOrDefault(k => k.DeletedAt == null && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
 
@@ -392,7 +393,7 @@ namespace planinarenje.Controllers
                 return;
             }
 
-            var ruta = _dbContext.Rute
+            var ruta = Db.Rute
                 .AsNoTracking()
                 .FirstOrDefault(r => r.DeletedAt == null && r.IdRuta == model.IdRuta);
 
@@ -504,7 +505,7 @@ namespace planinarenje.Controllers
 
         private List<PosjetIndexViewModel> BuildIndexModel(string? searchTerm)
         {
-            var query = _dbContext.Posjeti
+            var query = Db.Posjeti
                 .Include(p => p.Korisnik)
                 .Include(p => p.KontrolnaTocka)
                 .Include(p => p.Ruta)
@@ -535,14 +536,15 @@ namespace planinarenje.Controllers
                     NazivRute = p.Ruta?.Naziv ?? "Samostalni posjet",
                     DatumVrijemePosjeta = p.DatumVrijemePosjeta,
                     Dozivljaj = FormatirajDozivljaj(p.DozivljajPosjeta),
-                    JeLiPotvrdenPosjet = p.JeLiPotvrdenPosjet
+                    JeLiPotvrdenPosjet = p.JeLiPotvrdenPosjet,
+                    AppUserId = p.Korisnik?.AppUserId
                 })
                 .ToList();
         }
 
         private void PopulateKnjiziceByKorisnik()
         {
-            var knjiziceByKorisnik = _dbContext.Knjizice
+            var knjiziceByKorisnik = Db.Knjizice
                 .Include(k => k.Korisnik)
                 .Where(k => k.StatusAktivna)
                 .OrderByDescending(k => k.DatumKreiranja)

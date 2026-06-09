@@ -35,7 +35,7 @@ public class RutaController : BaseController
     [HttpGet]
     public IActionResult AutocompleteSearch(string term)
     {
-        var results = _dbContext.Rute
+        var results = Db.Rute
             .Where(r => r.DeletedAt == null && r.Naziv.Contains(term))
             .OrderBy(r => r.Naziv)
             .Take(15)
@@ -58,7 +58,7 @@ public class RutaController : BaseController
 
     private bool ValidirajKontrolnuTocku(int idKontrolnaTocka)
     {
-        var postoji = _dbContext.KontrolneTocke.Any(k => k.IdKontrolnaTocka == idKontrolnaTocka && k.DeletedAt == null);
+        var postoji = Db.KontrolneTocke.Any(k => k.IdKontrolnaTocka == idKontrolnaTocka && k.DeletedAt == null);
         if (postoji)
         {
             return true;
@@ -71,7 +71,7 @@ public class RutaController : BaseController
 
     private bool DodajGreskeZaDuplikatRute(RutaCreateModel model, int? excludeId = null)
     {
-        var postoji = _dbContext.Rute
+        var postoji = Db.Rute
             .Where(r => r.DeletedAt == null)
             .Any(r => r.Naziv == model.Naziv &&
                       r.IdKontrolnaTocka == model.IdKontrolnaTocka &&
@@ -303,7 +303,7 @@ public class RutaController : BaseController
         if (!Enum.TryParse<TezinaRute>(tezina, true, out var tezinaEnum))
             return NotFound();
 
-        var filtrirane = _dbContext.Rute
+        var filtrirane = Db.Rute
             .Include(r => r.KontrolnaTocka)
             .Where(r => r.TezinaRute == tezinaEnum && r.DeletedAt == null)
             .ToList();
@@ -393,7 +393,7 @@ public class RutaController : BaseController
             return null;
         }
 
-        return _dbContext.KontrolneTocke
+        return Db.KontrolneTocke
             .Where(k => k.DeletedAt == null && k.IdKontrolnaTocka == id.Value)
             .Select(k => k.Naziv)
             .FirstOrDefault();

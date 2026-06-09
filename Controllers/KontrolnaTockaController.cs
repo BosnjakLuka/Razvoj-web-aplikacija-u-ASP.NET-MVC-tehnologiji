@@ -34,7 +34,7 @@ namespace planinarenje.Controllers
         [HttpGet]
         public IActionResult AutocompleteSearch(string term)
         {
-            var results = _dbContext.KontrolneTocke
+            var results = Db.KontrolneTocke
                 .Where(k => k.DeletedAt == null && k.Naziv.Contains(term))
                 .OrderBy(k => k.Naziv)
                 .Take(15)
@@ -58,7 +58,7 @@ namespace planinarenje.Controllers
 
         private bool ValidirajPodrucje(int idPodrucje)
         {
-            var postoji = _dbContext.Podrucja.Any(p => p.IdPodrucje == idPodrucje && p.DeletedAt == null);
+            var postoji = Db.Podrucja.Any(p => p.IdPodrucje == idPodrucje && p.DeletedAt == null);
             if (postoji)
             {
                 return true;
@@ -71,7 +71,7 @@ namespace planinarenje.Controllers
 
         private bool DodajGreskeZaDuplikatKontrolneTocke(string naziv, string guidOznaka, int idPodrucje, int? excludeId = null)
         {
-            var postoji = _dbContext.KontrolneTocke.Any(k =>
+            var postoji = Db.KontrolneTocke.Any(k =>
                 k.Naziv == naziv &&
                 k.GUIDOznaka == guidOznaka &&
                 k.IdPodrucje == idPodrucje &&
@@ -91,7 +91,7 @@ namespace planinarenje.Controllers
 
         private bool DodajGreskeZaZauzetGUID(string guidOznaka, int? excludeId = null)
         {
-            var postoji = _dbContext.KontrolneTocke.Any(k =>
+            var postoji = Db.KontrolneTocke.Any(k =>
                 k.GUIDOznaka == guidOznaka && (!excludeId.HasValue || k.IdKontrolnaTocka != excludeId.Value) && k.DeletedAt == null);
 
             if (!postoji)
@@ -339,7 +339,7 @@ namespace planinarenje.Controllers
 
         private List<KontrolnaTockaIndexCardViewModel> BuildIndexModel(string? searchTerm)
         {
-            var query = _dbContext.KontrolneTocke
+            var query = Db.KontrolneTocke
                 .Include(k => k.Podrucje)
                 .Where(k => k.DeletedAt == null && (k.Podrucje == null || k.Podrucje.DeletedAt == null));
 
@@ -374,7 +374,7 @@ namespace planinarenje.Controllers
                 return null;
             }
 
-            return _dbContext.Podrucja
+            return Db.Podrucja
                 .Where(p => p.DeletedAt == null && p.IdPodrucje == id.Value)
                 .Select(p => p.Naziv)
                 .FirstOrDefault();

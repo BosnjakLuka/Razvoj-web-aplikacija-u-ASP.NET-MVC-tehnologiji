@@ -279,7 +279,7 @@ public class FotografijaController : BaseController
             return null;
         }
 
-        return _dbContext.Posjeti
+        return Db.Posjeti
             .Include(p => p.KontrolnaTocka)
             .Where(p => p.DeletedAt == null && p.IdPosjet == id.Value)
             .Select(p => p.KontrolnaTocka != null
