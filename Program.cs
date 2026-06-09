@@ -170,6 +170,16 @@ builder.Services
 builder.Services.AddRazorPages();
 builder.Services.AddSingleton<IEmailSender, NoOpEmailSender>();
 
+// Lab5 Faza 3: Web API dokumentacija (Swagger / OpenAPI) - samo u Development okruženju.
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    // Dokumentiraj samo Web API kontrolere (rute koje počinju s "api/"),
+    // a ne konvencionalno rutirane MVC akcije (npr. Home/Index) koje nemaju eksplicitan HTTP verb.
+    options.DocInclusionPredicate((_, apiDesc) =>
+        apiDesc.RelativePath is not null && apiDesc.RelativePath.StartsWith("api/"));
+});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -196,7 +206,16 @@ string ResolveProjectRoot(string startPath)
 var projectRoot = ResolveProjectRoot(app.Environment.ContentRootPath);
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    // Lab5 Faza 3: Swagger UI dostupan na /swagger samo u Development okruženju.
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Planinarenje API v1");
+    });
+}
+else
 {
     app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
@@ -253,6 +272,9 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// Lab5 Faza 3: atributno rutirani Web API kontroleri (api/...).
+app.MapControllers();
 
 app.MapRazorPages();
 

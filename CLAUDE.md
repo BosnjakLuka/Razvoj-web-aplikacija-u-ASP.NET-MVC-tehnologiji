@@ -174,6 +174,8 @@ U `/LabosDokumenti/` postoji set markdown filea koji opisuju **što projekt mora
 - `PasswordHash`, OIB, JMBG ne izlažu se u javnim API endpointima
 - Standardni status kodovi: 200 / 201 (Created) / 204 (NoContent) / 400 / 401 / 403 / 404
 - Query parametri za filtriranje (npr. `GET /api/posjet?korisnikId=1&datumOd=...`)
+- **PodrucjeDto mora imati i `MinimalanBrojKTZaObilazak` (prag za medalju) I `BrojKontrolnihTocaka` (stvarni ukupni broj KT u tom području).** To su dva različita polja — jedno je uvjet, drugo je stvarno stanje. Nakon POST/PUT uvijek reloadaj entitet s `.Include(p => p.KontrolneTocke)` da se count ispravno vrati u odgovoru.
+- GET lista s filterom koji ne pronađe ništa vraća **200 s praznim `[]`** — to nije greška. 404 se vraća samo za `GET /{id}` kad konkretan zapis ne postoji.
 
 ### Autorizacija (Lab5)
 - Role: `Admin` i `Planinar`
