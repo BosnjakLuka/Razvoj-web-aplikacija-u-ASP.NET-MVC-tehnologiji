@@ -24,55 +24,55 @@
 > ⚠️ Ovo radiš ti, ne agent — uključuje pravi Google račun i tajne ključeve koji **nikad ne idu u git**.
 
 ### B1. Google Cloud Console
-- [ ] Otvori https://console.cloud.google.com → **New Project** (npr. „Planinarenje")
-- [ ] **APIs & Services → OAuth consent screen** → tip **External** → ispuni naziv aplikacije i e-mail; dodaj sebe pod **Test users**
-- [ ] **APIs & Services → Credentials → Create Credentials → OAuth client ID**
+- [x] Otvori https://console.cloud.google.com → **New Project** (npr. „Planinarenje")
+- [x] **APIs & Services → OAuth consent screen** → tip **External** → ispuni naziv aplikacije i e-mail; dodaj sebe pod **Test users**
+- [x] **APIs & Services → Credentials → Create Credentials → OAuth client ID**
   - Application type: **Web application**
   - **Authorized redirect URI:** `https://localhost:7187/signin-google`
-- [ ] Kopiraj **Client ID** i **Client Secret**
+- [x] Kopiraj **Client ID** i **Client Secret**
 
 ### B2. User secrets (iz root foldera projekta)
-- [ ] `dotnet user-secrets set "Authentication:Google:ClientId" "<TVOJ_CLIENT_ID>"`
-- [ ] `dotnet user-secrets set "Authentication:Google:ClientSecret" "<TVOJ_CLIENT_SECRET>"`
-- [ ] Provjera: `dotnet user-secrets list` prikazuje oba ključa
+- [x] `dotnet user-secrets set "Authentication:Google:ClientId" "<TVOJ_CLIENT_ID>"`
+- [x] `dotnet user-secrets set "Authentication:Google:ClientSecret" "<TVOJ_CLIENT_SECRET>"`
+- [x] Provjera: `dotnet user-secrets list` prikazuje oba ključa
 
 ---
 
 ## C) Build i pokretanje
 
-- [ ] `dotnet build` prolazi bez **grešaka**
-- [ ] `dotnet run --launch-profile https` se pokreće (sluša na `https://localhost:7187`)
-- [ ] `/Identity/Account/Login` se otvara
+- [x] `dotnet build` prolazi bez **grešaka**
+- [x] `dotnet run --launch-profile https` se pokreće (sluša na `https://localhost:7187`)
+- [x] `/Identity/Account/Login` se otvara
 
 ---
 
 ## D) Google gumb i preusmjeravanje
 
-- [ ] U sekciji „Use another service to log in" vidi se **Google** gumb
+- [x] U sekciji „Use another service to log in" vidi se **Google** gumb
   *(ako ga nema → ključevi nisu postavljeni; vrati se na B2)*
-- [ ] Klik na **Google** preusmjerava na Google login stranicu
-- [ ] Prijava test Google računom prolazi i vraća te natrag na aplikaciju
+- [x] Klik na **Google** preusmjerava na Google login stranicu
+- [x] Prijava test Google računom prolazi i vraća te natrag na aplikaciju
 
 ---
 
 ## E) Prva prijava (kreiranje računa)
 
-- [ ] Prva prijava novim Google računom otvara „Dovrši registraciju" formu
-- [ ] Email je predpopunjen iz Google računa
-- [ ] Forma traži Ime, Prezime, OIB (11 znamenki), JMBG (13 znamenki)
-- [ ] Kriv OIB/JMBG (npr. slova ili pogrešna duljina) → validacijska greška, račun se NE kreira
-- [ ] Ispravan unos → korisnik je prijavljen i preusmjeren na `/`
-- [ ] U `AspNetUsers` postoji novi red (s OIB/JMBG)
-- [ ] U `AspNetUserLogins` postoji red (LoginProvider = Google)
-- [ ] U `Korisnik` postoji novi red s popunjenim `AppUserId`
+- [x] Prva prijava novim Google računom otvara „Dovrši registraciju" formu
+- [x] Email je predpopunjen iz Google računa
+- [x] Forma traži Ime, Prezime, OIB (11 znamenki), JMBG (13 znamenki)
+- [x] Kriv OIB/JMBG (npr. slova ili pogrešna duljina) → validacijska greška, račun se NE kreira
+- [x] Ispravan unos → korisnik je prijavljen i preusmjeren na `/`
+- [x] U `AspNetUsers` postoji novi red (s OIB/JMBG)
+- [x] U `AspNetUserLogins` postoji red (LoginProvider = Google)
+- [x] U `Korisnik` postoji novi red s popunjenim `AppUserId`
 
 ---
 
 ## F) Ponovna prijava
 
-- [ ] Odjava (`/Identity/Account/Logout`)
-- [ ] Ponovni klik na Google s **istim** računom → odmah prijavljen (bez ponovnog traženja OIB/JMBG)
-- [ ] Ne kreira se duplikat u `AspNetUsers` ni u `Korisnik`
+- [x] Odjava (`/Identity/Account/Logout`)
+- [x] Ponovni klik na Google s **istim** računom → odmah prijavljen (bez ponovnog traženja OIB/JMBG)
+- [x] Ne kreira se duplikat u `AspNetUsers` ni u `Korisnik`
 
 ---
 
@@ -81,7 +81,7 @@
 - [x] ClientId/ClientSecret se NE drže u kodu ni u `appsettings*.json` (samo user secrets)
 - [x] OIB/JMBG se traže pri prvoj vanjskoj prijavi (kao kod lokalne registracije)
 - [x] UI tekst na hrvatskom
-- [ ] Postojeća lokalna prijava/registracija i Lab1–4 ekrani i dalje rade
+- [x] Postojeća lokalna prijava/registracija i Lab1–4 ekrani i dalje rade
 
 ---
 
