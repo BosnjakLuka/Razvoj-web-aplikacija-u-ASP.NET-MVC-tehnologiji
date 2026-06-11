@@ -18,7 +18,10 @@
             <h1 class="section-title mb-2">Planinarske udruge</h1>
             <p class="text-muted mb-0">Pregled udruga s brzim pretrazivanjem i CRUD akcijama.</p>
         </div>
-        <a asp-action="Create" class="btn btn-primary">Nova udruga</a>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Create" class="btn btn-primary">Nova udruga</a>
+        }
     </div>
 </section>
 

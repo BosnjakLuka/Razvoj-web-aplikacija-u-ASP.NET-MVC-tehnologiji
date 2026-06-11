@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using planinarenje.Entiteti;
 
 namespace planinarenje.Data;
 
-public class PlaninarstvoDbContext : DbContext
+public class PlaninarstvoDbContext : IdentityDbContext<AppUser>
 {
     public PlaninarstvoDbContext(DbContextOptions<PlaninarstvoDbContext> options) : base(options)
     {
@@ -602,7 +603,6 @@ public class PlaninarstvoDbContext : DbContext
                 Prezime = "Bošnjak",
                 Email = "luka.bosnjak92@gmail.com",
                 KorisnickoIme = "Boss",
-                PasswordHash = "123456789",
                 DatumRodenja = new DateTime(2004, 6, 29),
                 DatumRegistracije = new DateTime(2026, 4, 1, 9, 0, 0),
                 BrojMobitela = "0979545897",
@@ -616,7 +616,6 @@ public class PlaninarstvoDbContext : DbContext
                 Prezime = "Test",
                 Email = "test123@gmail.com",
                 KorisnickoIme = "Test",
-                PasswordHash = "123456789",
                 DatumRodenja = new DateTime(2005, 1, 1),
                 DatumRegistracije = new DateTime(2026, 4, 1, 9, 15, 0),
                 BrojMobitela = null,
@@ -823,5 +822,15 @@ public class PlaninarstvoDbContext : DbContext
                 Napomena = "Korisnik je zadovoljio uvjet početničke medalje jer ima evidentiran obilazak područja 2 (Moslavačka gora i Bilogora), gdje je prag 1 KT."
             }
         );
+
+        modelBuilder.Entity<Fotografija>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<KorisnikMedalja>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<KontrolnaTocka>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<Medalja>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<PlaninarskaUdruga>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<PlaninarskiObjekt>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<Posjet>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<Podrucje>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<Ruta>().HasQueryFilter(x => x.DeletedAt == null);
     }
 }

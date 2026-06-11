@@ -4,18 +4,19 @@ using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
 using planinarenje.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace planinarenje.Controllers
 {
-    public class PodrucjeController : Controller
+    public class PodrucjeController : BaseController
     {
-        private readonly PlaninarstvoDbContext _dbContext;
-
-        public PodrucjeController(PlaninarstvoDbContext dbContext)
+        public PodrucjeController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+            : base(userMgr, db)
         {
-            _dbContext = dbContext;
         }
 
+        [AllowAnonymous]
         public IActionResult Index()
         {
             var model = BuildIndexModel(null);
@@ -33,7 +34,7 @@ namespace planinarenje.Controllers
         [HttpGet]
         public IActionResult AutocompleteSearch(string term)
         {
-            var results = _dbContext.Podrucja
+            var results = Db.Podrucja
                 .Where(p => p.DeletedAt == null && p.Naziv.Contains(term))
                 .OrderBy(p => p.Naziv)
                 .Take(15)
@@ -47,6 +48,7 @@ namespace planinarenje.Controllers
             return Json(results);
         }
 
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             ViewData["Title"] = "Novo podrucje";
@@ -55,12 +57,12 @@ namespace planinarenje.Controllers
 
         private int DohvatiUkupnoKontrolnihTocaka(int idPodrucje)
         {
-            return _dbContext.KontrolneTocke.Count(kt => kt.IdPodrucje == idPodrucje && kt.DeletedAt == null);
+            return Db.KontrolneTocke.Count(kt => kt.IdPodrucje == idPodrucje && kt.DeletedAt == null);
         }
 
         private bool DodajGreskeZaDuplikatPodrucja(string naziv, string? regija, int minimalanBrojKt, int ukupnoKt, int? excludeId = null)
         {
-            var postoji = _dbContext.Podrucja
+            var postoji = Db.Podrucja
                 .Where(p => p.DeletedAt == null)
                 .Select(p => new
                 {
@@ -68,7 +70,7 @@ namespace planinarenje.Controllers
                     p.Naziv,
                     p.Regija,
                     p.MinimalanBrojKTZaObilazak,
-                    UkupnoKT = _dbContext.KontrolneTocke.Count(kt => kt.IdPodrucje == p.IdPodrucje && kt.DeletedAt == null)
+                    UkupnoKT = Db.KontrolneTocke.Count(kt => kt.IdPodrucje == p.IdPodrucje && kt.DeletedAt == null)
                 })
                 .AsEnumerable()
                 .Any(p => p.Naziv == naziv &&
@@ -90,7 +92,8 @@ namespace planinarenje.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(PodrucjeCreateModel model)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Create(PodrucjeCreateModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -114,8 +117,8 @@ namespace planinarenje.Controllers
 
             try
             {
-                _dbContext.Podrucja.Add(podrucje);
-                _dbContext.SaveChanges();
+                Db.Podrucja.Add(podrucje);
+                await Db.SaveChangesAsync();
             }
             catch (DbUpdateException)
             {
@@ -130,9 +133,10 @@ namespace planinarenje.Controllers
         }
 
         [ActionName("Edit")]
-        public IActionResult EditGet(int id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> EditGet(int id)
         {
-            var podrucje = _dbContext.Podrucja.FirstOrDefault(p => p.IdPodrucje == id && p.DeletedAt == null);
+            var podrucje = await Db.Podrucja.FirstOrDefaultAsync(p => p.IdPodrucje == id && p.DeletedAt == null);
             if (podrucje is null)
             {
                 return NotFound();
@@ -153,7 +157,8 @@ namespace planinarenje.Controllers
 
         [HttpPost, ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        public IActionResult EditPost(int id, PodrucjeEditModel model)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> EditPost(int id, PodrucjeEditModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -161,7 +166,7 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
-            var podrucje = _dbContext.Podrucja.FirstOrDefault(p => p.IdPodrucje == id && p.DeletedAt == null);
+            var podrucje = await Db.Podrucja.FirstOrDefaultAsync(p => p.IdPodrucje == id && p.DeletedAt == null);
             if (podrucje is null)
             {
                 return NotFound();
@@ -181,7 +186,7 @@ namespace planinarenje.Controllers
 
             try
             {
-                _dbContext.SaveChanges();
+                await Db.SaveChangesAsync();
             }
             catch (DbUpdateException)
             {
@@ -194,9 +199,10 @@ namespace planinarenje.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public IActionResult Delete(int id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Delete(int id)
         {
-            var podrucje = _dbContext.Podrucja.FirstOrDefault(p => p.IdPodrucje == id && p.DeletedAt == null);
+            var podrucje = await Db.Podrucja.FirstOrDefaultAsync(p => p.IdPodrucje == id && p.DeletedAt == null);
             if (podrucje is null)
             {
                 return NotFound();
@@ -208,23 +214,24 @@ namespace planinarenje.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(int id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var podrucje = _dbContext.Podrucja.FirstOrDefault(p => p.IdPodrucje == id && p.DeletedAt == null);
+            var podrucje = await Db.Podrucja.FirstOrDefaultAsync(p => p.IdPodrucje == id && p.DeletedAt == null);
             if (podrucje is null)
             {
                 return NotFound();
             }
 
             podrucje.DeletedAt = DateTime.UtcNow;
-            _dbContext.SaveChanges();
+            await Db.SaveChangesAsync();
             TempData["Success"] = "Podrucje je uspjesno obrisano.";
             return RedirectToAction(nameof(Index));
         }
 
         public IActionResult Details(int id)
         {
-            var podrucje = _dbContext.Podrucja
+            var podrucje = Db.Podrucja
                 .Include(p => p.KontrolneTocke)
                 .Include(p => p.PlaninarskiObjekti)
                 .FirstOrDefault(p => p.IdPodrucje == id && p.DeletedAt == null);
@@ -248,10 +255,10 @@ namespace planinarenje.Controllers
         [Route("podrucje/{id:int}/tocke")]
         public IActionResult KontrolneTockePodrucja(int id)
         {
-            var podrucje = _dbContext.Podrucja.FirstOrDefault(p => p.IdPodrucje == id && p.DeletedAt == null);
+            var podrucje = Db.Podrucja.FirstOrDefault(p => p.IdPodrucje == id && p.DeletedAt == null);
             if (podrucje == null) return NotFound();
 
-            var tocke = _dbContext.KontrolneTocke
+            var tocke = Db.KontrolneTocke
                 .Include(kt => kt.Podrucje)
                 .Where(kt => kt.IdPodrucje == id && kt.DeletedAt == null)
                 .OrderBy(kt => kt.Naziv)
@@ -279,7 +286,7 @@ namespace planinarenje.Controllers
 
         private List<PodrucjeIndexCardViewModel> BuildIndexModel(string? searchTerm)
         {
-            var filteredPodrucja = _dbContext.Podrucja
+            var filteredPodrucja = Db.Podrucja
                 .Where(p => p.DeletedAt == null);
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -291,7 +298,7 @@ namespace planinarenje.Controllers
                     (p.Opis != null && p.Opis.Contains(term)));
             }
 
-            var ktCountByPodrucje = _dbContext.KontrolneTocke
+            var ktCountByPodrucje = Db.KontrolneTocke
                 .Where(kt => kt.DeletedAt == null)
                 .GroupBy(kt => kt.IdPodrucje)
                 .Select(g => new { g.Key, Count = g.Count() })

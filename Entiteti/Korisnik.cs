@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace planinarenje.Entiteti;
 
@@ -23,10 +24,6 @@ public class Korisnik
     [MaxLength(100)]
     public string KorisnickoIme { get; set; } = string.Empty;
 
-    [Required]
-    [MaxLength(255)]
-    public string PasswordHash { get; set; } = string.Empty;
-
     public DateTime? DatumRodenja { get; set; }
     public DateTime DatumRegistracije { get; set; }
 
@@ -37,6 +34,11 @@ public class Korisnik
     public string? ProfilnaSlika { get; set; }
 
     public bool StatusAktivan { get; set; }
+
+    public string? AppUserId { get; set; }
+
+    [ForeignKey(nameof(AppUserId))]
+    public virtual AppUser? AppUser { get; set; }
 
     public virtual Knjizica Knjizica { get; set; } = null!;
     public virtual ICollection<Posjet> Posjeti { get; set; } = new List<Posjet>();

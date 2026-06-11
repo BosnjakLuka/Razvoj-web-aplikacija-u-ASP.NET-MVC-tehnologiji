@@ -33,8 +33,11 @@ else
                             <td>@ruta.DuljinaKm.ToString("F1") km</td>
                             <td class="text-end">
                                 <a asp-action="Details" asp-route-id="@ruta.IdRuta" class="btn btn-sm btn-outline-primary">Detalji</a>
-                                <a asp-action="Edit" asp-route-id="@ruta.IdRuta" class="btn btn-sm btn-outline-secondary">Uredi</a>
-                                <a asp-action="Delete" asp-route-id="@ruta.IdRuta" class="btn btn-sm btn-outline-danger">Obrisi</a>
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <a asp-action="Edit" asp-route-id="@ruta.IdRuta" class="btn btn-sm btn-outline-secondary">Uredi</a>
+                                    <a asp-action="Delete" asp-route-id="@ruta.IdRuta" class="btn btn-sm btn-outline-danger">Obrisi</a>
+                                }
                             </td>
                         </tr>
                     }

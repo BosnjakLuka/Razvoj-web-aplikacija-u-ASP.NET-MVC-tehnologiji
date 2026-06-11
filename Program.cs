@@ -1,8 +1,10 @@
-using planinarenje.Data;
-using planinarenje.Entiteti;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using planinarenje.Data;
+using planinarenje.Entiteti;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -150,8 +152,56 @@ builder.Services.AddDbContext<PlaninarstvoDbContext>(options =>
         builder.Configuration.GetConnectionString("PlaninarstvoDbContext"),
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("PlaninarstvoDbContext"))
     ));
+builder.Services
+    .AddDefaultIdentity<AppUser>(options =>
+    {
+        options.SignIn.RequireConfirmedAccount = false;
+        options.User.RequireUniqueEmail = true;
+
+        options.Password.RequiredLength = 10;
+        options.Password.RequireDigit = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireNonAlphanumeric = true;
+    })
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<PlaninarstvoDbContext>();
+
+// Lab5 Faza 5: Google OAuth vanjska prijava.
+// ClientId/ClientSecret se NE drže u kodu — čitaju se iz user secrets (development)
+// ili konfiguracije okruženja. Registriramo provider samo ako su oba ključa postavljena,
+// inače aplikacija normalno radi s lokalnom prijavom (bez pada na startupu).
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+{
+    builder.Services.AddAuthentication()
+        .AddGoogle(options =>
+        {
+            options.ClientId = googleClientId;
+            options.ClientSecret = googleClientSecret;
+        });
+}
+
+builder.Services.AddRazorPages();
+builder.Services.AddSingleton<IEmailSender, NoOpEmailSender>();
+
+// Lab5 Faza 3: Web API dokumentacija (Swagger / OpenAPI) - samo u Development okruženju.
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    // Dokumentiraj samo Web API kontrolere (rute koje počinju s "api/"),
+    // a ne konvencionalno rutirane MVC akcije (npr. Home/Index) koje nemaju eksplicitan HTTP verb.
+    options.DocInclusionPredicate((_, apiDesc) =>
+        apiDesc.RelativePath is not null && apiDesc.RelativePath.StartsWith("api/"));
+});
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    await IdentitySeed.SeedAsync(scope.ServiceProvider);
+}
 
 // Resolve project root robustly (works when launched from project root or bin/Debug).
 string ResolveProjectRoot(string startPath)
@@ -172,7 +222,16 @@ string ResolveProjectRoot(string startPath)
 var projectRoot = ResolveProjectRoot(app.Environment.ContentRootPath);
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    // Lab5 Faza 3: Swagger UI dostupan na /swagger samo u Development okruženju.
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Planinarenje API v1");
+    });
+}
+else
 {
     app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
@@ -223,11 +282,20 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedUICultures = supportedCultures
 });
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+// Lab5 Faza 3: atributno rutirani Web API kontroleri (api/...).
+app.MapControllers();
+
+app.MapRazorPages();
+
 
 app.Run();
+
+// Potrebno za WebApplicationFactory<Program> u integracijskim testovima.
+public partial class Program { }

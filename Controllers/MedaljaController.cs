@@ -4,18 +4,19 @@ using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
 using planinarenje.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace planinarenje.Controllers;
 
-public class MedaljaController : Controller
+public class MedaljaController : BaseController
 {
-    private readonly PlaninarstvoDbContext _dbContext;
-
-    public MedaljaController(PlaninarstvoDbContext dbContext)
+    public MedaljaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+        : base(userMgr, db)
     {
-        _dbContext = dbContext;
     }
 
+    [AllowAnonymous]
     public IActionResult Index()
     {
         var model = BuildIndexModel(null);
@@ -33,7 +34,7 @@ public class MedaljaController : Controller
     [HttpGet]
     public IActionResult AutocompleteSearch(string term)
     {
-        var results = _dbContext.Medalje
+        var results = Db.Medalje
             .Where(m => m.DeletedAt == null && m.Naziv.Contains(term))
             .OrderBy(m => m.Naziv)
             .Take(15)
@@ -47,6 +48,7 @@ public class MedaljaController : Controller
         return Json(results);
     }
 
+    [Authorize(Roles = "Admin")]
     public IActionResult Create()
     {
         ViewData["Title"] = "Nova medalja";
@@ -55,7 +57,7 @@ public class MedaljaController : Controller
 
     private bool DodajGreskeZaDuplikatMedalje(string naziv, int minimalanBrojKontrolnihTocaka, int minimalanBrojPodrucja, int? excludeId = null)
     {
-        var postoji = _dbContext.Medalje.Any(m =>
+        var postoji = Db.Medalje.Any(m =>
             m.Naziv == naziv &&
             m.MinimalanBrojKontrolnihTocaka == minimalanBrojKontrolnihTocaka &&
             m.MinimalanBrojPodrucja == minimalanBrojPodrucja &&
@@ -75,7 +77,8 @@ public class MedaljaController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(MedaljaCreateModel model)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Create(MedaljaCreateModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -99,8 +102,8 @@ public class MedaljaController : Controller
 
         try
         {
-            _dbContext.Medalje.Add(entity);
-            _dbContext.SaveChanges();
+            Db.Medalje.Add(entity);
+            await Db.SaveChangesAsync();
         }
         catch (DbUpdateException)
         {
@@ -114,10 +117,11 @@ public class MedaljaController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Admin")]
     [ActionName("Edit")]
-    public IActionResult EditGet(int id)
+    public async Task<IActionResult> EditGet(int id)
     {
-        var entity = _dbContext.Medalje.FirstOrDefault(m => m.IdMedalja == id && m.DeletedAt == null);
+        var entity = await Db.Medalje.FirstOrDefaultAsync(m => m.IdMedalja == id && m.DeletedAt == null);
         if (entity == null) return NotFound();
 
         var model = new MedaljaEditModel
@@ -134,7 +138,8 @@ public class MedaljaController : Controller
 
     [HttpPost, ActionName("Edit")]
     [ValidateAntiForgeryToken]
-    public IActionResult EditPost(int id, MedaljaEditModel model)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> EditPost(int id, MedaljaEditModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -142,7 +147,7 @@ public class MedaljaController : Controller
             return View(model);
         }
 
-        var entity = _dbContext.Medalje.FirstOrDefault(m => m.IdMedalja == id && m.DeletedAt == null);
+        var entity = await Db.Medalje.FirstOrDefaultAsync(m => m.IdMedalja == id && m.DeletedAt == null);
         if (entity == null) return NotFound();
 
         if (DodajGreskeZaDuplikatMedalje(model.Naziv, model.MinimalanBrojKontrolnihTocaka, model.MinimalanBrojPodrucja, id))
@@ -158,7 +163,7 @@ public class MedaljaController : Controller
 
         try
         {
-            _dbContext.SaveChanges();
+            await Db.SaveChangesAsync();
         }
         catch (DbUpdateException)
         {
@@ -171,9 +176,10 @@ public class MedaljaController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    public IActionResult Delete(int id)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
     {
-        var entity = _dbContext.Medalje.FirstOrDefault(m => m.IdMedalja == id && m.DeletedAt == null);
+        var entity = await Db.Medalje.FirstOrDefaultAsync(m => m.IdMedalja == id && m.DeletedAt == null);
         if (entity == null) return NotFound();
 
         ViewData["Title"] = "Obrisi medalju";
@@ -182,20 +188,22 @@ public class MedaljaController : Controller
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var entity = _dbContext.Medalje.FirstOrDefault(m => m.IdMedalja == id && m.DeletedAt == null);
+        var entity = await Db.Medalje.FirstOrDefaultAsync(m => m.IdMedalja == id && m.DeletedAt == null);
         if (entity == null) return NotFound();
 
         entity.DeletedAt = DateTime.UtcNow;
-        _dbContext.SaveChanges();
+        await Db.SaveChangesAsync();
         TempData["Success"] = "Medalja je uspjesno obrisana.";
         return RedirectToAction(nameof(Index));
     }
 
+    [AllowAnonymous]
     public IActionResult Details(int id)
     {
-        var medalja = _dbContext.Medalje.FirstOrDefault(m => m.IdMedalja == id && m.DeletedAt == null);
+        var medalja = Db.Medalje.FirstOrDefault(m => m.IdMedalja == id && m.DeletedAt == null);
 
         if (medalja == null)
             return NotFound();
@@ -206,7 +214,7 @@ public class MedaljaController : Controller
 
     private List<MedaljaIndexCardViewModel> BuildIndexModel(string? searchTerm)
     {
-        var query = _dbContext.Medalje
+        var query = Db.Medalje
             .Where(m => m.DeletedAt == null);
 
         if (!string.IsNullOrWhiteSpace(searchTerm))

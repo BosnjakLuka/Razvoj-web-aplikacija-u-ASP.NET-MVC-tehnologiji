@@ -13,6 +13,7 @@ namespace planinarenje.Models
         public DateTime DatumVrijemePosjeta { get; set; }
         public string Dozivljaj { get; set; } = string.Empty;
         public bool JeLiPotvrdenPosjet { get; set; }
+        public string? AppUserId { get; set; }
     }
 
     public class PosjetDetailsViewModel
@@ -40,6 +41,9 @@ namespace planinarenje.Models
         public DateTime DatumKreiranjaZapisa { get; set; }
 
         public List<FotografijaPosjetaViewModel> Fotografije { get; set; } = new();
+
+        // Lab5 Faza 4: true ako je trenutni korisnik vlasnik posjeta ili Admin (smije uploadati/brisati).
+        public bool MozeUredivati { get; set; }
     }
 
     public class FotografijaPosjetaViewModel

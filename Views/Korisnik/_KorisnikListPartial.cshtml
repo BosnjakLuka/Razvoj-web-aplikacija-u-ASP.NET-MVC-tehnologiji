@@ -42,8 +42,11 @@ else
                         </td>
                         <td class="text-end align-middle">
                             <a asp-action="Details" asp-route-id="@korisnik.IdKorisnik" class="btn btn-outline-primary btn-sm">Detalji</a>
-                            <a asp-action="Edit" asp-route-id="@korisnik.IdKorisnik" class="btn btn-outline-secondary btn-sm">Uredi</a>
-                            <a asp-action="Delete" asp-route-id="@korisnik.IdKorisnik" class="btn btn-outline-danger btn-sm">Obrisi</a>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a asp-action="Edit" asp-route-id="@korisnik.IdKorisnik" class="btn btn-outline-secondary btn-sm">Uredi</a>
+                                <a asp-action="Delete" asp-route-id="@korisnik.IdKorisnik" class="btn btn-outline-danger btn-sm">Obrisi</a>
+                            }
                         </td>
                     </tr>
                 }

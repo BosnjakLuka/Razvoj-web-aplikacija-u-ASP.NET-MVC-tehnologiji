@@ -15,7 +15,10 @@
             <h1 class="section-title no-accent mb-2">Planinarska područja Hrvatske</h1>
             <p class="text-muted mb-0">Pregled područja obilaznice, uz brzu pretragu i CRUD akcije.</p>
         </div>
-        <a asp-action="Create" class="btn btn-primary">Novo podrucje</a>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Create" class="btn btn-primary">Novo podrucje</a>
+        }
     </div>
 </section>
 

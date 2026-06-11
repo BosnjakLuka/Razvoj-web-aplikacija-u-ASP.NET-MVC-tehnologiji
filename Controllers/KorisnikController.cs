@@ -6,16 +6,16 @@ using planinarenje.Models;
 using planinarenje.Models.ViewModels;
 using System.IO;
 using System.Linq;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace planinarenje.Controllers
 {
-    public class KorisnikController : Controller
+    public class KorisnikController : BaseController
     {
-        private readonly PlaninarstvoDbContext _dbContext;
-
-        public KorisnikController(PlaninarstvoDbContext dbContext)
+        public KorisnikController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+            : base(userMgr, db)
         {
-            _dbContext = dbContext;
         }
 
         // Helpar za dohvacanje puta slike ako je string pun
@@ -39,10 +39,10 @@ namespace planinarenje.Controllers
 
         private bool DodajGreskeZaDuplikatKorisnika(string email, string korisnickoIme, int? excludeId = null)
         {
-            var postojiEmail = _dbContext.Korisnici.Any(k =>
+            var postojiEmail = Db.Korisnici.Any(k =>
                 k.Email == email && (!excludeId.HasValue || k.IdKorisnik != excludeId.Value));
 
-            var postojiKorisnickoIme = _dbContext.Korisnici.Any(k =>
+            var postojiKorisnickoIme = Db.Korisnici.Any(k =>
                 k.KorisnickoIme == korisnickoIme && (!excludeId.HasValue || k.IdKorisnik != excludeId.Value));
 
             if (postojiEmail)
@@ -58,6 +58,7 @@ namespace planinarenje.Controllers
             return postojiEmail || postojiKorisnickoIme;
         }
 
+        [Authorize(Roles = "Admin")]
         public IActionResult Index()
         {
             var model = BuildIndexModel(null);
@@ -75,7 +76,7 @@ namespace planinarenje.Controllers
         [HttpGet]
         public IActionResult AutocompleteSearch(string term)
         {
-            var results = _dbContext.Korisnici
+            var results = Db.Korisnici
                 .Where(k => k.StatusAktivan &&
                             (k.Ime.Contains(term) || k.Prezime.Contains(term) || k.KorisnickoIme.Contains(term)))
                 .OrderBy(k => k.Prezime)
@@ -91,6 +92,7 @@ namespace planinarenje.Controllers
             return Json(results);
         }
 
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             ViewData["Title"] = "Novi korisnik";
@@ -99,7 +101,8 @@ namespace planinarenje.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(KorisnikCreateModel model)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Create(KorisnikCreateModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -123,14 +126,13 @@ namespace planinarenje.Controllers
                 BrojMobitela = model.BrojMobitela,
                 DatumRodenja = model.DatumRodenja,
                 DatumRegistracije = DateTime.UtcNow,
-                PasswordHash = "ChangeMe123!",
                 StatusAktivan = true
             };
 
             try
             {
-                _dbContext.Korisnici.Add(korisnik);
-                _dbContext.SaveChanges();
+                Db.Korisnici.Add(korisnik);
+                await Db.SaveChangesAsync();
             }
             catch (DbUpdateException)
             {
@@ -149,15 +151,19 @@ namespace planinarenje.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize]
         [ActionName("Edit")]
-        public IActionResult EditGet(int id)
+        public async Task<IActionResult> EditGet(int id)
         {
-            var korisnik = _dbContext.Korisnici
-                .FirstOrDefault(k => k.IdKorisnik == id && k.StatusAktivan);
+            var korisnik = await Db.Korisnici
+                .FirstOrDefaultAsync(k => k.IdKorisnik == id && k.StatusAktivan);
             if (korisnik == null)
             {
                 return NotFound();
             }
+
+            if (!IsAdmin && !await IsOwnerAsync(id))
+                return Forbid();
 
             var model = new KorisnikEditModel
             {
@@ -175,7 +181,8 @@ namespace planinarenje.Controllers
 
         [HttpPost, ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        public IActionResult EditPost(int id, KorisnikEditModel model)
+        [Authorize]
+        public async Task<IActionResult> EditPost(int id, KorisnikEditModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -183,8 +190,8 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
-            var korisnik = _dbContext.Korisnici
-                .FirstOrDefault(k => k.IdKorisnik == id && k.StatusAktivan);
+            var korisnik = await Db.Korisnici
+                .FirstOrDefaultAsync(k => k.IdKorisnik == id && k.StatusAktivan);
             if (korisnik == null)
             {
                 return NotFound();
@@ -197,6 +204,10 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
+            // ownership check
+            if (!IsAdmin && !await IsOwnerAsync(id))
+                return Forbid();
+
             korisnik.Ime = model.Ime;
             korisnik.Prezime = model.Prezime;
             korisnik.Email = model.Email;
@@ -206,7 +217,7 @@ namespace planinarenje.Controllers
 
             try
             {
-                _dbContext.SaveChanges();
+                await Db.SaveChangesAsync();
             }
             catch (DbUpdateException)
             {
@@ -224,10 +235,11 @@ namespace planinarenje.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public IActionResult Delete(int id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Delete(int id)
         {
-            var korisnik = _dbContext.Korisnici
-                .FirstOrDefault(k => k.IdKorisnik == id && k.StatusAktivan);
+            var korisnik = await Db.Korisnici
+                .FirstOrDefaultAsync(k => k.IdKorisnik == id && k.StatusAktivan);
             if (korisnik == null)
             {
                 return NotFound();
@@ -239,33 +251,38 @@ namespace planinarenje.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(int id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var korisnik = _dbContext.Korisnici
-                .FirstOrDefault(k => k.IdKorisnik == id && k.StatusAktivan);
+            var korisnik = await Db.Korisnici
+                .FirstOrDefaultAsync(k => k.IdKorisnik == id && k.StatusAktivan);
             if (korisnik == null)
             {
                 return NotFound();
             }
 
             korisnik.StatusAktivan = false;
-            _dbContext.SaveChanges();
+            await Db.SaveChangesAsync();
             TempData["Success"] = "Korisnik je uspjesno obrisan.";
             return RedirectToAction(nameof(Index));
         }
 
         [Route("planinar/{id:int}")]
         [Route("[controller]/[action]/{id:int}")]
-        public IActionResult Details(int id)
+        [Authorize]
+        public async Task<IActionResult> Details(int id)
         {
-            var korisnik = _dbContext.Korisnici
+            var korisnik = await Db.Korisnici
                 .Include(k => k.Knjizica)
-                .FirstOrDefault(k => k.IdKorisnik == id && k.StatusAktivan);
+                .FirstOrDefaultAsync(k => k.IdKorisnik == id && k.StatusAktivan);
 
             if (korisnik == null)
             {
                 return NotFound();
             }
+
+            if (!IsAdmin && !await IsOwnerAsync(id))
+                return Forbid();
 
             var model = new KorisnikDetailsViewModel
             {
@@ -288,7 +305,7 @@ namespace planinarenje.Controllers
                 Posjeti = new List<PosjetViewModel>()
             };
             
-            model.Posjeti = _dbContext.Posjeti
+            model.Posjeti = Db.Posjeti
                 .Where(p => p.IdKorisnik == id && p.DeletedAt == null)
                 .Include(p => p.KontrolnaTocka)
                 .Include(p => p.Ruta)
@@ -305,7 +322,7 @@ namespace planinarenje.Controllers
                 })
                 .ToList();
 
-            model.Medalje = _dbContext.KorisnikMedalje
+            model.Medalje = Db.KorisnikMedalje
                 .Where(km => km.IdKorisnik == id && km.DeletedAt == null)
                 .Include(km => km.Medalja)
                 .OrderByDescending(km => km.DatumDodjele)
@@ -323,7 +340,7 @@ namespace planinarenje.Controllers
 
         private List<KorisnikIndexCardViewModel> BuildIndexModel(string? searchTerm)
         {
-            var query = _dbContext.Korisnici
+            var query = Db.Korisnici
                 .Where(k => k.StatusAktivan);
 
             if (!string.IsNullOrWhiteSpace(searchTerm))

@@ -23,6 +23,11 @@ public class Fotografija
     public TipSlike TipSlike { get; set; }
     public string? Opis { get; set; }
 
+    [StringLength(100)]
+    public string? ContentType { get; set; }
+
+    public long FileSize { get; set; }
+
     public DateTime? DeletedAt { get; set; }
 
     public virtual Posjet Posjet { get; set; } = null!;

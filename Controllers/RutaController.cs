@@ -5,18 +5,19 @@ using planinarenje.Entiteti;
 using planinarenje.Models;
 using planinarenje.Models.ViewModels;
 using System;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace planinarenje.Controllers;
 
-public class RutaController : Controller
+public class RutaController : BaseController
 {
-    private readonly PlaninarstvoDbContext _dbContext;
-
-    public RutaController(PlaninarstvoDbContext dbContext)
+    public RutaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+        : base(userMgr, db)
     {
-        _dbContext = dbContext;
     }
 
+    [AllowAnonymous]
     public IActionResult Index()
     {
         var model = BuildIndexModel(null);
@@ -34,7 +35,7 @@ public class RutaController : Controller
     [HttpGet]
     public IActionResult AutocompleteSearch(string term)
     {
-        var results = _dbContext.Rute
+        var results = Db.Rute
             .Where(r => r.DeletedAt == null && r.Naziv.Contains(term))
             .OrderBy(r => r.Naziv)
             .Take(15)
@@ -48,6 +49,7 @@ public class RutaController : Controller
         return Json(results);
     }
 
+    [Authorize(Roles = "Admin")]
     public IActionResult Create()
     {
         ViewData["Title"] = "Nova ruta";
@@ -56,7 +58,7 @@ public class RutaController : Controller
 
     private bool ValidirajKontrolnuTocku(int idKontrolnaTocka)
     {
-        var postoji = _dbContext.KontrolneTocke.Any(k => k.IdKontrolnaTocka == idKontrolnaTocka && k.DeletedAt == null);
+        var postoji = Db.KontrolneTocke.Any(k => k.IdKontrolnaTocka == idKontrolnaTocka && k.DeletedAt == null);
         if (postoji)
         {
             return true;
@@ -69,7 +71,7 @@ public class RutaController : Controller
 
     private bool DodajGreskeZaDuplikatRute(RutaCreateModel model, int? excludeId = null)
     {
-        var postoji = _dbContext.Rute
+        var postoji = Db.Rute
             .Where(r => r.DeletedAt == null)
             .Any(r => r.Naziv == model.Naziv &&
                       r.IdKontrolnaTocka == model.IdKontrolnaTocka &&
@@ -92,7 +94,8 @@ public class RutaController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(RutaCreateModel model)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Create(RutaCreateModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -134,8 +137,8 @@ public class RutaController : Controller
 
         try
         {
-            _dbContext.Rute.Add(entity);
-            _dbContext.SaveChanges();
+            Db.Rute.Add(entity);
+            await Db.SaveChangesAsync();
         }
         catch (DbUpdateException)
         {
@@ -150,12 +153,13 @@ public class RutaController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Admin")]
     [ActionName("Edit")]
-    public IActionResult EditGet(int id)
+    public async Task<IActionResult> EditGet(int id)
     {
-        var entity = _dbContext.Rute
+        var entity = await Db.Rute
             .Include(r => r.KontrolnaTocka)
-            .FirstOrDefault(r => r.IdRuta == id && r.DeletedAt == null);
+            .FirstOrDefaultAsync(r => r.IdRuta == id && r.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
@@ -185,7 +189,8 @@ public class RutaController : Controller
 
     [HttpPost, ActionName("Edit")]
     [ValidateAntiForgeryToken]
-    public IActionResult EditPost(int id, RutaEditModel model)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> EditPost(int id, RutaEditModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -194,8 +199,8 @@ public class RutaController : Controller
             return View(model);
         }
 
-        var entity = _dbContext.Rute
-            .FirstOrDefault(r => r.IdRuta == id && r.DeletedAt == null);
+        var entity = await Db.Rute
+            .FirstOrDefaultAsync(r => r.IdRuta == id && r.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
@@ -231,7 +236,7 @@ public class RutaController : Controller
 
         try
         {
-            _dbContext.SaveChanges();
+            await Db.SaveChangesAsync();
         }
         catch (DbUpdateException)
         {
@@ -245,11 +250,12 @@ public class RutaController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    public IActionResult Delete(int id)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
     {
-        var entity = _dbContext.Rute
+        var entity = await Db.Rute
             .Include(r => r.KontrolnaTocka)
-            .FirstOrDefault(r => r.IdRuta == id && r.DeletedAt == null);
+            .FirstOrDefaultAsync(r => r.IdRuta == id && r.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
@@ -261,24 +267,26 @@ public class RutaController : Controller
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var entity = _dbContext.Rute
-            .FirstOrDefault(r => r.IdRuta == id && r.DeletedAt == null);
+        var entity = await Db.Rute
+            .FirstOrDefaultAsync(r => r.IdRuta == id && r.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
         }
 
         entity.DeletedAt = DateTime.UtcNow;
-        _dbContext.SaveChanges();
+        await Db.SaveChangesAsync();
         TempData["Success"] = "Ruta je uspjesno obrisana.";
         return RedirectToAction(nameof(Index));
     }
 
+    [AllowAnonymous]
     public IActionResult Details(int id)
     {
-        var ruta = _dbContext.Rute
+        var ruta = Db.Rute
             .Include(r => r.KontrolnaTocka)
             .FirstOrDefault(r => r.IdRuta == id && r.DeletedAt == null);
         
@@ -295,7 +303,7 @@ public class RutaController : Controller
         if (!Enum.TryParse<TezinaRute>(tezina, true, out var tezinaEnum))
             return NotFound();
 
-        var filtrirane = _dbContext.Rute
+        var filtrirane = Db.Rute
             .Include(r => r.KontrolnaTocka)
             .Where(r => r.TezinaRute == tezinaEnum && r.DeletedAt == null)
             .ToList();
@@ -344,7 +352,7 @@ public class RutaController : Controller
 
     private List<RutaIndexCardViewModel> BuildIndexModel(string? searchTerm)
     {
-        var query = _dbContext.Rute
+        var query = Db.Rute
             .Include(r => r.KontrolnaTocka)
             .Where(r => r.DeletedAt == null && (r.KontrolnaTocka == null || r.KontrolnaTocka.DeletedAt == null));
 
@@ -385,7 +393,7 @@ public class RutaController : Controller
             return null;
         }
 
-        return _dbContext.KontrolneTocke
+        return Db.KontrolneTocke
             .Where(k => k.DeletedAt == null && k.IdKontrolnaTocka == id.Value)
             .Select(k => k.Naziv)
             .FirstOrDefault();

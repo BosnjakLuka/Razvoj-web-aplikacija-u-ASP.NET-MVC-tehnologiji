@@ -6,16 +6,16 @@ using planinarenje.Models;
 using planinarenje.Models.ViewModels;
 using System.IO;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace planinarenje.Controllers;
 
-public class KorisnikMedaljaController : Controller
+public class KorisnikMedaljaController : BaseController
 {
-    private readonly PlaninarstvoDbContext _dbContext;
-
-    public KorisnikMedaljaController(PlaninarstvoDbContext dbContext)
+    public KorisnikMedaljaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+        : base(userMgr, db)
     {
-        _dbContext = dbContext;
     }
 
     private string? FormatProfileSlika(string? absolutePath)
@@ -38,7 +38,7 @@ public class KorisnikMedaljaController : Controller
 
     private bool DodajGreskeZaDuplikatDodjele(int idKorisnik, int idMedalja, int? excludeId = null)
     {
-        var postoji = _dbContext.KorisnikMedalje.Any(km =>
+        var postoji = Db.KorisnikMedalje.Any(km =>
             km.IdKorisnik == idKorisnik &&
             km.IdMedalja == idMedalja &&
             (!excludeId.HasValue || km.IdKorisnikMedalja != excludeId.Value));
@@ -54,6 +54,7 @@ public class KorisnikMedaljaController : Controller
         return true;
     }
 
+    [AllowAnonymous]
     public IActionResult Index()
     {
         var model = BuildIndexModel(null);
@@ -68,6 +69,7 @@ public class KorisnikMedaljaController : Controller
         return PartialView("_KorisnikMedaljaListPartial", model);
     }
 
+    [Authorize(Roles = "Admin")]
     public IActionResult Create()
     {
         ViewData["Title"] = "Nova dodjela medalje";
@@ -77,9 +79,10 @@ public class KorisnikMedaljaController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Award(int medaljaId, int korisnikId)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Award(int medaljaId, int korisnikId)
     {
-        var medalja = _dbContext.Medalje.FirstOrDefault(m => m.IdMedalja == medaljaId && m.DeletedAt == null);
+        var medalja = Db.Medalje.FirstOrDefault(m => m.IdMedalja == medaljaId && m.DeletedAt == null);
         if (medalja == null)
         {
             TempData["Error"] = "Odabrana medalja nije valjana.";
@@ -94,7 +97,7 @@ public class KorisnikMedaljaController : Controller
             return RedirectToAction(nameof(Create));
         }
 
-        var exists = _dbContext.KorisnikMedalje.Any(km =>
+        var exists = Db.KorisnikMedalje.Any(km =>
             km.DeletedAt == null && km.IdKorisnik == korisnikId && km.IdMedalja == medaljaId);
         if (exists)
         {
@@ -111,21 +114,22 @@ public class KorisnikMedaljaController : Controller
             Napomena = "Automatski dodijeljeno kroz eligibility stranicu."
         };
 
-        _dbContext.KorisnikMedalje.Add(entity);
-        _dbContext.SaveChanges();
+        Db.KorisnikMedalje.Add(entity);
+        await Db.SaveChangesAsync();
         TempData["NewId"] = entity.IdKorisnikMedalja;
         TempData["MedaljaSuccess"] = true;
         TempData["Success"] = "Medalja je uspjesno dodijeljena.";
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Admin")]
     [ActionName("Edit")]
-    public IActionResult EditGet(int id)
+    public async Task<IActionResult> EditGet(int id)
     {
-        var entity = _dbContext.KorisnikMedalje
+        var entity = await Db.KorisnikMedalje
             .Include(km => km.Korisnik)
             .Include(km => km.Medalja)
-            .FirstOrDefault(km => km.IdKorisnikMedalja == id && km.DeletedAt == null);
+            .FirstOrDefaultAsync(km => km.IdKorisnikMedalja == id && km.DeletedAt == null);
         if (entity == null) return NotFound();
 
         var model = new KorisnikMedaljaEditModel
@@ -146,7 +150,8 @@ public class KorisnikMedaljaController : Controller
 
     [HttpPost, ActionName("Edit")]
     [ValidateAntiForgeryToken]
-    public IActionResult EditPost(int id, KorisnikMedaljaEditModel model)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> EditPost(int id, KorisnikMedaljaEditModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -156,8 +161,8 @@ public class KorisnikMedaljaController : Controller
             return View(model);
         }
 
-        var entity = _dbContext.KorisnikMedalje
-            .FirstOrDefault(km => km.IdKorisnikMedalja == id && km.DeletedAt == null);
+        var entity = await Db.KorisnikMedalje
+            .FirstOrDefaultAsync(km => km.IdKorisnikMedalja == id && km.DeletedAt == null);
         if (entity == null) return NotFound();
 
         if (DodajGreskeZaDuplikatDodjele(model.IdKorisnik, model.IdMedalja, id))
@@ -175,7 +180,7 @@ public class KorisnikMedaljaController : Controller
 
         try
         {
-            _dbContext.SaveChanges();
+            await Db.SaveChangesAsync();
         }
         catch (DbUpdateException)
         {
@@ -190,12 +195,13 @@ public class KorisnikMedaljaController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    public IActionResult Delete(int id)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
     {
-        var entity = _dbContext.KorisnikMedalje
+        var entity = await Db.KorisnikMedalje
             .Include(km => km.Korisnik)
             .Include(km => km.Medalja)
-            .FirstOrDefault(km => km.IdKorisnikMedalja == id && km.DeletedAt == null);
+            .FirstOrDefaultAsync(km => km.IdKorisnikMedalja == id && km.DeletedAt == null);
         if (entity == null) return NotFound();
 
         ViewData["Title"] = "Obrisi dodjelu";
@@ -204,21 +210,22 @@ public class KorisnikMedaljaController : Controller
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var entity = _dbContext.KorisnikMedalje
-            .FirstOrDefault(km => km.IdKorisnikMedalja == id && km.DeletedAt == null);
+        var entity = await Db.KorisnikMedalje
+            .FirstOrDefaultAsync(km => km.IdKorisnikMedalja == id && km.DeletedAt == null);
         if (entity == null) return NotFound();
 
         entity.DeletedAt = DateTime.UtcNow;
-        _dbContext.SaveChanges();
+        await Db.SaveChangesAsync();
         TempData["Success"] = "Dodjela je uspjesno obrisana.";
         return RedirectToAction(nameof(Index));
     }
 
     public IActionResult Details(int id)
     {
-        var km = _dbContext.KorisnikMedalje
+        var km = Db.KorisnikMedalje
             .Include(x => x.Korisnik)
             .Include(x => x.Medalja)
             .FirstOrDefault(x => x.IdKorisnikMedalja == id && x.DeletedAt == null);
@@ -242,7 +249,7 @@ public class KorisnikMedaljaController : Controller
 
     private List<KorisnikMedaljaIndexViewModel> BuildIndexModel(string? searchTerm)
     {
-        var query = _dbContext.KorisnikMedalje
+        var query = Db.KorisnikMedalje
             .Include(km => km.Korisnik)
             .Include(km => km.Medalja)
             .Where(km => km.DeletedAt == null &&
@@ -281,7 +288,7 @@ public class KorisnikMedaljaController : Controller
             return null;
         }
 
-        return _dbContext.Korisnici
+        return Db.Korisnici
             .Where(k => k.StatusAktivan && k.IdKorisnik == id.Value)
             .Select(k => k.Ime + " " + k.Prezime + " (@" + k.KorisnickoIme + ")")
             .FirstOrDefault();
@@ -294,7 +301,7 @@ public class KorisnikMedaljaController : Controller
             return null;
         }
 
-        return _dbContext.Medalje
+        return Db.Medalje
             .Where(m => m.DeletedAt == null && m.IdMedalja == id.Value)
             .Select(m => m.Naziv)
             .FirstOrDefault();
@@ -303,7 +310,7 @@ public class KorisnikMedaljaController : Controller
     private KorisnikMedaljaEligibilityPageViewModel BuildEligibilityPageModel()
     {
         var userStats = GetEligibleUsersBaseQuery();
-        var medals = _dbContext.Medalje
+        var medals = Db.Medalje
             .Where(m => m.DeletedAt == null)
             .OrderBy(m => m.MinimalanBrojKontrolnihTocaka)
             .ThenBy(m => m.Naziv)
@@ -327,19 +334,19 @@ public class KorisnikMedaljaController : Controller
 
     private List<KorisnikMedaljaEligibleUserViewModel> GetEligibleUsersBaseQuery()
     {
-        return _dbContext.Korisnici
+        return Db.Korisnici
             .Where(k => k.StatusAktivan)
             .Select(k => new KorisnikMedaljaEligibleUserViewModel
             {
                 IdKorisnik = k.IdKorisnik,
                 ImePrezimeKorisnika = k.Ime + " " + k.Prezime,
                 KorisnickoIme = k.KorisnickoIme,
-                BrojKontrolnihTocaka = _dbContext.Posjeti
+                BrojKontrolnihTocaka = Db.Posjeti
                     .Where(p => p.DeletedAt == null && p.IdKorisnik == k.IdKorisnik)
                     .Select(p => p.IdKontrolnaTocka)
                     .Distinct()
                     .Count(),
-                BrojPodrucja = _dbContext.Posjeti
+                BrojPodrucja = Db.Posjeti
                     .Where(p => p.DeletedAt == null && p.IdKorisnik == k.IdKorisnik)
                     .Select(p => p.KontrolnaTocka != null ? p.KontrolnaTocka.IdPodrucje : 0)
                     .Where(id => id > 0)
@@ -353,7 +360,7 @@ public class KorisnikMedaljaController : Controller
     {
         var stats = cachedStats ?? GetEligibleUsersBaseQuery();
 
-        var awardedUserIds = _dbContext.KorisnikMedalje
+        var awardedUserIds = Db.KorisnikMedalje
             .Where(km => km.DeletedAt == null && km.IdMedalja == medalja.IdMedalja)
             .Select(km => km.IdKorisnik)
             .ToHashSet();

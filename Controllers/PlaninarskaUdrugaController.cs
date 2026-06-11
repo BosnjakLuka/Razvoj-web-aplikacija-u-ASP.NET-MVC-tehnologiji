@@ -5,16 +5,16 @@ using planinarenje.Entiteti;
 using planinarenje.Models;
 using planinarenje.Models.ViewModels;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace planinarenje.Controllers;
 
-public class PlaninarskaUdrugaController : Controller
+public class PlaninarskaUdrugaController : BaseController
 {
-    private readonly PlaninarstvoDbContext _dbContext;
-
-    public PlaninarskaUdrugaController(PlaninarstvoDbContext dbContext)
+    public PlaninarskaUdrugaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+        : base(userMgr, db)
     {
-        _dbContext = dbContext;
     }
 
     private string FormatirajTipObjekta(TipObjekta tip)
@@ -28,6 +28,7 @@ public class PlaninarskaUdrugaController : Controller
         };
     }
 
+    [AllowAnonymous]
     public IActionResult Index()
     {
         var model = BuildIndexModel(null);
@@ -45,7 +46,7 @@ public class PlaninarskaUdrugaController : Controller
     [HttpGet]
     public IActionResult AutocompleteSearch(string term)
     {
-        var results = _dbContext.PlaninarskeUdruge
+        var results = Db.PlaninarskeUdruge
             .Where(u => u.DeletedAt == null && u.Naziv.Contains(term))
             .OrderBy(u => u.Naziv)
             .Take(15)
@@ -59,6 +60,7 @@ public class PlaninarskaUdrugaController : Controller
         return Json(results);
     }
 
+    [Authorize(Roles = "Admin")]
     public IActionResult Create()
     {
         ViewData["Title"] = "Nova udruga";
@@ -67,7 +69,7 @@ public class PlaninarskaUdrugaController : Controller
 
     private bool DodajGreskeZaDuplikatUdruge(string oib, int? excludeId = null)
     {
-        var postoji = _dbContext.PlaninarskeUdruge.Any(u =>
+        var postoji = Db.PlaninarskeUdruge.Any(u =>
             u.OIB == oib && (!excludeId.HasValue || u.IdPlaninarskaUdruga != excludeId.Value));
 
         if (!postoji)
@@ -83,7 +85,8 @@ public class PlaninarskaUdrugaController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(PlaninarskaUdrugaCreateModel model)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Create(PlaninarskaUdrugaCreateModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -112,8 +115,8 @@ public class PlaninarskaUdrugaController : Controller
 
         try
         {
-            _dbContext.PlaninarskeUdruge.Add(entity);
-            _dbContext.SaveChanges();
+            Db.PlaninarskeUdruge.Add(entity);
+            await Db.SaveChangesAsync();
         }
         catch (DbUpdateException)
         {
@@ -127,11 +130,12 @@ public class PlaninarskaUdrugaController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Admin")]
     [ActionName("Edit")]
-    public IActionResult EditGet(int id)
+    public async Task<IActionResult> EditGet(int id)
     {
-        var entity = _dbContext.PlaninarskeUdruge
-            .FirstOrDefault(u => u.IdPlaninarskaUdruga == id && u.DeletedAt == null);
+        var entity = await Db.PlaninarskeUdruge
+            .FirstOrDefaultAsync(u => u.IdPlaninarskaUdruga == id && u.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
@@ -156,7 +160,8 @@ public class PlaninarskaUdrugaController : Controller
 
     [HttpPost, ActionName("Edit")]
     [ValidateAntiForgeryToken]
-    public IActionResult EditPost(int id, PlaninarskaUdrugaEditModel model)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> EditPost(int id, PlaninarskaUdrugaEditModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -164,8 +169,8 @@ public class PlaninarskaUdrugaController : Controller
             return View(model);
         }
 
-        var entity = _dbContext.PlaninarskeUdruge
-            .FirstOrDefault(u => u.IdPlaninarskaUdruga == id && u.DeletedAt == null);
+        var entity = await Db.PlaninarskeUdruge
+            .FirstOrDefaultAsync(u => u.IdPlaninarskaUdruga == id && u.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
@@ -189,7 +194,7 @@ public class PlaninarskaUdrugaController : Controller
 
         try
         {
-            _dbContext.SaveChanges();
+            await Db.SaveChangesAsync();
         }
         catch (DbUpdateException)
         {
@@ -202,10 +207,11 @@ public class PlaninarskaUdrugaController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    public IActionResult Delete(int id)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
     {
-        var entity = _dbContext.PlaninarskeUdruge
-            .FirstOrDefault(u => u.IdPlaninarskaUdruga == id && u.DeletedAt == null);
+        var entity = await Db.PlaninarskeUdruge
+            .FirstOrDefaultAsync(u => u.IdPlaninarskaUdruga == id && u.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
@@ -217,24 +223,25 @@ public class PlaninarskaUdrugaController : Controller
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var entity = _dbContext.PlaninarskeUdruge
-            .FirstOrDefault(u => u.IdPlaninarskaUdruga == id && u.DeletedAt == null);
+        var entity = await Db.PlaninarskeUdruge
+            .FirstOrDefaultAsync(u => u.IdPlaninarskaUdruga == id && u.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
         }
 
         entity.DeletedAt = DateTime.UtcNow;
-        _dbContext.SaveChanges();
+        await Db.SaveChangesAsync();
         TempData["Success"] = "Udruga je uspjesno obrisana.";
         return RedirectToAction(nameof(Index));
     }
 
     public IActionResult Details(int id)
     {
-        var u = _dbContext.PlaninarskeUdruge
+        var u = Db.PlaninarskeUdruge
             .Include(x => x.PlaninarskiObjekti)
             .FirstOrDefault(x => x.IdPlaninarskaUdruga == id && x.DeletedAt == null);
 
@@ -272,7 +279,7 @@ public class PlaninarskaUdrugaController : Controller
 
     private List<PlaninarskaUdrugaIndexViewModel> BuildIndexModel(string? searchTerm)
     {
-        var query = _dbContext.PlaninarskeUdruge
+        var query = Db.PlaninarskeUdruge
             .Where(u => u.DeletedAt == null);
 
         if (!string.IsNullOrWhiteSpace(searchTerm))

@@ -15,7 +15,10 @@
             <h1 class="section-title no-accent mb-2">Imenik korisnika</h1>
             <p class="text-muted mb-0">Prikaz svih registriranih korisnika aplikacije.</p>
         </div>
-        <a asp-action="Create" class="btn btn-primary">Novi korisnik</a>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Create" class="btn btn-primary">Novi korisnik</a>
+        }
     </div>
 </section>
 

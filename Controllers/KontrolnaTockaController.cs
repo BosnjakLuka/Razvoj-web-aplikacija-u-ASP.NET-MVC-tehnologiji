@@ -4,18 +4,19 @@ using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
 using planinarenje.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace planinarenje.Controllers
 {
-    public class KontrolnaTockaController : Controller
+    public class KontrolnaTockaController : BaseController
     {
-        private readonly PlaninarstvoDbContext _dbContext;
-
-        public KontrolnaTockaController(PlaninarstvoDbContext dbContext)
+        public KontrolnaTockaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+            : base(userMgr, db)
         {
-            _dbContext = dbContext;
         }
 
+        [AllowAnonymous]
         public IActionResult Index()
         {
             var model = BuildIndexModel(null);
@@ -33,7 +34,7 @@ namespace planinarenje.Controllers
         [HttpGet]
         public IActionResult AutocompleteSearch(string term)
         {
-            var results = _dbContext.KontrolneTocke
+            var results = Db.KontrolneTocke
                 .Where(k => k.DeletedAt == null && k.Naziv.Contains(term))
                 .OrderBy(k => k.Naziv)
                 .Take(15)
@@ -48,6 +49,7 @@ namespace planinarenje.Controllers
             return Json(results);
         }
 
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             ViewData["Title"] = "Nova kontrolna tocka";
@@ -56,7 +58,7 @@ namespace planinarenje.Controllers
 
         private bool ValidirajPodrucje(int idPodrucje)
         {
-            var postoji = _dbContext.Podrucja.Any(p => p.IdPodrucje == idPodrucje && p.DeletedAt == null);
+            var postoji = Db.Podrucja.Any(p => p.IdPodrucje == idPodrucje && p.DeletedAt == null);
             if (postoji)
             {
                 return true;
@@ -69,7 +71,7 @@ namespace planinarenje.Controllers
 
         private bool DodajGreskeZaDuplikatKontrolneTocke(string naziv, string guidOznaka, int idPodrucje, int? excludeId = null)
         {
-            var postoji = _dbContext.KontrolneTocke.Any(k =>
+            var postoji = Db.KontrolneTocke.Any(k =>
                 k.Naziv == naziv &&
                 k.GUIDOznaka == guidOznaka &&
                 k.IdPodrucje == idPodrucje &&
@@ -89,7 +91,7 @@ namespace planinarenje.Controllers
 
         private bool DodajGreskeZaZauzetGUID(string guidOznaka, int? excludeId = null)
         {
-            var postoji = _dbContext.KontrolneTocke.Any(k =>
+            var postoji = Db.KontrolneTocke.Any(k =>
                 k.GUIDOznaka == guidOznaka && (!excludeId.HasValue || k.IdKontrolnaTocka != excludeId.Value) && k.DeletedAt == null);
 
             if (!postoji)
@@ -105,7 +107,8 @@ namespace planinarenje.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(KontrolnaTockaCreateModel model)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Create(KontrolnaTockaCreateModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -149,8 +152,8 @@ namespace planinarenje.Controllers
 
             try
             {
-                _dbContext.KontrolneTocke.Add(entity);
-                _dbContext.SaveChanges();
+                Db.KontrolneTocke.Add(entity);
+                await Db.SaveChangesAsync();
             }
             catch (DbUpdateException)
             {
@@ -166,11 +169,12 @@ namespace planinarenje.Controllers
         }
 
         [ActionName("Edit")]
-        public IActionResult EditGet(int id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> EditGet(int id)
         {
-            var entity = _dbContext.KontrolneTocke
+            var entity = await Db.KontrolneTocke
                 .Include(k => k.Podrucje)
-                .FirstOrDefault(k => k.IdKontrolnaTocka == id && k.DeletedAt == null);
+                .FirstOrDefaultAsync(k => k.IdKontrolnaTocka == id && k.DeletedAt == null);
             if (entity is null)
             {
                 return NotFound();
@@ -195,7 +199,8 @@ namespace planinarenje.Controllers
 
         [HttpPost, ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        public IActionResult EditPost(int id, KontrolnaTockaEditModel model)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> EditPost(int id, KontrolnaTockaEditModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -204,8 +209,8 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
-            var entity = _dbContext.KontrolneTocke
-                .FirstOrDefault(k => k.IdKontrolnaTocka == id && k.DeletedAt == null);
+            var entity = await Db.KontrolneTocke
+                .FirstOrDefaultAsync(k => k.IdKontrolnaTocka == id && k.DeletedAt == null);
             if (entity is null)
             {
                 return NotFound();
@@ -243,7 +248,7 @@ namespace planinarenje.Controllers
 
             try
             {
-                _dbContext.SaveChanges();
+                await Db.SaveChangesAsync();
             }
             catch (DbUpdateException)
             {
@@ -257,11 +262,12 @@ namespace planinarenje.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public IActionResult Delete(int id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Delete(int id)
         {
-            var entity = _dbContext.KontrolneTocke
+            var entity = await Db.KontrolneTocke
                 .Include(k => k.Podrucje)
-                .FirstOrDefault(k => k.IdKontrolnaTocka == id && k.DeletedAt == null);
+                .FirstOrDefaultAsync(k => k.IdKontrolnaTocka == id && k.DeletedAt == null);
             if (entity is null)
             {
                 return NotFound();
@@ -273,17 +279,18 @@ namespace planinarenje.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(int id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var entity = _dbContext.KontrolneTocke
-                .FirstOrDefault(k => k.IdKontrolnaTocka == id && k.DeletedAt == null);
+            var entity = await Db.KontrolneTocke
+                .FirstOrDefaultAsync(k => k.IdKontrolnaTocka == id && k.DeletedAt == null);
             if (entity is null)
             {
                 return NotFound();
             }
 
             entity.DeletedAt = DateTime.UtcNow;
-            _dbContext.SaveChanges();
+            await Db.SaveChangesAsync();
             TempData["Success"] = "Kontrolna tocka je uspjesno obrisana.";
             return RedirectToAction(nameof(Index));
         }
@@ -292,7 +299,7 @@ namespace planinarenje.Controllers
         [Route("[controller]/[action]/{id:int}")]
         public IActionResult Details(int id)
         {
-            var kontrolnaTocka = _dbContext.KontrolneTocke
+            var kontrolnaTocka = Db.KontrolneTocke
                 .Include(k => k.Podrucje)
                 .FirstOrDefault(k => k.IdKontrolnaTocka == id && k.DeletedAt == null);
             if (kontrolnaTocka is null)
@@ -332,7 +339,7 @@ namespace planinarenje.Controllers
 
         private List<KontrolnaTockaIndexCardViewModel> BuildIndexModel(string? searchTerm)
         {
-            var query = _dbContext.KontrolneTocke
+            var query = Db.KontrolneTocke
                 .Include(k => k.Podrucje)
                 .Where(k => k.DeletedAt == null && (k.Podrucje == null || k.Podrucje.DeletedAt == null));
 
@@ -367,7 +374,7 @@ namespace planinarenje.Controllers
                 return null;
             }
 
-            return _dbContext.Podrucja
+            return Db.Podrucja
                 .Where(p => p.DeletedAt == null && p.IdPodrucje == id.Value)
                 .Select(p => p.Naziv)
                 .FirstOrDefault();

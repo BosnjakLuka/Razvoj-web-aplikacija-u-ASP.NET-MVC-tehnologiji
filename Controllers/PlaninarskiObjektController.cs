@@ -4,18 +4,19 @@ using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.Models;
 using planinarenje.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace planinarenje.Controllers;
 
-public class PlaninarskiObjektController : Controller
+public class PlaninarskiObjektController : BaseController
 {
-    private readonly PlaninarstvoDbContext _dbContext;
-
-    public PlaninarskiObjektController(PlaninarstvoDbContext dbContext)
+    public PlaninarskiObjektController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+        : base(userMgr, db)
     {
-        _dbContext = dbContext;
     }
 
+    [AllowAnonymous]
     public IActionResult Index()
     {
         var model = BuildIndexModel(null);
@@ -30,6 +31,7 @@ public class PlaninarskiObjektController : Controller
         return PartialView("_PlaninarskiObjektListPartial", model);
     }
 
+    [Authorize(Roles = "Admin")]
     public IActionResult Create()
     {
         ViewData["Title"] = "Novi objekt";
@@ -38,8 +40,8 @@ public class PlaninarskiObjektController : Controller
 
     private bool ValidirajUdruguIPodrucje(PlaninarskiObjektCreateModel model)
     {
-        var imaPodrucje = _dbContext.Podrucja.Any(p => p.IdPodrucje == model.IdPodrucje && p.DeletedAt == null);
-        var imaUdrugu = _dbContext.PlaninarskeUdruge.Any(u => u.IdPlaninarskaUdruga == model.IdPlaninarskaUdruga && u.DeletedAt == null);
+        var imaPodrucje = Db.Podrucja.Any(p => p.IdPodrucje == model.IdPodrucje && p.DeletedAt == null);
+        var imaUdrugu = Db.PlaninarskeUdruge.Any(u => u.IdPlaninarskaUdruga == model.IdPlaninarskaUdruga && u.DeletedAt == null);
 
         if (imaPodrucje && imaUdrugu)
         {
@@ -62,7 +64,7 @@ public class PlaninarskiObjektController : Controller
 
     private bool DodajGreskeZaDuplikatObjekta(string naziv, int idPodrucje, int idPlaninarskaUdruga, int? excludeId = null)
     {
-        var postoji = _dbContext.PlaninarskiObjekti.Any(po =>
+        var postoji = Db.PlaninarskiObjekti.Any(po =>
             po.Naziv == naziv &&
             po.IdPodrucje == idPodrucje &&
             po.IdPlaninarskaUdruga == idPlaninarskaUdruga &&
@@ -82,7 +84,8 @@ public class PlaninarskiObjektController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(PlaninarskiObjektCreateModel model)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Create(PlaninarskiObjektCreateModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -128,8 +131,8 @@ public class PlaninarskiObjektController : Controller
 
         try
         {
-            _dbContext.PlaninarskiObjekti.Add(entity);
-            _dbContext.SaveChanges();
+            Db.PlaninarskiObjekti.Add(entity);
+            await Db.SaveChangesAsync();
         }
         catch (DbUpdateException)
         {
@@ -145,13 +148,14 @@ public class PlaninarskiObjektController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Admin")]
     [ActionName("Edit")]
-    public IActionResult EditGet(int id)
+    public async Task<IActionResult> EditGet(int id)
     {
-        var entity = _dbContext.PlaninarskiObjekti
+        var entity = await Db.PlaninarskiObjekti
             .Include(po => po.Podrucje)
             .Include(po => po.PlaninarskaUdruga)
-            .FirstOrDefault(po => po.IdPlaninarskiObjekt == id && po.DeletedAt == null);
+            .FirstOrDefaultAsync(po => po.IdPlaninarskiObjekt == id && po.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
@@ -183,7 +187,8 @@ public class PlaninarskiObjektController : Controller
 
     [HttpPost, ActionName("Edit")]
     [ValidateAntiForgeryToken]
-    public IActionResult EditPost(int id, PlaninarskiObjektEditModel model)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> EditPost(int id, PlaninarskiObjektEditModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -193,8 +198,8 @@ public class PlaninarskiObjektController : Controller
             return View(model);
         }
 
-        var entity = _dbContext.PlaninarskiObjekti
-            .FirstOrDefault(po => po.IdPlaninarskiObjekt == id && po.DeletedAt == null);
+        var entity = await Db.PlaninarskiObjekti
+            .FirstOrDefaultAsync(po => po.IdPlaninarskiObjekt == id && po.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
@@ -233,7 +238,7 @@ public class PlaninarskiObjektController : Controller
 
         try
         {
-            _dbContext.SaveChanges();
+            await Db.SaveChangesAsync();
         }
         catch (DbUpdateException)
         {
@@ -248,12 +253,13 @@ public class PlaninarskiObjektController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    public IActionResult Delete(int id)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
     {
-        var entity = _dbContext.PlaninarskiObjekti
+        var entity = await Db.PlaninarskiObjekti
             .Include(po => po.Podrucje)
             .Include(po => po.PlaninarskaUdruga)
-            .FirstOrDefault(po => po.IdPlaninarskiObjekt == id && po.DeletedAt == null);
+            .FirstOrDefaultAsync(po => po.IdPlaninarskiObjekt == id && po.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
@@ -265,24 +271,26 @@ public class PlaninarskiObjektController : Controller
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int id)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var entity = _dbContext.PlaninarskiObjekti
-            .FirstOrDefault(po => po.IdPlaninarskiObjekt == id && po.DeletedAt == null);
+        var entity = await Db.PlaninarskiObjekti
+            .FirstOrDefaultAsync(po => po.IdPlaninarskiObjekt == id && po.DeletedAt == null);
         if (entity == null)
         {
             return NotFound();
         }
 
         entity.DeletedAt = DateTime.UtcNow;
-        _dbContext.SaveChanges();
+        await Db.SaveChangesAsync();
         TempData["Success"] = "Objekt je uspjesno obrisan.";
         return RedirectToAction(nameof(Index));
     }
 
+    [AllowAnonymous]
     public IActionResult Details(int id)
     {
-        var objekt = _dbContext.PlaninarskiObjekti
+        var objekt = Db.PlaninarskiObjekti
             .Include(po => po.Podrucje)
             .Include(po => po.PlaninarskaUdruga)
             .FirstOrDefault(po => po.IdPlaninarskiObjekt == id && po.DeletedAt == null);
@@ -315,7 +323,7 @@ public class PlaninarskiObjektController : Controller
 
     private List<PlaninarskiObjektIndexCardViewModel> BuildIndexModel(string? searchTerm)
     {
-        var query = _dbContext.PlaninarskiObjekti
+        var query = Db.PlaninarskiObjekti
             .Include(po => po.Podrucje)
             .Include(po => po.PlaninarskaUdruga)
             .Where(po => po.DeletedAt == null &&
@@ -358,7 +366,7 @@ public class PlaninarskiObjektController : Controller
             return null;
         }
 
-        return _dbContext.Podrucja
+        return Db.Podrucja
             .Where(p => p.DeletedAt == null && p.IdPodrucje == id.Value)
             .Select(p => p.Naziv)
             .FirstOrDefault();
@@ -371,7 +379,7 @@ public class PlaninarskiObjektController : Controller
             return null;
         }
 
-        return _dbContext.PlaninarskeUdruge
+        return Db.PlaninarskeUdruge
             .Where(u => u.DeletedAt == null && u.IdPlaninarskaUdruga == id.Value)
             .Select(u => u.Naziv)
             .FirstOrDefault();

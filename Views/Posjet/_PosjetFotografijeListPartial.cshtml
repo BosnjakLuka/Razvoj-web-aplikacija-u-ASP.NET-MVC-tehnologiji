@@ -1,0 +1,45 @@
+@model List<planinarenje.Models.FotografijaPosjetaViewModel>
+@{
+    var mozeUredivati = ViewBag.MozeUredivati as bool? ?? false;
+}
+
+<div class="d-flex align-items-center mb-3">
+    <h3 class="h5 mb-0"><i class="bi bi-camera me-2 text-primary"></i>Fotografije s posjeta (@Model.Count)</h3>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="app-card h-auto bg-light text-center py-4 text-muted">
+        <i class="bi bi-image fs-1 d-block mb-3 opacity-50"></i>
+        <p class="mb-0">Aplikacija ne bilježi ni jednu fotografiju za ovaj posjet.</p>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var foto in Model)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="app-card h-100 p-2 shadow-sm rounded overflow-hidden border position-relative">
+                    @if (mozeUredivati)
+                    {
+                        <button type="button"
+                                class="position-absolute top-0 end-0 js-foto-delete border-0"
+                                data-id="@foto.IdFotografija"
+                                title="Obriši fotografiju"
+                                style="width:22px;height:22px;background:#dc3545;border-radius:3px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;margin:0;">
+                            <span style="font-size:1rem;font-weight:700;color:#000;line-height:1;user-select:none;">&times;</span>
+                        </button>
+                    }
+                    <a asp-controller="Fotografija" asp-action="Details" asp-route-id="@foto.IdFotografija" title="Otvori fotografiju @foto.NazivDatoteke">
+                        <img src="@foto.PutanjaUrl" class="img-fluid rounded border-bottom w-100 mb-2 mb-lg-0" style="object-fit: cover; aspect-ratio: 4/3;" alt="@foto.NazivDatoteke" />
+                    </a>
+                    @if (!string.IsNullOrEmpty(foto.Opis))
+                    {
+                        <p class="text-muted small mb-0 mt-2 text-truncate px-1" title="@foto.Opis">@foto.Opis</p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}

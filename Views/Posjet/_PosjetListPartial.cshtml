@@ -43,8 +43,11 @@ else
                         </td>
                         <td class="text-end">
                             <a asp-action="Details" asp-route-id="@posjet.IdPosjet" class="btn btn-outline-primary btn-sm">Detalji</a>
-                            <a asp-action="Edit" asp-route-id="@posjet.IdPosjet" class="btn btn-outline-secondary btn-sm">Uredi</a>
-                            <a asp-action="Delete" asp-route-id="@posjet.IdPosjet" class="btn btn-outline-danger btn-sm">Obrisi</a>
+                            @if (User.IsInRole("Admin") || (User.Identity!.IsAuthenticated && posjet.AppUserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value))
+                            {
+                                <a asp-action="Edit" asp-route-id="@posjet.IdPosjet" class="btn btn-outline-secondary btn-sm">Uredi</a>
+                                <a asp-action="Delete" asp-route-id="@posjet.IdPosjet" class="btn btn-outline-danger btn-sm">Obrisi</a>
+                            }
                         </td>
                     </tr>
                 }
