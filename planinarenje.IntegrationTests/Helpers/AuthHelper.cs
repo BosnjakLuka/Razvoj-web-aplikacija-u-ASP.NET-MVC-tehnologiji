@@ -22,6 +22,18 @@ public static class AuthHelper
         return client;
     }
 
+    /// <summary>
+    /// Autentificiran korisnik s rolom Planinar koji NIJE povezan ni s jednim Korisnik profilom.
+    /// Prolazi rolnu provjeru, ali pada na provjeri vlasništva (očekivani 403 Forbidden).
+    /// </summary>
+    public static HttpClient CreateForeignPlaninarClient(CustomWebAppFactory factory)
+    {
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Test-UserId", "test-foreign-planinar-id-999");
+        client.DefaultRequestHeaders.Add("X-Test-Roles", "Planinar");
+        return client;
+    }
+
     public static HttpClient CreateAnonymousClient(CustomWebAppFactory factory)
         => factory.CreateClient();
 }

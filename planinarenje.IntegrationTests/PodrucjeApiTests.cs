@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using planinarenje.Data;
+using planinarenje.Entiteti;
 using planinarenje.IntegrationTests.Helpers;
 using planinarenje.Models.Dto.Podrucje;
 
@@ -79,5 +81,96 @@ public class PodrucjeApiTests : IClassFixture<CustomWebAppFactory>, IAsyncLifeti
         var response = await _adminClient.PostAsJsonAsync("/api/podrucje", new { });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    // ---- Lab5: PUT / DELETE testovi ----
+
+    [Fact]
+    public async Task Put_Returns200_AndUpdatesEntity_WhenExists()
+    {
+        var id = await SeedPodrucjeAsync();
+
+        var dto = new PodrucjeUpdateDto
+        {
+            Naziv = "Ažurirano područje",
+            Regija = "Nova regija",
+            MinimalanBrojKTZaObilazak = 3
+        };
+
+        var response = await _adminClient.PutAsJsonAsync($"/api/podrucje/{id}", dto);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var azuriran = await response.Content.ReadFromJsonAsync<PodrucjeDto>();
+        azuriran!.IdPodrucje.Should().Be(id);
+        azuriran.Naziv.Should().Be(dto.Naziv);
+    }
+
+    [Fact]
+    public async Task Put_Returns404_WhenMissing()
+    {
+        var dto = new PodrucjeUpdateDto
+        {
+            Naziv = "Ne postoji",
+            MinimalanBrojKTZaObilazak = 1
+        };
+
+        var response = await _adminClient.PutAsJsonAsync("/api/podrucje/99999", dto);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Delete_Returns204_WhenExists()
+    {
+        var id = await SeedPodrucjeAsync();
+
+        var response = await _adminClient.DeleteAsync($"/api/podrucje/{id}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Delete_Returns404_WhenMissing()
+    {
+        var response = await _adminClient.DeleteAsync("/api/podrucje/99999");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    // Seeda jedno throwaway područje (auto-generirani Id) i vrati njegov Id.
+    private async Task<int> SeedPodrucjeAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PlaninarstvoDbContext>();
+
+        var entity = new Podrucje
+        {
+            Naziv = "Seed područje",
+            Regija = "Seed regija",
+            MinimalanBrojKTZaObilazak = 1
+        };
+        db.Podrucja.Add(entity);
+        await db.SaveChangesAsync();
+        return entity.IdPodrucje;
+    }
+
+    // ---- Lab5: Autorizacijski testovi (401 / 403) ----
+
+    [Fact]
+    public async Task Post_Returns401_WhenAnonymous()
+    {
+        var response = await _anonClient.PostAsJsonAsync("/api/podrucje", new { });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Post_Returns403_WhenNotAdmin()
+    {
+        using var planinarClient = AuthHelper.CreatePlaninarClient(_factory);
+
+        var response = await planinarClient.PostAsJsonAsync("/api/podrucje", new { });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }

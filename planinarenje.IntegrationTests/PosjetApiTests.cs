@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using planinarenje.Data;
 using planinarenje.Entiteti;
 using planinarenje.IntegrationTests.Helpers;
 using planinarenje.Models.Dto.Posjet;
@@ -102,5 +103,120 @@ public class PosjetApiTests : IClassFixture<CustomWebAppFactory>, IAsyncLifetime
         var response = await _planinarClient.PostAsJsonAsync("/api/posjet", new { });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    // ---- Lab5: PUT / DELETE testovi (Admin zaobilazi provjeru vlasništva) ----
+
+    [Fact]
+    public async Task Put_Returns200_AndUpdatesEntity_WhenExists()
+    {
+        var id = await SeedPosjetAsync();
+
+        var dto = new PosjetUpdateDto
+        {
+            IdKnjizica = TestData.KnjizicaId,
+            IdKontrolnaTocka = TestData.KontrolnaTockaId,
+            IdRuta = TestData.RutaId,
+            DatumVrijemePosjeta = new DateTime(2026, 2, 1, 10, 0, 0),
+            DozivljajPosjeta = DozivljajPosjeta.Lagano,
+            UneseniGUID = "AZURIRANO-POSJET-GUID",
+            OpisIskustva = "Ažurirani opis."
+        };
+
+        var response = await _adminClient.PutAsJsonAsync($"/api/posjet/{id}", dto);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var azuriran = await response.Content.ReadFromJsonAsync<PosjetDto>();
+        azuriran!.IdPosjet.Should().Be(id);
+        azuriran.OpisIskustva.Should().Be(dto.OpisIskustva);
+    }
+
+    [Fact]
+    public async Task Put_Returns404_WhenMissing()
+    {
+        var dto = new PosjetUpdateDto
+        {
+            IdKnjizica = TestData.KnjizicaId,
+            IdKontrolnaTocka = TestData.KontrolnaTockaId,
+            IdRuta = TestData.RutaId,
+            DatumVrijemePosjeta = new DateTime(2026, 2, 1, 10, 0, 0),
+            DozivljajPosjeta = DozivljajPosjeta.Lagano,
+            UneseniGUID = "NE-POSTOJI-GUID"
+        };
+
+        var response = await _adminClient.PutAsJsonAsync("/api/posjet/99999", dto);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Delete_Returns204_WhenExists()
+    {
+        var id = await SeedPosjetAsync();
+
+        var response = await _adminClient.DeleteAsync($"/api/posjet/{id}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Delete_Returns404_WhenMissing()
+    {
+        var response = await _adminClient.DeleteAsync("/api/posjet/99999");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    // Seeda jedan throwaway posjet (auto-generirani Id) vezan uz seedirane korisnika/knjižicu/KT/rutu.
+    private async Task<int> SeedPosjetAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PlaninarstvoDbContext>();
+
+        var entity = new Posjet
+        {
+            IdKorisnik = TestData.PlaninarKorisnikId,
+            IdKnjizica = TestData.KnjizicaId,
+            IdKontrolnaTocka = TestData.KontrolnaTockaId,
+            IdRuta = TestData.RutaId,
+            DatumVrijemePosjeta = new DateTime(2026, 1, 1, 9, 0, 0),
+            DozivljajPosjeta = DozivljajPosjeta.Srednje,
+            UneseniGUID = "SEED-POSJET-GUID",
+            DatumKreiranjaZapisa = DateTime.UtcNow
+        };
+        db.Posjeti.Add(entity);
+        await db.SaveChangesAsync();
+        return entity.IdPosjet;
+    }
+
+    // ---- Lab5: Autorizacijski testovi (401 / 403) ----
+
+    [Fact]
+    public async Task Post_Returns401_WhenAnonymous()
+    {
+        var response = await _anonClient.PostAsJsonAsync("/api/posjet", new { });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    // Strani planinar (autentificiran, ali nije vlasnik knjižice/posjeta) → 403.
+    [Fact]
+    public async Task Post_Returns403_WhenNotOwner()
+    {
+        using var foreignClient = AuthHelper.CreateForeignPlaninarClient(_factory);
+
+        var dto = new PosjetCreateDto
+        {
+            IdKnjizica = TestData.KnjizicaId,
+            IdKontrolnaTocka = TestData.KontrolnaTockaId,
+            IdRuta = TestData.RutaId,
+            DatumVrijemePosjeta = new DateTime(2026, 6, 1, 10, 0, 0),
+            DozivljajPosjeta = DozivljajPosjeta.Srednje,
+            UneseniGUID = "FOREIGN-TEST-GUID"
+        };
+
+        var response = await foreignClient.PostAsJsonAsync("/api/posjet", dto);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }

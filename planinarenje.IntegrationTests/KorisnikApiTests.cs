@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using planinarenje.Data;
+using planinarenje.Entiteti;
 using planinarenje.IntegrationTests.Helpers;
 using planinarenje.Models.Dto.Korisnik;
 
@@ -81,5 +83,104 @@ public class KorisnikApiTests : IClassFixture<CustomWebAppFactory>, IAsyncLifeti
         var response = await _adminClient.PostAsJsonAsync("/api/korisnik", new { });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    // ---- Lab5: PUT / DELETE testovi ----
+
+    [Fact]
+    public async Task Put_Returns200_AndUpdatesEntity_WhenExists()
+    {
+        var id = await SeedKorisnikAsync();
+
+        var dto = new KorisnikUpdateDto
+        {
+            Ime = "Ažuriran",
+            Prezime = "Korisnik",
+            Email = $"azuriran-{Guid.NewGuid():N}@test.hr",
+            KorisnickoIme = $"azuriran_{Guid.NewGuid():N}",
+            StatusAktivan = true
+        };
+
+        var response = await _adminClient.PutAsJsonAsync($"/api/korisnik/{id}", dto);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var azuriran = await response.Content.ReadFromJsonAsync<KorisnikAdminDto>();
+        azuriran!.IdKorisnik.Should().Be(id);
+        azuriran.Ime.Should().Be(dto.Ime);
+    }
+
+    [Fact]
+    public async Task Put_Returns404_WhenMissing()
+    {
+        var dto = new KorisnikUpdateDto
+        {
+            Ime = "Ne",
+            Prezime = "Postoji",
+            Email = $"nepostoji-{Guid.NewGuid():N}@test.hr",
+            KorisnickoIme = $"nepostoji_{Guid.NewGuid():N}",
+            StatusAktivan = true
+        };
+
+        var response = await _adminClient.PutAsJsonAsync("/api/korisnik/99999", dto);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Delete_Returns204_WhenExists()
+    {
+        var id = await SeedKorisnikAsync();
+
+        var response = await _adminClient.DeleteAsync($"/api/korisnik/{id}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Delete_Returns404_WhenMissing()
+    {
+        var response = await _adminClient.DeleteAsync("/api/korisnik/99999");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    // Seeda svježeg throwaway Korisnika (jedinstveni email/korisničko ime) i vrati njegov Id.
+    private async Task<int> SeedKorisnikAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PlaninarstvoDbContext>();
+
+        var entity = new Korisnik
+        {
+            Ime = "Seed",
+            Prezime = "Korisnik",
+            Email = $"seed-{Guid.NewGuid():N}@test.hr",
+            KorisnickoIme = $"seed_{Guid.NewGuid():N}",
+            DatumRegistracije = DateTime.UtcNow,
+            StatusAktivan = true
+        };
+        db.Korisnici.Add(entity);
+        await db.SaveChangesAsync();
+        return entity.IdKorisnik;
+    }
+
+    // ---- Lab5: Autorizacijski testovi (401 / 403) ----
+
+    [Fact]
+    public async Task Post_Returns401_WhenAnonymous()
+    {
+        var response = await _anonClient.PostAsJsonAsync("/api/korisnik", new { });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Post_Returns403_WhenNotAdmin()
+    {
+        using var planinarClient = AuthHelper.CreatePlaninarClient(_factory);
+
+        var response = await planinarClient.PostAsJsonAsync("/api/korisnik", new { });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }
