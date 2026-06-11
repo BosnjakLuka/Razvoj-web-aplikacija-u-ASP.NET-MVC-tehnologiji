@@ -7,6 +7,13 @@
     <UserSecretsId>e23cb0e0-c7e4-439d-bf70-a0d6613c83d8</UserSecretsId>
   </PropertyGroup>
 
+  <!-- Isključi test projekt iz kompilacije main projekta (SDK wildcard inače uhvati i podmape). -->
+  <ItemGroup>
+    <Compile Remove="planinarenje.IntegrationTests/**" />
+    <Content Remove="planinarenje.IntegrationTests/**" />
+    <None Remove="planinarenje.IntegrationTests/**" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.0" />

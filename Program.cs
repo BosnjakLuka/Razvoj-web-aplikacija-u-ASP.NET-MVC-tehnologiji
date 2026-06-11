@@ -296,3 +296,6 @@ app.MapRazorPages();
 
 
 app.Run();
+
+// Potrebno za WebApplicationFactory<Program> u integracijskim testovima.
+public partial class Program { }

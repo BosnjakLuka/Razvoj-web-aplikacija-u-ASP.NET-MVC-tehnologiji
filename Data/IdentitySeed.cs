@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using MySqlConnector;
 using planinarenje.Entiteti;
 
 namespace planinarenje.Data;
@@ -109,10 +108,11 @@ public static class IdentitySeed
 
     private static async Task<bool> IdentityTablesExistAsync(PlaninarstvoDbContext dbContext)
     {
-        await dbContext.Database.OpenConnectionAsync();
-
+        // Hvata sve iznimke (ne samo MySqlException) jer s InMemory providerom (testovi)
+        // relacijski pozivi bacaju InvalidOperationException — seed se u tom slučaju preskače.
         try
         {
+            await dbContext.Database.OpenConnectionAsync();
             await using var command = dbContext.Database.GetDbConnection().CreateCommand();
             command.CommandText = @"
                 SELECT COUNT(*)
@@ -123,13 +123,13 @@ public static class IdentitySeed
             var result = await command.ExecuteScalarAsync();
             return Convert.ToInt32(result) >= 2;
         }
-        catch (MySqlException)
+        catch (Exception)
         {
             return false;
         }
         finally
         {
-            await dbContext.Database.CloseConnectionAsync();
+            try { await dbContext.Database.CloseConnectionAsync(); } catch { }
         }
     }
 }
