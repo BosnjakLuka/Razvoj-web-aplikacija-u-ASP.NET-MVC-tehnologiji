@@ -5,9 +5,23 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using planinarenje.Data;
 using planinarenje.Entiteti;
+using Serilog;
 using System.Globalization;
 
+// Lab5 Faza 6: Serilog logging mehanizam.
+// Konfiguriran prije WebApplication.CreateBuilder kako bi se uhvatile i greške iz startup faze.
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(new ConfigurationBuilder()
+        .AddJsonFile("appsettings.json")
+        .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true)
+        .Build())
+    .CreateLogger();
+
+try
+{
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog();
 
 // Lab 1: inicijalno punjenje objekata podacima iz dataset dokumenta.
 var lab1Podaci = Lab1PodaciFactory.Kreiraj();
@@ -198,6 +212,8 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+app.UseSerilogRequestLogging();
+
 using (var scope = app.Services.CreateScope())
 {
     await IdentitySeed.SeedAsync(scope.ServiceProvider);
@@ -296,6 +312,12 @@ app.MapRazorPages();
 
 
 app.Run();
+
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 // Potrebno za WebApplicationFactory<Program> u integracijskim testovima.
 public partial class Program { }
