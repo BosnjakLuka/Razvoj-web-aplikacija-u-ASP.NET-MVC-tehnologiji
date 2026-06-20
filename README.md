@@ -6,5 +6,5 @@ Uloga	Email	Lozinka
 Admin	admin@planinarenje.hr	Admin@2026!
 Planinar	luka@planinarenje.hr	Planinar@26!
 
-test za development stranu projekta 55 api testova
+test za development stranu projekta 121 api testova
 dotnet test --logger "console;verbosity=detailed"
