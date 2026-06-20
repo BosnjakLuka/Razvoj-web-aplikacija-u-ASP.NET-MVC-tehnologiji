@@ -161,6 +161,7 @@ var _ = knjizice.Count + medalje.Count;
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<PlaninarstvoDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("PlaninarstvoDbContext"),
