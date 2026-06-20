@@ -1,0 +1,64 @@
+@model planinarenje.Models.ViewModels.GlobalnaPretragaViewModel
+@{
+    ViewData["Title"] = "Pretraga";
+}
+
+<div class="gs-page">
+    <h1 class="h3 mb-3">Pretraga</h1>
+
+    <form method="get" asp-controller="Pretraga" asp-action="Index" class="gs-page-form mb-4" role="search" autocomplete="off">
+        <div class="input-group input-group-lg">
+            <input type="text" name="q" value="@Model.Upit" class="form-control"
+                   placeholder="Pretraži područja, kontrolne točke, rute, objekte, udruge, medalje…"
+                   aria-label="Pretraga" autocomplete="off" autofocus />
+            <button type="submit" class="btn btn-primary px-4">Pretraži</button>
+        </div>
+    </form>
+
+    @if (!Model.UpitJeValjan)
+    {
+        <p class="text-muted">Upiši barem @planinarenje.Models.ViewModels.GlobalnaPretragaViewModel.MinDuljinaUpita znaka za pretragu.</p>
+    }
+    else if (Model.UkupnoPrikazano == 0)
+    {
+        <div class="gs-empty">
+            <p class="mb-0">Nema rezultata za <strong>„@Model.Upit”</strong>.</p>
+            <p class="text-muted small mb-0">Provjeri ima li tipfelera ili pokušaj s kraćim pojmom.</p>
+        </div>
+    }
+    else
+    {
+        <p class="text-muted mb-4">
+            Pronađeno <strong>@Model.UkupnoPoklapanja</strong>
+            @(Model.UkupnoPoklapanja == 1 ? "rezultat" : "rezultata") za <strong>„@Model.Upit”</strong>.
+        </p>
+
+        foreach (var grupa in Model.Grupe)
+        {
+            <section class="gs-group">
+                <div class="gs-group-head">
+                    <h2 class="h5 mb-0">@grupa.Naziv</h2>
+                    <span class="app-badge badge-subtle">@grupa.Ukupno</span>
+                </div>
+                <div class="gs-group-body">
+                    @foreach (var s in grupa.Stavke)
+                    {
+                        <a class="gs-item" asp-controller="@grupa.Controller" asp-action="Details" asp-route-id="@s.Id">
+                            <span class="gs-item-title">@s.Naziv</span>
+                            @if (!string.IsNullOrWhiteSpace(s.Podnaslov))
+                            {
+                                <span class="gs-item-sub">@s.Podnaslov</span>
+                            }
+                        </a>
+                    }
+                </div>
+                @if (grupa.Ukupno > grupa.Stavke.Count)
+                {
+                    <a class="gs-group-more" asp-controller="@grupa.Controller" asp-action="Index">
+                        Prikaži sve u „@grupa.Naziv” (@grupa.Ukupno) →
+                    </a>
+                }
+            </section>
+        }
+    }
+</div>

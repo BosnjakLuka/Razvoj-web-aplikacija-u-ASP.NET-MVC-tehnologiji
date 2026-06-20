@@ -477,3 +477,213 @@ a:hover {
     left: 8px;
     right: 8px;
 }
+
+/* ============================================================
+   Globalna (cross-entity) pretraga
+   ============================================================ */
+
+/* --- Navbar okvir + live dropdown --- */
+.global-search {
+    min-width: 200px;
+}
+
+.global-search-input {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    padding-left: 14px;
+}
+
+.global-search-input:focus {
+    background: #fff;
+    box-shadow: 0 0 0 0.18rem rgba(82, 183, 136, 0.35);
+    border-color: var(--color-hiking-green);
+}
+
+.global-search-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    min-width: 320px;
+    max-height: 70vh;
+    overflow-y: auto;
+    background: var(--bg-surface-light);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    z-index: 1050;
+    padding: 4px 0;
+}
+
+.gs-dd-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-primary-blue);
+    background: var(--bg-surface-muted);
+}
+
+.gs-dd-count {
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.gs-dd-item {
+    display: flex;
+    flex-direction: column;
+    padding: 7px 16px;
+    text-decoration: none;
+    color: var(--text-main);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.gs-dd-item:last-of-type {
+    border-bottom: none;
+}
+
+.gs-dd-item:hover,
+.gs-dd-item.active {
+    background: #e8f5e9;
+    color: #1b4332;
+}
+
+.gs-dd-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.gs-dd-tip {
+    flex: 0 0 auto;
+    font-size: 0.64rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+    background: var(--bg-surface-muted);
+    border-radius: 10px;
+    padding: 1px 8px;
+    white-space: nowrap;
+}
+
+.gs-dd-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.gs-dd-sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.gs-dd-empty {
+    padding: 14px 16px;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+.gs-dd-all {
+    display: block;
+    text-align: center;
+    padding: 9px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--color-hiking-green);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.gs-dd-all:hover {
+    background: var(--bg-surface-muted);
+    color: var(--color-hiking-green-hover);
+}
+
+/* --- Puna stranica rezultata --- */
+.gs-page-form .form-control:focus {
+    border-color: var(--color-hiking-green);
+    box-shadow: 0 0 0 0.18rem rgba(82, 183, 136, 0.25);
+}
+
+.gs-group {
+    background: var(--bg-surface-light);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-left: 5px solid var(--color-hiking-green);
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+}
+
+.gs-group-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--bg-surface-muted);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.gs-group-head h2 {
+    color: var(--color-dark-blue);
+}
+
+.gs-group-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.gs-item {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 16px;
+    text-decoration: none;
+    color: var(--text-main);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.gs-item:last-child {
+    border-bottom: none;
+}
+
+.gs-item:hover {
+    background: #e8f5e9;
+}
+
+.gs-item-title {
+    font-weight: 600;
+    color: var(--color-primary-blue);
+}
+
+.gs-item-sub {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.gs-group-more {
+    display: block;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--color-hiking-green);
+    background: var(--bg-surface-light);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.gs-group-more:hover {
+    background: var(--bg-surface-muted);
+}
+
+.gs-empty {
+    background: var(--bg-surface-muted);
+    border: 1px dashed rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+}

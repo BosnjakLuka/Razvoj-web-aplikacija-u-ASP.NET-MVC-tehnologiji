@@ -51,6 +51,14 @@
                         <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="KorisnikMedalja" asp-action="Index">Dodijeljene medalje</a></li>
                         <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="Medalja" asp-action="Index">Sve medalje</a></li>
                     </ul>
+                    <form class="global-search position-relative me-lg-3 my-2 my-lg-0"
+                          method="get" action="@Url.Action("Index", "Pretraga")" role="search"
+                          autocomplete="off" data-live-url="@Url.Action("Live", "Pretraga")">
+                        <input type="text" name="q" id="globalSearchInput"
+                               class="form-control form-control-sm global-search-input"
+                               placeholder="Pretraži…" aria-label="Globalna pretraga" autocomplete="off" />
+                        <div class="global-search-dropdown shadow d-none" id="globalSearchDropdown" role="listbox"></div>
+                    </form>
                     <partial name="_LoginPartial" />
                 </div>
             </div>
@@ -206,6 +214,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/hr.js"></script>
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/autocomplete.js" asp-append-version="true"></script>
+    <script src="~/js/global-search.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 

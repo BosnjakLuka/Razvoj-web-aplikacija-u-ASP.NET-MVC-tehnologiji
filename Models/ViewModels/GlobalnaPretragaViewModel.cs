@@ -1,0 +1,41 @@
+namespace planinarenje.Models.ViewModels;
+
+// Jedna stavka rezultata globalne pretrage (jedan zapis nekog entiteta).
+public class PretragaStavka
+{
+    public string Naziv { get; set; } = string.Empty;
+    public string? Podnaslov { get; set; }
+    public string Controller { get; set; } = string.Empty;
+    public int Id { get; set; }
+
+    // Čitljiv naziv tipa entiteta (npr. "Kontrolna točka") - prikazuje se kao oznaka u ravnoj listi.
+    public string Tip { get; set; } = string.Empty;
+
+    // Relevantnost pogotka (veće = bolje); koristi se za rangiranje "najvjerojatnijih" pogodaka.
+    public int Skor { get; set; }
+}
+
+// Grupa rezultata za jedan tip entiteta (npr. "Područja").
+public class PretragaGrupa
+{
+    public string Naziv { get; set; } = string.Empty;
+    public string Controller { get; set; } = string.Empty;
+    public string Ikona { get; set; } = string.Empty;
+    public List<PretragaStavka> Stavke { get; set; } = new();
+
+    // Ukupan broj poklapanja u toj grupi (može biti veći od broja prikazanih Stavki).
+    public int Ukupno { get; set; }
+}
+
+// Model za cross-entity (globalnu) pretragu.
+public class GlobalnaPretragaViewModel
+{
+    public const int MinDuljinaUpita = 2;
+
+    public string? Upit { get; set; }
+    public List<PretragaGrupa> Grupe { get; set; } = new();
+
+    public int UkupnoPrikazano => Grupe.Sum(g => g.Stavke.Count);
+    public int UkupnoPoklapanja => Grupe.Sum(g => g.Ukupno);
+    public bool UpitJeValjan => !string.IsNullOrWhiteSpace(Upit) && Upit.Trim().Length >= MinDuljinaUpita;
+}
