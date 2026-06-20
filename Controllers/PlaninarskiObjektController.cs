@@ -11,9 +11,12 @@ namespace planinarenje.Controllers;
 
 public class PlaninarskiObjektController : BaseController
 {
-    public PlaninarskiObjektController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+    private readonly ILogger<PlaninarskiObjektController> _logger;
+
+    public PlaninarskiObjektController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, ILogger<PlaninarskiObjektController> logger)
         : base(userMgr, db)
     {
+        _logger = logger;
     }
 
     [AllowAnonymous]
@@ -143,6 +146,7 @@ public class PlaninarskiObjektController : BaseController
             return View(model);
         }
 
+        _logger.LogInformation("Planinarski objekt {IdPlaninarskiObjekt} kreiran ({Naziv}).", entity.IdPlaninarskiObjekt, entity.Naziv);
         TempData["NewId"] = entity.IdPlaninarskiObjekt;
         TempData["Success"] = "Objekt je uspjesno dodan.";
         return RedirectToAction(nameof(Index));
@@ -249,6 +253,7 @@ public class PlaninarskiObjektController : BaseController
             return View(model);
         }
 
+        _logger.LogInformation("Planinarski objekt {IdPlaninarskiObjekt} ažuriran.", id);
         TempData["Success"] = "Objekt je uspjesno azuriran.";
         return RedirectToAction(nameof(Index));
     }
@@ -283,6 +288,7 @@ public class PlaninarskiObjektController : BaseController
 
         entity.DeletedAt = DateTime.UtcNow;
         await Db.SaveChangesAsync();
+        _logger.LogInformation("Planinarski objekt {IdPlaninarskiObjekt} obrisan (soft delete).", id);
         TempData["Success"] = "Objekt je uspjesno obrisan.";
         return RedirectToAction(nameof(Index));
     }

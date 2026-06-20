@@ -11,9 +11,12 @@ namespace planinarenje.Controllers;
 
 public class MedaljaController : BaseController
 {
-    public MedaljaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+    private readonly ILogger<MedaljaController> _logger;
+
+    public MedaljaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, ILogger<MedaljaController> logger)
         : base(userMgr, db)
     {
+        _logger = logger;
     }
 
     [AllowAnonymous]
@@ -112,6 +115,7 @@ public class MedaljaController : BaseController
             return View(model);
         }
 
+        _logger.LogInformation("Medalja {IdMedalja} kreirana ({Naziv}).", entity.IdMedalja, entity.Naziv);
         TempData["NewId"] = entity.IdMedalja;
         TempData["Success"] = "Medalja je uspjesno dodana.";
         return RedirectToAction(nameof(Index));
@@ -172,6 +176,7 @@ public class MedaljaController : BaseController
             return View(model);
         }
 
+        _logger.LogInformation("Medalja {IdMedalja} ažurirana.", id);
         TempData["Success"] = "Medalja je uspjesno azurirana.";
         return RedirectToAction(nameof(Index));
     }
@@ -196,6 +201,7 @@ public class MedaljaController : BaseController
 
         entity.DeletedAt = DateTime.UtcNow;
         await Db.SaveChangesAsync();
+        _logger.LogInformation("Medalja {IdMedalja} obrisana (soft delete).", id);
         TempData["Success"] = "Medalja je uspjesno obrisana.";
         return RedirectToAction(nameof(Index));
     }

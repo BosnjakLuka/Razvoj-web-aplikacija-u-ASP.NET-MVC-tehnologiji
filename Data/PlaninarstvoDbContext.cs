@@ -1,15 +1,23 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using planinarenje.Entiteti;
 
 namespace planinarenje.Data;
 
 public class PlaninarstvoDbContext : IdentityDbContext<AppUser>
 {
-    public PlaninarstvoDbContext(DbContextOptions<PlaninarstvoDbContext> options) : base(options)
+    private readonly IHttpContextAccessor? _httpContextAccessor;
+
+    public PlaninarstvoDbContext(DbContextOptions<PlaninarstvoDbContext> options, IHttpContextAccessor? httpContextAccessor = null)
+        : base(options)
     {
+        _httpContextAccessor = httpContextAccessor;
     }
 
+    public DbSet<LogAktivnosti> LogoviAktivnosti { get; set; }
     public DbSet<Korisnik> Korisnici { get; set; }
     public DbSet<Knjizica> Knjizice { get; set; }
     public DbSet<Posjet> Posjeti { get; set; }
@@ -832,5 +840,241 @@ public class PlaninarstvoDbContext : IdentityDbContext<AppUser>
         modelBuilder.Entity<Posjet>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<Podrucje>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<Ruta>().HasQueryFilter(x => x.DeletedAt == null);
+
+        // Akcija se sprema kao tekst (Kreirano/Azurirano/Obrisano), ne kao int (0/1/2),
+        // da je log u bazi čitljiv bez potrebe za mapiranjem enum vrijednosti.
+        modelBuilder.Entity<LogAktivnosti>()
+            .Property(l => l.Akcija)
+            .HasConversion<string>()
+            .HasMaxLength(20);
+    }
+
+    // ---------------------------------------------------------------------
+    // Audit log: svaka Added/Modified/Deleted promjena nad domenskim entitetima
+    // (namespace planinarenje.Entiteti, osim LogAktivnosti samog) automatski se
+    // zapisuje u LogoviAktivnosti, uz tko je promjenu napravio i koja su polja
+    // promijenjena (za Modified: stara -> nova vrijednost).
+    // ---------------------------------------------------------------------
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        var pendingAuditEntries = OnBeforeSaveChanges();
+        var result = base.SaveChanges(acceptAllChangesOnSuccess);
+        OnAfterSaveChanges(pendingAuditEntries);
+        return result;
+    }
+
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        var pendingAuditEntries = OnBeforeSaveChanges();
+        var result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        await OnAfterSaveChangesAsync(pendingAuditEntries, cancellationToken);
+        return result;
+    }
+
+    private List<AuditZapisUIzradi> OnBeforeSaveChanges()
+    {
+        ChangeTracker.DetectChanges();
+
+        var (appUserId, korisnickoIme) = DohvatiTrenutnogKorisnika();
+        var pending = new List<AuditZapisUIzradi>();
+
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.State is EntityState.Detached or EntityState.Unchanged)
+                continue;
+
+            // Audit pratimo samo nad domenskim entitetima ove aplikacije, ne nad samim audit logom.
+            if (entry.Entity is LogAktivnosti || entry.Entity.GetType().Namespace != "planinarenje.Entiteti")
+                continue;
+
+            var auditEntry = new AuditZapisUIzradi(entry, appUserId, korisnickoIme);
+            pending.Add(auditEntry);
+
+            foreach (var property in entry.Properties)
+            {
+                if (property.IsTemporary)
+                {
+                    auditEntry.SvojstvaSGeneriranomVrijednoscu.Add(property);
+                    continue;
+                }
+
+                if (property.Metadata.IsPrimaryKey())
+                {
+                    auditEntry.IdEntiteta = property.CurrentValue?.ToString() ?? string.Empty;
+                    continue;
+                }
+
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        auditEntry.NoveVrijednosti[property.Metadata.Name] = property.CurrentValue;
+                        break;
+                    case EntityState.Deleted:
+                        auditEntry.StareVrijednosti[property.Metadata.Name] = property.OriginalValue;
+                        break;
+                    case EntityState.Modified:
+                        if (property.IsModified && !Equals(property.OriginalValue, property.CurrentValue))
+                        {
+                            auditEntry.StareVrijednosti[property.Metadata.Name] = property.OriginalValue;
+                            auditEntry.NoveVrijednosti[property.Metadata.Name] = property.CurrentValue;
+                        }
+                        break;
+                }
+            }
+        }
+
+        // Modified/Deleted entiteti već imaju poznat PK, pa se mogu odmah pretvoriti u LogAktivnosti.
+        // Added entiteti čekaju generirani PK do nakon SaveChanges (vidi OnAfterSaveChanges).
+        var spremniOdmah = pending.Where(p => p.SvojstvaSGeneriranomVrijednoscu.Count == 0).ToList();
+        foreach (var auditEntry in spremniOdmah)
+        {
+            if (auditEntry.ImaPromjene)
+            {
+                LogoviAktivnosti.Add(auditEntry.IzgradiZapis());
+            }
+        }
+
+        return pending.Where(p => p.SvojstvaSGeneriranomVrijednoscu.Count > 0).ToList();
+    }
+
+    private void OnAfterSaveChanges(List<AuditZapisUIzradi> pendingAuditEntries)
+    {
+        if (pendingAuditEntries.Count == 0) return;
+
+        foreach (var auditEntry in pendingAuditEntries)
+        {
+            DopuniGenerirunePKVrijednosti(auditEntry);
+            if (auditEntry.ImaPromjene)
+            {
+                LogoviAktivnosti.Add(auditEntry.IzgradiZapis());
+            }
+        }
+
+        // Bitno: pozvati TOČNO isti overload (bool) kojeg ova klasa overrida.
+        // base.SaveChanges() (bez parametara) bi internalno virtualno pozvao
+        // SaveChanges(true), što bi se opet vratilo na naš override umjesto
+        // direktno na EF Core implementaciju, i audit zapis bi se izgubio.
+        base.SaveChanges(acceptAllChangesOnSuccess: true);
+    }
+
+    private async Task OnAfterSaveChangesAsync(List<AuditZapisUIzradi> pendingAuditEntries, CancellationToken cancellationToken)
+    {
+        if (pendingAuditEntries.Count == 0) return;
+
+        foreach (var auditEntry in pendingAuditEntries)
+        {
+            DopuniGenerirunePKVrijednosti(auditEntry);
+            if (auditEntry.ImaPromjene)
+            {
+                LogoviAktivnosti.Add(auditEntry.IzgradiZapis());
+            }
+        }
+
+        // Bitno: pozvati TOČNO isti overload (bool, token) kojeg ova klasa overrida -
+        // vidi komentar u OnAfterSaveChanges.
+        await base.SaveChangesAsync(acceptAllChangesOnSuccess: true, cancellationToken);
+    }
+
+    private static void DopuniGenerirunePKVrijednosti(AuditZapisUIzradi auditEntry)
+    {
+        foreach (var property in auditEntry.SvojstvaSGeneriranomVrijednoscu)
+        {
+            if (property.Metadata.IsPrimaryKey())
+            {
+                auditEntry.IdEntiteta = property.CurrentValue?.ToString() ?? string.Empty;
+            }
+            else
+            {
+                auditEntry.NoveVrijednosti[property.Metadata.Name] = property.CurrentValue;
+            }
+        }
+    }
+
+    private (string AppUserId, string? KorisnickoIme) DohvatiTrenutnogKorisnika()
+    {
+        var user = _httpContextAccessor?.HttpContext?.User;
+        var appUserId = user?.FindFirstValue(ClaimTypes.NameIdentifier);
+        var korisnickoIme = user?.Identity?.IsAuthenticated == true ? user.Identity!.Name : null;
+
+        return (appUserId ?? "Sustav", korisnickoIme);
+    }
+
+    // Privremeni radni objekt dok se ne sazna generirani PK (za Added entitete) - nije persistirana klasa.
+    private sealed class AuditZapisUIzradi
+    {
+        private readonly EntityEntry _entry;
+        private readonly string _appUserId;
+        private readonly string? _korisnickoIme;
+
+        // Snapshot stanja u trenutku hvatanja (prije SaveChanges) - _entry.State se NE smije
+        // čitati kasnije u OnAfterSaveChanges, jer EF Core nakon uspješnog spremanja
+        // (acceptAllChangesOnSuccess: true) prebaci Added/Modified/Deleted natrag u Unchanged.
+        private readonly EntityState _izvornoStanje;
+
+        public AuditZapisUIzradi(EntityEntry entry, string appUserId, string? korisnickoIme)
+        {
+            _entry = entry;
+            _izvornoStanje = entry.State;
+            _appUserId = appUserId;
+            _korisnickoIme = korisnickoIme;
+        }
+
+        public string IdEntiteta { get; set; } = string.Empty;
+        public List<PropertyEntry> SvojstvaSGeneriranomVrijednoscu { get; } = new();
+        public Dictionary<string, object?> StareVrijednosti { get; } = new();
+        public Dictionary<string, object?> NoveVrijednosti { get; } = new();
+
+        public bool ImaPromjene => _izvornoStanje switch
+        {
+            EntityState.Added => true,
+            EntityState.Deleted => true,
+            EntityState.Modified => StareVrijednosti.Count > 0,
+            _ => false
+        };
+
+        public LogAktivnosti IzgradiZapis()
+        {
+            var akcija = _izvornoStanje switch
+            {
+                EntityState.Added => TipAkcijeLoga.Kreirano,
+                EntityState.Deleted => TipAkcijeLoga.Obrisano,
+                _ => TipAkcijeLoga.Azurirano
+            };
+
+            return new LogAktivnosti
+            {
+                VrijemeDogadaja = DateTime.UtcNow,
+                AppUserId = _appUserId,
+                KorisnickoIme = _korisnickoIme,
+                NazivEntiteta = _entry.Entity.GetType().Name,
+                IdEntiteta = IdEntiteta,
+                Akcija = akcija,
+                Detalji = IzgradiDetalje(akcija)
+            };
+        }
+
+        private string IzgradiDetalje(TipAkcijeLoga akcija)
+        {
+            if (akcija == TipAkcijeLoga.Azurirano)
+            {
+                var promjene = StareVrijednosti.Keys
+                    .Select(naziv => $"{naziv}: '{FormatVrijednost(StareVrijednosti[naziv])}' -> '{FormatVrijednost(NoveVrijednosti.GetValueOrDefault(naziv))}'");
+                return string.Join("; ", promjene);
+            }
+
+            var vrijednosti = akcija == TipAkcijeLoga.Kreirano ? NoveVrijednosti : StareVrijednosti;
+            var polja = vrijednosti
+                .Where(kv => kv.Value != null)
+                .Select(kv => $"{kv.Key}: '{FormatVrijednost(kv.Value)}'");
+            return string.Join("; ", polja);
+        }
+
+        private static string FormatVrijednost(object? vrijednost)
+        {
+            if (vrijednost is null) return "null";
+            if (vrijednost is DateTime dt) return dt.ToString("yyyy-MM-dd HH:mm");
+            return vrijednost.ToString() ?? "null";
+        }
     }
 }

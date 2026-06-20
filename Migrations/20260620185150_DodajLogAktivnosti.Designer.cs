@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using planinarenje.Data;
 
@@ -11,9 +12,11 @@ using planinarenje.Data;
 namespace planinarenje.Migrations
 {
     [DbContext(typeof(PlaninarstvoDbContext))]
-    partial class PlaninarstvoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260620185150_DodajLogAktivnosti")]
+    partial class DodajLogAktivnosti
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1288,10 +1291,8 @@ namespace planinarenje.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdLogAktivnosti"));
 
-                    b.Property<string>("Akcija")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)");
+                    b.Property<int>("Akcija")
+                        .HasColumnType("int");
 
                     b.Property<string>("AppUserId")
                         .IsRequired()

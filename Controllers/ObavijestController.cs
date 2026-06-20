@@ -10,10 +10,12 @@ namespace planinarenje.Controllers;
 public class ObavijestController : Controller
 {
     private readonly PlaninarstvoDbContext _dbContext;
+    private readonly ILogger<ObavijestController> _logger;
 
-    public ObavijestController(PlaninarstvoDbContext dbContext)
+    public ObavijestController(PlaninarstvoDbContext dbContext, ILogger<ObavijestController> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     public IActionResult Index()
@@ -70,6 +72,7 @@ public class ObavijestController : Controller
 
         _dbContext.Obavijesti.Add(obavijest);
         _dbContext.SaveChanges();
+        _logger.LogInformation("Obavijest {IdObavijest} kreirana ({Naslov}).", obavijest.IdObavijest, obavijest.Naslov);
         TempData["NewId"] = obavijest.IdObavijest;
         return RedirectToAction(nameof(Index));
     }
@@ -101,6 +104,7 @@ public class ObavijestController : Controller
 
         _dbContext.Obavijesti.Update(obavijest);
         _dbContext.SaveChanges();
+        _logger.LogInformation("Obavijest {IdObavijest} ažurirana.", id);
         return RedirectToAction(nameof(Index));
     }
 
@@ -138,6 +142,7 @@ public class ObavijestController : Controller
 
         _dbContext.Obavijesti.Remove(obavijest);
         _dbContext.SaveChanges();
+        _logger.LogInformation("Obavijest {IdObavijest} obrisana.", id);
         TempData["Success"] = "Obavijest je uspjesno obrisana.";
         return RedirectToAction(nameof(Index));
     }

@@ -13,9 +13,12 @@ namespace planinarenje.Controllers;
 
 public class KorisnikMedaljaController : BaseController
 {
-    public KorisnikMedaljaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+    private readonly ILogger<KorisnikMedaljaController> _logger;
+
+    public KorisnikMedaljaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, ILogger<KorisnikMedaljaController> logger)
         : base(userMgr, db)
     {
+        _logger = logger;
     }
 
     private string? FormatProfileSlika(string? absolutePath)
@@ -116,6 +119,8 @@ public class KorisnikMedaljaController : BaseController
 
         Db.KorisnikMedalje.Add(entity);
         await Db.SaveChangesAsync();
+        _logger.LogInformation("Medalja {IdMedalja} dodijeljena korisniku {IdKorisnik} (dodjela {IdKorisnikMedalja}).",
+            medaljaId, korisnikId, entity.IdKorisnikMedalja);
         TempData["NewId"] = entity.IdKorisnikMedalja;
         TempData["MedaljaSuccess"] = true;
         TempData["Success"] = "Medalja je uspjesno dodijeljena.";
@@ -191,6 +196,7 @@ public class KorisnikMedaljaController : BaseController
             return View(model);
         }
 
+        _logger.LogInformation("Dodjela medalje {IdKorisnikMedalja} ažurirana.", id);
         TempData["Success"] = "Dodjela je uspjesno azurirana.";
         return RedirectToAction(nameof(Index));
     }
@@ -219,6 +225,7 @@ public class KorisnikMedaljaController : BaseController
 
         entity.DeletedAt = DateTime.UtcNow;
         await Db.SaveChangesAsync();
+        _logger.LogInformation("Dodjela medalje {IdKorisnikMedalja} obrisana (soft delete).", id);
         TempData["Success"] = "Dodjela je uspjesno obrisana.";
         return RedirectToAction(nameof(Index));
     }

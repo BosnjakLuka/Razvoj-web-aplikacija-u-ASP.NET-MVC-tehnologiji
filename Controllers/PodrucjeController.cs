@@ -11,9 +11,12 @@ namespace planinarenje.Controllers
 {
     public class PodrucjeController : BaseController
     {
-        public PodrucjeController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+        private readonly ILogger<PodrucjeController> _logger;
+
+        public PodrucjeController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, ILogger<PodrucjeController> logger)
             : base(userMgr, db)
         {
+            _logger = logger;
         }
 
         [AllowAnonymous]
@@ -127,6 +130,7 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
+            _logger.LogInformation("Područje {IdPodrucje} kreirano ({Naziv}).", podrucje.IdPodrucje, podrucje.Naziv);
             TempData["NewId"] = podrucje.IdPodrucje;
             TempData["Success"] = "Podrucje je uspjesno dodano.";
             return RedirectToAction(nameof(Index));
@@ -195,6 +199,7 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
+            _logger.LogInformation("Područje {IdPodrucje} ažurirano.", id);
             TempData["Success"] = "Podrucje je uspjesno azurirano.";
             return RedirectToAction(nameof(Index));
         }
@@ -225,6 +230,7 @@ namespace planinarenje.Controllers
 
             podrucje.DeletedAt = DateTime.UtcNow;
             await Db.SaveChangesAsync();
+            _logger.LogInformation("Područje {IdPodrucje} obrisano (soft delete).", id);
             TempData["Success"] = "Podrucje je uspjesno obrisano.";
             return RedirectToAction(nameof(Index));
         }

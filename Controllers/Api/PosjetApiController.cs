@@ -15,9 +15,12 @@ namespace planinarenje.Controllers.Api;
 [Route("api/posjet")]
 public class PosjetApiController : ApiBaseController
 {
-    public PosjetApiController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+    private readonly ILogger<PosjetApiController> _logger;
+
+    public PosjetApiController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, ILogger<PosjetApiController> logger)
         : base(userMgr, db)
     {
+        _logger = logger;
     }
 
     // GET /api/posjet?korisnikId=&kontrolnaTockaId=&datumOd=&datumDo=&dozivljaj=
@@ -79,12 +82,18 @@ public class PosjetApiController : ApiBaseController
     public async Task<ActionResult<PosjetDto>> Post([FromBody] PosjetCreateDto dto)
     {
         if (!ModelState.IsValid)
+        {
+            _logger.LogWarning("POST /api/posjet - neispravan DTO od korisnika {AppUserId}.", AppUserId);
             return BadRequest(ModelState);
+        }
 
         // Vlasnik se postavlja iz prijavljenog korisnika, NIKAD iz DTO-a.
         var korisnik = await GetCurrentKorisnikAsync();
         if (korisnik == null)
+        {
+            _logger.LogWarning("POST /api/posjet - nepoznat planinarski profil za AppUserId {AppUserId}.", AppUserId);
             return Forbid();
+        }
 
         var knjizica = await Db.Knjizice
             .FirstOrDefaultAsync(k => k.IdKnjizica == dto.IdKnjizica && k.StatusAktivna);
@@ -93,7 +102,11 @@ public class PosjetApiController : ApiBaseController
 
         // Knjižica mora pripadati prijavljenom korisniku (osim ako je Admin).
         if (!IsAdmin && knjizica.IdKorisnik != korisnik.IdKorisnik)
+        {
+            _logger.LogWarning("POST /api/posjet - korisnik {IdKorisnik} pokušao koristiti tuđu knjižicu {IdKnjizica}.",
+                korisnik.IdKorisnik, dto.IdKnjizica);
             return Forbid();
+        }
 
         var kontrolnaTocka = await Db.KontrolneTocke
             .FirstOrDefaultAsync(k => k.IdKontrolnaTocka == dto.IdKontrolnaTocka);
@@ -124,6 +137,8 @@ public class PosjetApiController : ApiBaseController
 
         Db.Posjeti.Add(entity);
         await Db.SaveChangesAsync();
+        _logger.LogInformation("POST /api/posjet - posjet {IdPosjet} kreiran za korisnika {IdKorisnik}.",
+            entity.IdPosjet, entity.IdKorisnik);
 
         var kreiran = await Db.Posjeti
             .Include(p => p.Korisnik)
@@ -148,7 +163,10 @@ public class PosjetApiController : ApiBaseController
             return NotFound();
 
         if (!await IsOwnerOrAdminAsync(entity.IdKorisnik))
+        {
+            _logger.LogWarning("PUT /api/posjet/{IdPosjet} - korisnik {AppUserId} bez prava pristupa.", id, AppUserId);
             return Forbid();
+        }
 
         var kontrolnaTocka = await Db.KontrolneTocke
             .FirstOrDefaultAsync(k => k.IdKontrolnaTocka == dto.IdKontrolnaTocka);
@@ -173,6 +191,7 @@ public class PosjetApiController : ApiBaseController
             dto.UneseniGUID, kontrolnaTocka.GUIDOznaka, StringComparison.OrdinalIgnoreCase);
 
         await Db.SaveChangesAsync();
+        _logger.LogInformation("PUT /api/posjet/{IdPosjet} - posjet ažuriran.", id);
 
         var azuriran = await Db.Posjeti
             .Include(p => p.Korisnik)
@@ -194,11 +213,15 @@ public class PosjetApiController : ApiBaseController
             return NotFound();
 
         if (!await IsOwnerOrAdminAsync(entity.IdKorisnik))
+        {
+            _logger.LogWarning("DELETE /api/posjet/{IdPosjet} - korisnik {AppUserId} bez prava pristupa.", id, AppUserId);
             return Forbid();
+        }
 
         // Soft delete – ne brišemo fizički iz baze.
         entity.DeletedAt = DateTime.UtcNow;
         await Db.SaveChangesAsync();
+        _logger.LogInformation("DELETE /api/posjet/{IdPosjet} - posjet obrisan (soft delete).", id);
 
         return NoContent();
     }

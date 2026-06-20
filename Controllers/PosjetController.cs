@@ -16,15 +16,17 @@ namespace planinarenje.Controllers
     public class PosjetController : BaseController
     {
         private readonly IWebHostEnvironment _env;
+        private readonly ILogger<PosjetController> _logger;
 
         // Lab5 Faza 4: dopuštene ekstenzije i maksimalna veličina za Dropzone upload.
         private static readonly string[] DopusteneEkstenzije = { ".jpg", ".jpeg", ".png", ".webp" };
         private const long MaxVelicinaDatoteke = 5 * 1024 * 1024; // 5 MB
 
-        public PosjetController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, IWebHostEnvironment env)
+        public PosjetController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, IWebHostEnvironment env, ILogger<PosjetController> logger)
             : base(userMgr, db)
         {
             _env = env;
+            _logger = logger;
         }
 
         // Helper za hrvatski opis doživljaja
@@ -153,6 +155,7 @@ namespace planinarenje.Controllers
 
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Validacija nije uspjela pri kreiranju posjeta za korisnika {AppUserId}.", AppUserId);
                 PopulateKnjiziceByKorisnik();
                 PopulateRuteByKontrolnaTocka(model.IdKontrolnaTocka, model.IdRuta);
                 SetPosjetViewTexts(model.IdKorisnik, model.IdKnjizica, model.IdKontrolnaTocka, model.IdRuta);
@@ -165,6 +168,7 @@ namespace planinarenje.Controllers
                 .FirstOrDefault(k => k.DeletedAt == null && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
             if (kontrolnaTocka == null)
             {
+                _logger.LogWarning("Pokušaj kreiranja posjeta s nevaljanom kontrolnom točkom {IdKontrolnaTocka}.", model.IdKontrolnaTocka);
                 ModelState.AddModelError(nameof(model.IdKontrolnaTocka), "Kontrolna tocka nije valjana.");
                 PopulateKnjiziceByKorisnik();
                 PopulateRuteByKontrolnaTocka(model.IdKontrolnaTocka, model.IdRuta);
@@ -175,7 +179,11 @@ namespace planinarenje.Controllers
 
             // force owner to current korisnik
             var currentKorisnik = await GetCurrentKorisnikAsync();
-            if (currentKorisnik == null) return Forbid();
+            if (currentKorisnik == null)
+            {
+                _logger.LogWarning("Pokušaj kreiranja posjeta bez povezanog planinarskog profila (AppUserId={AppUserId}).", AppUserId);
+                return Forbid();
+            }
             model.IdKorisnik = currentKorisnik.IdKorisnik;
 
             var entity = new Posjet
@@ -195,6 +203,8 @@ namespace planinarenje.Controllers
 
             Db.Posjeti.Add(entity);
             await Db.SaveChangesAsync();
+            _logger.LogInformation("Posjet {IdPosjet} kreiran za korisnika {IdKorisnik} na kontrolnoj točki {IdKontrolnaTocka}.",
+                entity.IdPosjet, model.IdKorisnik, model.IdKontrolnaTocka);
             TempData["NewId"] = entity.IdPosjet;
             TempData["PosjetSuccess"] = true;
             TempData["Success"] = "Posjet je uspjesno dodan.";
@@ -279,7 +289,10 @@ namespace planinarenje.Controllers
             var original = await Db.Posjeti.AsNoTracking().FirstOrDefaultAsync(p => p.IdPosjet == id);
             if (original == null) return NotFound();
             if (!IsAdmin && !await IsOwnerAsync(original.IdKorisnik))
+            {
+                _logger.LogWarning("Korisnik {AppUserId} bez prava pristupa pokušao je urediti posjet {IdPosjet}.", AppUserId, id);
                 return Forbid();
+            }
 
             // force owner to original
             model.IdKorisnik = original.IdKorisnik;
@@ -295,6 +308,7 @@ namespace planinarenje.Controllers
             entity.UneseniGUID = kontrolnaTocka.GUIDOznaka;
 
             await Db.SaveChangesAsync();
+            _logger.LogInformation("Posjet {IdPosjet} ažuriran (korisnik {AppUserId}).", id, AppUserId);
             TempData["Success"] = "Posjet je uspjesno azuriran.";
             return RedirectToAction(nameof(Index));
         }
@@ -461,10 +475,14 @@ namespace planinarenje.Controllers
             }
 
             if (!IsAdmin && !await IsOwnerAsync(entity.IdKorisnik))
+            {
+                _logger.LogWarning("Korisnik {AppUserId} bez prava pristupa pokušao je obrisati posjet {IdPosjet}.", AppUserId, id);
                 return Forbid();
+            }
 
             entity.DeletedAt = DateTime.UtcNow;
             await Db.SaveChangesAsync();
+            _logger.LogInformation("Posjet {IdPosjet} obrisan (soft delete) od korisnika {AppUserId}.", id, AppUserId);
             TempData["Success"] = "Posjet je uspjesno obrisan.";
             return RedirectToAction(nameof(Index));
         }

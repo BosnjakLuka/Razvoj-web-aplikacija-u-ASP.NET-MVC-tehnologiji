@@ -12,9 +12,12 @@ namespace planinarenje.Controllers;
 
 public class FotografijaController : BaseController
 {
-    public FotografijaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+    private readonly ILogger<FotografijaController> _logger;
+
+    public FotografijaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, ILogger<FotografijaController> logger)
         : base(userMgr, db)
     {
+        _logger = logger;
     }
 
     private string FormatirajTipSlike(TipSlike tip)
@@ -92,7 +95,11 @@ public class FotografijaController : BaseController
         // ownership check via posjet
         var posjet = await Db.Posjeti.FindAsync(model.IdPosjet);
         if (posjet == null) return NotFound();
-        if (!IsAdmin && !await IsOwnerAsync(posjet.IdKorisnik)) return Forbid();
+        if (!IsAdmin && !await IsOwnerAsync(posjet.IdKorisnik))
+        {
+            _logger.LogWarning("Korisnik {AppUserId} bez prava pristupa pokušao je dodati fotografiju na posjet {IdPosjet}.", AppUserId, model.IdPosjet);
+            return Forbid();
+        }
 
         var entity = new Fotografija
         {
@@ -106,6 +113,7 @@ public class FotografijaController : BaseController
 
         Db.Fotografije.Add(entity);
         await Db.SaveChangesAsync();
+        _logger.LogInformation("Fotografija {IdFotografija} kreirana za posjet {IdPosjet}.", entity.IdFotografija, entity.IdPosjet);
         TempData["NewId"] = entity.IdFotografija;
         TempData["Success"] = "Fotografija je uspjesno dodana.";
         return RedirectToAction(nameof(Index));
@@ -164,7 +172,11 @@ public class FotografijaController : BaseController
         // ownership via posjet
         var posjet = await Db.Posjeti.FindAsync(model.IdPosjet);
         if (posjet == null) return NotFound();
-        if (!IsAdmin && !await IsOwnerAsync(posjet.IdKorisnik)) return Forbid();
+        if (!IsAdmin && !await IsOwnerAsync(posjet.IdKorisnik))
+        {
+            _logger.LogWarning("Korisnik {AppUserId} bez prava pristupa pokušao je urediti fotografiju {IdFotografija}.", AppUserId, id);
+            return Forbid();
+        }
 
         entity.IdPosjet = model.IdPosjet;
         entity.NazivDatoteke = model.NazivDatoteke;
@@ -173,6 +185,7 @@ public class FotografijaController : BaseController
         entity.Opis = model.Opis;
 
         await Db.SaveChangesAsync();
+        _logger.LogInformation("Fotografija {IdFotografija} ažurirana.", id);
         TempData["Success"] = "Fotografija je uspjesno azurirana.";
         return RedirectToAction(nameof(Index));
     }
@@ -209,10 +222,14 @@ public class FotografijaController : BaseController
         }
 
         if (!IsAdmin && !await IsOwnerAsync(entity.Posjet!.IdKorisnik))
+        {
+            _logger.LogWarning("Korisnik {AppUserId} bez prava pristupa pokušao je obrisati fotografiju {IdFotografija}.", AppUserId, id);
             return Forbid();
+        }
 
         entity.DeletedAt = DateTime.UtcNow;
         await Db.SaveChangesAsync();
+        _logger.LogInformation("Fotografija {IdFotografija} obrisana (soft delete).", id);
         TempData["Success"] = "Fotografija je uspjesno obrisana.";
         return RedirectToAction(nameof(Index));
     }

@@ -16,10 +16,12 @@ namespace planinarenje.Controllers.Api;
 public class KontrolnaTockaApiController : ControllerBase
 {
     private readonly PlaninarstvoDbContext _db;
+    private readonly ILogger<KontrolnaTockaApiController> _logger;
 
-    public KontrolnaTockaApiController(PlaninarstvoDbContext db)
+    public KontrolnaTockaApiController(PlaninarstvoDbContext db, ILogger<KontrolnaTockaApiController> logger)
     {
         _db = db;
+        _logger = logger;
     }
 
     // GET /api/kontrolnatocka?podrucjeId=&tip=&naziv=
@@ -88,6 +90,7 @@ public class KontrolnaTockaApiController : ControllerBase
 
         _db.KontrolneTocke.Add(entity);
         await _db.SaveChangesAsync();
+        _logger.LogInformation("POST /api/kontrolnatocka - kontrolna točka {IdKontrolnaTocka} kreirana.", entity.IdKontrolnaTocka);
 
         var kreiran = await _db.KontrolneTocke
             .Include(k => k.Podrucje)
@@ -124,6 +127,7 @@ public class KontrolnaTockaApiController : ControllerBase
         entity.OpisZiga = dto.OpisZiga;
 
         await _db.SaveChangesAsync();
+        _logger.LogInformation("PUT /api/kontrolnatocka/{IdKontrolnaTocka} - kontrolna točka ažurirana.", id);
 
         var azuriran = await _db.KontrolneTocke
             .Include(k => k.Podrucje)
@@ -143,6 +147,7 @@ public class KontrolnaTockaApiController : ControllerBase
 
         entity.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+        _logger.LogInformation("DELETE /api/kontrolnatocka/{IdKontrolnaTocka} - kontrolna točka obrisana (soft delete).", id);
 
         return NoContent();
     }
