@@ -11,9 +11,12 @@ namespace planinarenje.Controllers
 {
     public class KontrolnaTockaController : BaseController
     {
-        public KontrolnaTockaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+        private readonly ILogger<KontrolnaTockaController> _logger;
+
+        public KontrolnaTockaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, ILogger<KontrolnaTockaController> logger)
             : base(userMgr, db)
         {
+            _logger = logger;
         }
 
         [AllowAnonymous]
@@ -163,6 +166,7 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
+            _logger.LogInformation("Kontrolna točka {IdKontrolnaTocka} kreirana ({Naziv}).", entity.IdKontrolnaTocka, entity.Naziv);
             TempData["NewId"] = entity.IdKontrolnaTocka;
             TempData["Success"] = "Kontrolna tocka je uspjesno dodana.";
             return RedirectToAction(nameof(Index));
@@ -258,6 +262,7 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
+            _logger.LogInformation("Kontrolna točka {IdKontrolnaTocka} ažurirana.", id);
             TempData["Success"] = "Kontrolna tocka je uspjesno azurirana.";
             return RedirectToAction(nameof(Index));
         }
@@ -291,6 +296,7 @@ namespace planinarenje.Controllers
 
             entity.DeletedAt = DateTime.UtcNow;
             await Db.SaveChangesAsync();
+            _logger.LogInformation("Kontrolna točka {IdKontrolnaTocka} obrisana (soft delete).", id);
             TempData["Success"] = "Kontrolna tocka je uspjesno obrisana.";
             return RedirectToAction(nameof(Index));
         }

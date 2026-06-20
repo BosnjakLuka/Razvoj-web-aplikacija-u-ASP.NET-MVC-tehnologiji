@@ -16,10 +16,12 @@ namespace planinarenje.Controllers.Api;
 public class MedaljaApiController : ControllerBase
 {
     private readonly PlaninarstvoDbContext _db;
+    private readonly ILogger<MedaljaApiController> _logger;
 
-    public MedaljaApiController(PlaninarstvoDbContext db)
+    public MedaljaApiController(PlaninarstvoDbContext db, ILogger<MedaljaApiController> logger)
     {
         _db = db;
+        _logger = logger;
     }
 
     // GET /api/medalja?naziv=
@@ -66,6 +68,7 @@ public class MedaljaApiController : ControllerBase
 
         _db.Medalje.Add(entity);
         await _db.SaveChangesAsync();
+        _logger.LogInformation("POST /api/medalja - medalja {IdMedalja} kreirana.", entity.IdMedalja);
 
         return CreatedAtAction(nameof(GetById), new { id = entity.IdMedalja }, ToDto(entity));
     }
@@ -88,6 +91,7 @@ public class MedaljaApiController : ControllerBase
         entity.MinimalanBrojPodrucja = dto.MinimalanBrojPodrucja;
 
         await _db.SaveChangesAsync();
+        _logger.LogInformation("PUT /api/medalja/{IdMedalja} - medalja ažurirana.", id);
 
         return Ok(ToDto(entity));
     }
@@ -103,6 +107,7 @@ public class MedaljaApiController : ControllerBase
 
         entity.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+        _logger.LogInformation("DELETE /api/medalja/{IdMedalja} - medalja obrisana (soft delete).", id);
 
         return NoContent();
     }

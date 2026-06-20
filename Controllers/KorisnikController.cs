@@ -13,9 +13,12 @@ namespace planinarenje.Controllers
 {
     public class KorisnikController : BaseController
     {
-        public KorisnikController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+        private readonly ILogger<KorisnikController> _logger;
+
+        public KorisnikController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, ILogger<KorisnikController> logger)
             : base(userMgr, db)
         {
+            _logger = logger;
         }
 
         // Helpar za dohvacanje puta slike ako je string pun
@@ -146,6 +149,7 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
+            _logger.LogInformation("Korisnik {IdKorisnik} kreiran ({KorisnickoIme}).", korisnik.IdKorisnik, korisnik.KorisnickoIme);
             TempData["NewId"] = korisnik.IdKorisnik;
             TempData["Success"] = "Korisnik je uspjesno dodan.";
             return RedirectToAction(nameof(Index));
@@ -206,7 +210,10 @@ namespace planinarenje.Controllers
 
             // ownership check
             if (!IsAdmin && !await IsOwnerAsync(id))
+            {
+                _logger.LogWarning("Korisnik {AppUserId} bez prava pristupa pokušao je urediti korisnika {IdKorisnik}.", AppUserId, id);
                 return Forbid();
+            }
 
             korisnik.Ime = model.Ime;
             korisnik.Prezime = model.Prezime;
@@ -231,6 +238,7 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
+            _logger.LogInformation("Korisnik {IdKorisnik} ažuriran.", id);
             TempData["Success"] = "Korisnik je uspjesno azuriran.";
             return RedirectToAction(nameof(Index));
         }
@@ -263,6 +271,7 @@ namespace planinarenje.Controllers
 
             korisnik.StatusAktivan = false;
             await Db.SaveChangesAsync();
+            _logger.LogInformation("Korisnik {IdKorisnik} obrisan (soft delete).", id);
             TempData["Success"] = "Korisnik je uspjesno obrisan.";
             return RedirectToAction(nameof(Index));
         }

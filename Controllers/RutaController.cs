@@ -12,9 +12,12 @@ namespace planinarenje.Controllers;
 
 public class RutaController : BaseController
 {
-    public RutaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+    private readonly ILogger<RutaController> _logger;
+
+    public RutaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, ILogger<RutaController> logger)
         : base(userMgr, db)
     {
+        _logger = logger;
     }
 
     [AllowAnonymous]
@@ -148,6 +151,7 @@ public class RutaController : BaseController
             return View(model);
         }
 
+        _logger.LogInformation("Ruta {IdRuta} kreirana ({Naziv}).", entity.IdRuta, entity.Naziv);
         TempData["NewId"] = entity.IdRuta;
         TempData["Success"] = "Ruta je uspjesno dodana.";
         return RedirectToAction(nameof(Index));
@@ -246,6 +250,7 @@ public class RutaController : BaseController
             return View(model);
         }
 
+        _logger.LogInformation("Ruta {IdRuta} ažurirana.", id);
         TempData["Success"] = "Ruta je uspjesno azurirana.";
         return RedirectToAction(nameof(Index));
     }
@@ -279,6 +284,7 @@ public class RutaController : BaseController
 
         entity.DeletedAt = DateTime.UtcNow;
         await Db.SaveChangesAsync();
+        _logger.LogInformation("Ruta {IdRuta} obrisana (soft delete).", id);
         TempData["Success"] = "Ruta je uspjesno obrisana.";
         return RedirectToAction(nameof(Index));
     }

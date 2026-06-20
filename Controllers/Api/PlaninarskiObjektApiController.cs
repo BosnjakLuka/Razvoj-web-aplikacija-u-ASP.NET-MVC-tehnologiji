@@ -16,10 +16,12 @@ namespace planinarenje.Controllers.Api;
 public class PlaninarskiObjektApiController : ControllerBase
 {
     private readonly PlaninarstvoDbContext _db;
+    private readonly ILogger<PlaninarskiObjektApiController> _logger;
 
-    public PlaninarskiObjektApiController(PlaninarstvoDbContext db)
+    public PlaninarskiObjektApiController(PlaninarstvoDbContext db, ILogger<PlaninarskiObjektApiController> logger)
     {
         _db = db;
+        _logger = logger;
     }
 
     // GET /api/planinarskiobjekt?podrucjeId=&udrugaId=&tip=&naziv=
@@ -98,6 +100,7 @@ public class PlaninarskiObjektApiController : ControllerBase
 
         _db.PlaninarskiObjekti.Add(entity);
         await _db.SaveChangesAsync();
+        _logger.LogInformation("POST /api/planinarskiobjekt - objekt {IdPlaninarskiObjekt} kreiran.", entity.IdPlaninarskiObjekt);
 
         var kreiran = await _db.PlaninarskiObjekti
             .Include(o => o.Podrucje)
@@ -140,6 +143,7 @@ public class PlaninarskiObjektApiController : ControllerBase
         entity.RadnoVrijemeOpis = dto.RadnoVrijemeOpis;
 
         await _db.SaveChangesAsync();
+        _logger.LogInformation("PUT /api/planinarskiobjekt/{IdPlaninarskiObjekt} - objekt ažuriran.", id);
 
         var azuriran = await _db.PlaninarskiObjekti
             .Include(o => o.Podrucje)
@@ -160,6 +164,7 @@ public class PlaninarskiObjektApiController : ControllerBase
 
         entity.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+        _logger.LogInformation("DELETE /api/planinarskiobjekt/{IdPlaninarskiObjekt} - objekt obrisan (soft delete).", id);
 
         return NoContent();
     }

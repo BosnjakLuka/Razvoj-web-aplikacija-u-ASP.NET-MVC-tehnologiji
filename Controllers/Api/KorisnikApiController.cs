@@ -16,9 +16,12 @@ namespace planinarenje.Controllers.Api;
 [Route("api/korisnik")]
 public class KorisnikApiController : ApiBaseController
 {
-    public KorisnikApiController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+    private readonly ILogger<KorisnikApiController> _logger;
+
+    public KorisnikApiController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, ILogger<KorisnikApiController> logger)
         : base(userMgr, db)
     {
+        _logger = logger;
     }
 
     // GET /api/korisnik?query=
@@ -90,6 +93,7 @@ public class KorisnikApiController : ApiBaseController
 
         Db.Korisnici.Add(entity);
         await Db.SaveChangesAsync();
+        _logger.LogInformation("POST /api/korisnik - korisnik {IdKorisnik} kreiran.", entity.IdKorisnik);
 
         return CreatedAtAction(nameof(GetById), new { id = entity.IdKorisnik }, ToAdminDto(entity));
     }
@@ -108,7 +112,10 @@ public class KorisnikApiController : ApiBaseController
 
         // Izmjenu smije raditi vlasnik profila ili Admin.
         if (!await IsOwnerOrAdminAsync(entity.IdKorisnik))
+        {
+            _logger.LogWarning("PUT /api/korisnik/{IdKorisnik} - korisnik {AppUserId} bez prava pristupa.", id, AppUserId);
             return Forbid();
+        }
 
         if (await Db.Korisnici.AnyAsync(k => k.Email == dto.Email && k.IdKorisnik != id))
             return BadRequest("Drugi korisnik s tim emailom već postoji.");
@@ -127,6 +134,7 @@ public class KorisnikApiController : ApiBaseController
             entity.StatusAktivan = dto.StatusAktivan;
 
         await Db.SaveChangesAsync();
+        _logger.LogInformation("PUT /api/korisnik/{IdKorisnik} - korisnik ažuriran.", id);
 
         return Ok(ToAdminDto(entity));
     }
@@ -143,6 +151,7 @@ public class KorisnikApiController : ApiBaseController
         // Korisnik nema DeletedAt – koristi se logičko gašenje preko StatusAktivan.
         entity.StatusAktivan = false;
         await Db.SaveChangesAsync();
+        _logger.LogInformation("DELETE /api/korisnik/{IdKorisnik} - korisnik deaktiviran.", id);
 
         return NoContent();
     }

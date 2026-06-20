@@ -12,9 +12,12 @@ namespace planinarenje.Controllers;
 
 public class PlaninarskaUdrugaController : BaseController
 {
-    public PlaninarskaUdrugaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+    private readonly ILogger<PlaninarskaUdrugaController> _logger;
+
+    public PlaninarskaUdrugaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, ILogger<PlaninarskaUdrugaController> logger)
         : base(userMgr, db)
     {
+        _logger = logger;
     }
 
     private string FormatirajTipObjekta(TipObjekta tip)
@@ -125,6 +128,7 @@ public class PlaninarskaUdrugaController : BaseController
             return View(model);
         }
 
+        _logger.LogInformation("Planinarska udruga {IdPlaninarskaUdruga} kreirana ({Naziv}).", entity.IdPlaninarskaUdruga, entity.Naziv);
         TempData["NewId"] = entity.IdPlaninarskaUdruga;
         TempData["Success"] = "Udruga je uspjesno dodana.";
         return RedirectToAction(nameof(Index));
@@ -203,6 +207,7 @@ public class PlaninarskaUdrugaController : BaseController
             return View(model);
         }
 
+        _logger.LogInformation("Planinarska udruga {IdPlaninarskaUdruga} ažurirana.", id);
         TempData["Success"] = "Udruga je uspjesno azurirana.";
         return RedirectToAction(nameof(Index));
     }
@@ -235,6 +240,7 @@ public class PlaninarskaUdrugaController : BaseController
 
         entity.DeletedAt = DateTime.UtcNow;
         await Db.SaveChangesAsync();
+        _logger.LogInformation("Planinarska udruga {IdPlaninarskaUdruga} obrisana (soft delete).", id);
         TempData["Success"] = "Udruga je uspjesno obrisana.";
         return RedirectToAction(nameof(Index));
     }

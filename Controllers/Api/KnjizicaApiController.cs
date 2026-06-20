@@ -15,9 +15,12 @@ namespace planinarenje.Controllers.Api;
 [Route("api/knjizica")]
 public class KnjizicaApiController : ApiBaseController
 {
-    public KnjizicaApiController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+    private readonly ILogger<KnjizicaApiController> _logger;
+
+    public KnjizicaApiController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, ILogger<KnjizicaApiController> logger)
         : base(userMgr, db)
     {
+        _logger = logger;
     }
 
     // GET /api/knjizica  (vlasnik vidi svoje; Admin vidi sve)
@@ -86,6 +89,8 @@ public class KnjizicaApiController : ApiBaseController
 
         Db.Knjizice.Add(entity);
         await Db.SaveChangesAsync();
+        _logger.LogInformation("POST /api/knjizica - knjižica {IdKnjizica} kreirana za korisnika {IdKorisnik}.",
+            entity.IdKnjizica, entity.IdKorisnik);
 
         var kreirana = await Db.Knjizice
             .Include(k => k.Korisnik)
@@ -108,12 +113,16 @@ public class KnjizicaApiController : ApiBaseController
             return NotFound();
 
         if (!await IsOwnerOrAdminAsync(entity.IdKorisnik))
+        {
+            _logger.LogWarning("PUT /api/knjizica/{IdKnjizica} - korisnik {AppUserId} bez prava pristupa.", id, AppUserId);
             return Forbid();
+        }
 
         entity.Napomena = dto.Napomena;
         entity.StatusAktivna = dto.StatusAktivna;
 
         await Db.SaveChangesAsync();
+        _logger.LogInformation("PUT /api/knjizica/{IdKnjizica} - knjižica ažurirana.", id);
 
         var azurirana = await Db.Knjizice
             .Include(k => k.Korisnik)
@@ -135,6 +144,7 @@ public class KnjizicaApiController : ApiBaseController
         // Knjizica nema DeletedAt – koristi se logičko gašenje preko StatusAktivna.
         entity.StatusAktivna = false;
         await Db.SaveChangesAsync();
+        _logger.LogInformation("DELETE /api/knjizica/{IdKnjizica} - knjižica deaktivirana.", id);
 
         return NoContent();
     }

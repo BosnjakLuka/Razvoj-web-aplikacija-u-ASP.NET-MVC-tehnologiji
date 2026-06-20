@@ -16,10 +16,12 @@ namespace planinarenje.Controllers.Api;
 public class PodrucjeApiController : ControllerBase
 {
     private readonly PlaninarstvoDbContext _db;
+    private readonly ILogger<PodrucjeApiController> _logger;
 
-    public PodrucjeApiController(PlaninarstvoDbContext db)
+    public PodrucjeApiController(PlaninarstvoDbContext db, ILogger<PodrucjeApiController> logger)
     {
         _db = db;
+        _logger = logger;
     }
 
     // GET /api/podrucje?naziv=
@@ -81,6 +83,7 @@ public class PodrucjeApiController : ControllerBase
 
         _db.Podrucja.Add(entity);
         await _db.SaveChangesAsync();
+        _logger.LogInformation("POST /api/podrucje - područje {IdPodrucje} kreirano.", entity.IdPodrucje);
 
         // Učitaj s navigacijskom kolekcijom da BrojKontrolnihTocaka bude točan.
         var kreiran = await _db.Podrucja
@@ -108,6 +111,7 @@ public class PodrucjeApiController : ControllerBase
         entity.MinimalanBrojKTZaObilazak = dto.MinimalanBrojKTZaObilazak;
 
         await _db.SaveChangesAsync();
+        _logger.LogInformation("PUT /api/podrucje/{IdPodrucje} - područje ažurirano.", id);
 
         var azuriran = await _db.Podrucja
             .Include(p => p.KontrolneTocke)
@@ -127,6 +131,7 @@ public class PodrucjeApiController : ControllerBase
 
         entity.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+        _logger.LogInformation("DELETE /api/podrucje/{IdPodrucje} - područje obrisano (soft delete).", id);
 
         return NoContent();
     }

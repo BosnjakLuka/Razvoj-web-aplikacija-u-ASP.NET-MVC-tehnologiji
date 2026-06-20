@@ -16,10 +16,12 @@ namespace planinarenje.Controllers.Api;
 public class RutaApiController : ControllerBase
 {
     private readonly PlaninarstvoDbContext _db;
+    private readonly ILogger<RutaApiController> _logger;
 
-    public RutaApiController(PlaninarstvoDbContext db)
+    public RutaApiController(PlaninarstvoDbContext db, ILogger<RutaApiController> logger)
     {
         _db = db;
+        _logger = logger;
     }
 
     // GET /api/ruta?tezina=&kontrolnaTockaId=&naziv=
@@ -90,6 +92,7 @@ public class RutaApiController : ControllerBase
 
         _db.Rute.Add(entity);
         await _db.SaveChangesAsync();
+        _logger.LogInformation("POST /api/ruta - ruta {IdRuta} kreirana.", entity.IdRuta);
 
         var kreiran = await _db.Rute
             .Include(r => r.KontrolnaTocka)
@@ -128,6 +131,7 @@ public class RutaApiController : ControllerBase
         entity.GPXPath = dto.GPXPath;
 
         await _db.SaveChangesAsync();
+        _logger.LogInformation("PUT /api/ruta/{IdRuta} - ruta ažurirana.", id);
 
         var azuriran = await _db.Rute
             .Include(r => r.KontrolnaTocka)
@@ -147,6 +151,7 @@ public class RutaApiController : ControllerBase
 
         entity.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+        _logger.LogInformation("DELETE /api/ruta/{IdRuta} - ruta obrisana (soft delete).", id);
 
         return NoContent();
     }

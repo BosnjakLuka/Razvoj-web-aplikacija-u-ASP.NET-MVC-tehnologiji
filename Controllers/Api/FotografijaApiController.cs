@@ -15,9 +15,12 @@ namespace planinarenje.Controllers.Api;
 [Route("api/fotografija")]
 public class FotografijaApiController : ApiBaseController
 {
-    public FotografijaApiController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+    private readonly ILogger<FotografijaApiController> _logger;
+
+    public FotografijaApiController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, ILogger<FotografijaApiController> logger)
         : base(userMgr, db)
     {
+        _logger = logger;
     }
 
     // GET /api/fotografija?posjetId=&tip=
@@ -63,7 +66,10 @@ public class FotografijaApiController : ApiBaseController
             return BadRequest("Posjet nije pronađen.");
 
         if (!await IsOwnerOrAdminAsync(posjet.IdKorisnik))
+        {
+            _logger.LogWarning("POST /api/fotografija - korisnik {AppUserId} bez prava pristupa posjetu {IdPosjet}.", AppUserId, dto.IdPosjet);
             return Forbid();
+        }
 
         var entity = new Fotografija
         {
@@ -79,6 +85,8 @@ public class FotografijaApiController : ApiBaseController
 
         Db.Fotografije.Add(entity);
         await Db.SaveChangesAsync();
+        _logger.LogInformation("POST /api/fotografija - fotografija {IdFotografija} kreirana za posjet {IdPosjet}.",
+            entity.IdFotografija, entity.IdPosjet);
 
         return CreatedAtAction(nameof(GetById), new { id = entity.IdFotografija }, ToDto(entity));
     }
@@ -98,12 +106,16 @@ public class FotografijaApiController : ApiBaseController
             return NotFound();
 
         if (!await IsOwnerOrAdminAsync(entity.Posjet.IdKorisnik))
+        {
+            _logger.LogWarning("PUT /api/fotografija/{IdFotografija} - korisnik {AppUserId} bez prava pristupa.", id, AppUserId);
             return Forbid();
+        }
 
         entity.TipSlike = dto.TipSlike;
         entity.Opis = dto.Opis;
 
         await Db.SaveChangesAsync();
+        _logger.LogInformation("PUT /api/fotografija/{IdFotografija} - fotografija ažurirana.", id);
 
         return Ok(ToDto(entity));
     }
@@ -120,10 +132,14 @@ public class FotografijaApiController : ApiBaseController
             return NotFound();
 
         if (!await IsOwnerOrAdminAsync(entity.Posjet.IdKorisnik))
+        {
+            _logger.LogWarning("DELETE /api/fotografija/{IdFotografija} - korisnik {AppUserId} bez prava pristupa.", id, AppUserId);
             return Forbid();
+        }
 
         entity.DeletedAt = DateTime.UtcNow;
         await Db.SaveChangesAsync();
+        _logger.LogInformation("DELETE /api/fotografija/{IdFotografija} - fotografija obrisana (soft delete).", id);
 
         return NoContent();
     }

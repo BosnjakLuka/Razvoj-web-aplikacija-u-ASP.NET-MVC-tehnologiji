@@ -16,10 +16,12 @@ namespace planinarenje.Controllers.Api;
 public class KorisnikMedaljaApiController : ControllerBase
 {
     private readonly PlaninarstvoDbContext _db;
+    private readonly ILogger<KorisnikMedaljaApiController> _logger;
 
-    public KorisnikMedaljaApiController(PlaninarstvoDbContext db)
+    public KorisnikMedaljaApiController(PlaninarstvoDbContext db, ILogger<KorisnikMedaljaApiController> logger)
     {
         _db = db;
+        _logger = logger;
     }
 
     // GET /api/korisnikmedalja?korisnikId=&medaljaId=
@@ -82,6 +84,8 @@ public class KorisnikMedaljaApiController : ControllerBase
 
         _db.KorisnikMedalje.Add(entity);
         await _db.SaveChangesAsync();
+        _logger.LogInformation("POST /api/korisnikmedalja - dodjela {IdKorisnikMedalja} kreirana (korisnik {IdKorisnik}, medalja {IdMedalja}).",
+            entity.IdKorisnikMedalja, entity.IdKorisnik, entity.IdMedalja);
 
         var kreiran = await _db.KorisnikMedalje
             .Include(km => km.Korisnik)
@@ -107,6 +111,7 @@ public class KorisnikMedaljaApiController : ControllerBase
         entity.Napomena = dto.Napomena;
 
         await _db.SaveChangesAsync();
+        _logger.LogInformation("PUT /api/korisnikmedalja/{IdKorisnikMedalja} - dodjela ažurirana.", id);
 
         var azuriran = await _db.KorisnikMedalje
             .Include(km => km.Korisnik)
@@ -127,6 +132,7 @@ public class KorisnikMedaljaApiController : ControllerBase
 
         entity.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+        _logger.LogInformation("DELETE /api/korisnikmedalja/{IdKorisnikMedalja} - dodjela obrisana (soft delete).", id);
 
         return NoContent();
     }

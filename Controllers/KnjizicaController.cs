@@ -13,9 +13,12 @@ namespace planinarenje.Controllers;
 
 public class KnjizicaController : BaseController
 {
-    public KnjizicaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db)
+    private readonly ILogger<KnjizicaController> _logger;
+
+    public KnjizicaController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, ILogger<KnjizicaController> logger)
         : base(userMgr, db)
     {
+        _logger = logger;
     }
 
     [Authorize]
@@ -133,6 +136,7 @@ public class KnjizicaController : BaseController
             return View(model);
         }
 
+        _logger.LogInformation("Knjizica {IdKnjizica} kreirana za korisnika {IdKorisnik}.", entity.IdKnjizica, entity.IdKorisnik);
         TempData["NewId"] = entity.IdKnjizica;
         TempData["Success"] = "Knjizica je uspjesno dodana.";
         return RedirectToAction(nameof(Index));
@@ -194,7 +198,10 @@ public class KnjizicaController : BaseController
         var original = await Db.Knjizice.AsNoTracking().FirstOrDefaultAsync(k => k.IdKnjizica == id);
         if (original == null) return NotFound();
         if (!IsAdmin && !await IsOwnerAsync(original.IdKorisnik))
+        {
+            _logger.LogWarning("Korisnik {AppUserId} bez prava pristupa pokušao je urediti knjižicu {IdKnjizica}.", AppUserId, id);
             return Forbid();
+        }
 
         model.IdKorisnik = original.IdKorisnik;
         entity.IdKorisnik = model.IdKorisnik;
@@ -212,6 +219,7 @@ public class KnjizicaController : BaseController
             return View(model);
         }
 
+        _logger.LogInformation("Knjizica {IdKnjizica} ažurirana.", id);
         TempData["Success"] = "Knjizica je uspjesno azurirana.";
         return RedirectToAction(nameof(Index));
     }
@@ -245,6 +253,7 @@ public class KnjizicaController : BaseController
 
         entity.StatusAktivna = false;
         await Db.SaveChangesAsync();
+        _logger.LogInformation("Knjizica {IdKnjizica} obrisana (soft delete).", id);
         TempData["Success"] = "Knjizica je uspjesno obrisana.";
         return RedirectToAction(nameof(Index));
     }

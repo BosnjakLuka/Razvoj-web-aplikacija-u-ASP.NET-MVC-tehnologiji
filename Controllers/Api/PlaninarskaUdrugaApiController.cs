@@ -16,10 +16,12 @@ namespace planinarenje.Controllers.Api;
 public class PlaninarskaUdrugaApiController : ControllerBase
 {
     private readonly PlaninarstvoDbContext _db;
+    private readonly ILogger<PlaninarskaUdrugaApiController> _logger;
 
-    public PlaninarskaUdrugaApiController(PlaninarstvoDbContext db)
+    public PlaninarskaUdrugaApiController(PlaninarstvoDbContext db, ILogger<PlaninarskaUdrugaApiController> logger)
     {
         _db = db;
+        _logger = logger;
     }
 
     // GET /api/planinarskaudruga?naziv=&grad=
@@ -78,6 +80,7 @@ public class PlaninarskaUdrugaApiController : ControllerBase
 
         _db.PlaninarskeUdruge.Add(entity);
         await _db.SaveChangesAsync();
+        _logger.LogInformation("POST /api/planinarskaudruga - udruga {IdPlaninarskaUdruga} kreirana.", entity.IdPlaninarskaUdruga);
 
         return CreatedAtAction(nameof(GetById), new { id = entity.IdPlaninarskaUdruga }, ToDto(entity));
     }
@@ -108,6 +111,7 @@ public class PlaninarskaUdrugaApiController : ControllerBase
         entity.BrojClanova = dto.BrojClanova;
 
         await _db.SaveChangesAsync();
+        _logger.LogInformation("PUT /api/planinarskaudruga/{IdPlaninarskaUdruga} - udruga ažurirana.", id);
 
         return Ok(ToDto(entity));
     }
@@ -123,6 +127,7 @@ public class PlaninarskaUdrugaApiController : ControllerBase
 
         entity.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+        _logger.LogInformation("DELETE /api/planinarskaudruga/{IdPlaninarskaUdruga} - udruga obrisana (soft delete).", id);
 
         return NoContent();
     }
