@@ -4,5 +4,8 @@ public enum TipAkcijeLoga
 {
     Kreirano,
     Azurirano,
-    Obrisano
+    Obrisano,
+    Prijava,
+    Odjava,
+    Registracija
 }

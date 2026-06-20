@@ -1,33 +1,51 @@
-@model planinarenje.Models.ViewModels.KnjizicaCreateModel
+@model planinarenje.Models.ViewModels.KnjizicaEligibilityPageViewModel
 
 <section class="mb-4">
-    <h1 class="section-title mb-2">Nova knjizica</h1>
-    <p class="text-muted mb-0">Unesite podatke o novoj knjizici.</p>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <h1 class="section-title mb-2">Nova knjizica</h1>
+            <p class="text-muted mb-0">Odaberi korisnika koji još nema knjižicu i dodijeli mu je jednim klikom.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">Natrag na popis</a>
+    </div>
 </section>
 
 <div class="app-card">
-    <form asp-action="Create" method="post">
-        <div class="mb-3">
-            <label asp-for="IdKorisnik" class="form-label">Korisnik</label>
-            @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
-            {
-                { "FieldName", "IdKorisnik" },
-                { "DisplayName", "Korisnik" },
-                { "SearchUrl", Url.Action("AutocompleteSearch", "Korisnik") },
-                { "CurrentId", Model?.IdKorisnik.ToString() },
-                { "CurrentText", ViewData["KorisnikText"]?.ToString() },
-                { "Placeholder", "Pretrazi korisnike..." },
-                { "IsRequired", true }
-            })
+    @if (Model.EligibleUsers.Count == 0)
+    {
+        <div class="alert alert-light mb-0">
+            Trenutno nema korisnika kojima se može dodijeliti knjižica - svi aktivni korisnici već imaju knjižicu.
         </div>
-        <div class="mb-3">
-            <label asp-for="Napomena" class="form-label"></label>
-            <textarea asp-for="Napomena" class="form-control" rows="3"></textarea>
-            <span asp-validation-for="Napomena" class="text-danger small"></span>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Korisnik</th>
+                        <th class="text-end">Akcija</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model.EligibleUsers)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@user.ImePrezimeKorisnika</div>
+                                <div class="text-muted small">@user.KorisnickoIme</div>
+                            </td>
+                            <td class="text-end">
+                                <form asp-action="Dodijeli" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="korisnikId" value="@user.IdKorisnik" />
+                                    <button type="submit" class="btn btn-success btn-sm">Dodijeli</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary">Spremi</button>
-            <a asp-action="Index" class="btn btn-outline-secondary">Odustani</a>
-        </div>
-    </form>
+    }
 </div>

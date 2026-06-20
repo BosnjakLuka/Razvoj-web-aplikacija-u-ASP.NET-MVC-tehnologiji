@@ -84,57 +84,59 @@ public class KnjizicaController : BaseController
         return Json(results);
     }
 
-    [Authorize(Roles = "Admin,Planinar")]
+    [Authorize(Roles = "Admin")]
     public IActionResult Create()
     {
         ViewData["Title"] = "Nova knjizica";
-        return View(new KnjizicaCreateModel());
+        var model = BuildEligibilityPageModel();
+        return View(model);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = "Admin,Planinar")]
-    public async Task<IActionResult> Create(KnjizicaCreateModel model)
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Dodijeli(int korisnikId)
     {
-        if (!ModelState.IsValid)
+        var eligibleIds = GetEligibleKorisniciZaKnjizicu().Select(k => k.IdKorisnik).ToHashSet();
+        if (!eligibleIds.Contains(korisnikId))
         {
-            ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
-            ViewData["Title"] = "Nova knjizica";
-            return View(model);
+            TempData["Error"] = "Korisnik nije eligible za dodjelu knjižice.";
+            return RedirectToAction(nameof(Create));
         }
 
-        if (DodajGreskeZaDuplikatKnjizice(model.IdKorisnik))
+        // Knjizice.IdKorisnik ima jedinstveni indeks, pa soft-obrisana knjizica (StatusAktivna = false)
+        // i dalje zauzima taj indeks. Zato ne smijemo ubaciti novi red - ako za korisnika postoji
+        // ranije obrisana knjizica, samo je reaktiviramo; inace kreiramo novu.
+        var postojeca = await Db.Knjizice.FirstOrDefaultAsync(k => k.IdKorisnik == korisnikId);
+        if (postojeca != null)
         {
-            ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
-            ViewData["Title"] = "Nova knjizica";
-            return View(model);
-        }
+            if (postojeca.StatusAktivna)
+            {
+                TempData["PopupWarning"] = "Knjizica za ovog korisnika već postoji.";
+                TempData["Error"] = "Knjizica za ovog korisnika već postoji.";
+                return RedirectToAction(nameof(Create));
+            }
 
-        // force owner to current korisnik
-        var current = await GetCurrentKorisnikAsync();
-        if (current == null) return Forbid();
-        model.IdKorisnik = current.IdKorisnik;
+            postojeca.StatusAktivna = true;
+            postojeca.DatumKreiranja = DateTime.UtcNow;
+            postojeca.Napomena = null;
+            await Db.SaveChangesAsync();
+
+            _logger.LogInformation("Knjizica {IdKnjizica} reaktivirana za korisnika {IdKorisnik}.", postojeca.IdKnjizica, korisnikId);
+            TempData["NewId"] = postojeca.IdKnjizica;
+            TempData["Success"] = "Knjizica je uspjesno dodana.";
+            return RedirectToAction(nameof(Index));
+        }
 
         var entity = new Knjizica
         {
-            IdKorisnik = model.IdKorisnik,
-            Napomena = model.Napomena,
+            IdKorisnik = korisnikId,
             DatumKreiranja = DateTime.UtcNow,
             StatusAktivna = true
         };
 
-        try
-        {
-            Db.Knjizice.Add(entity);
-            await Db.SaveChangesAsync();
-        }
-        catch (DbUpdateException)
-        {
-            ViewData["PopupWarning"] = "Knjizica za ovog korisnika već postoji. Odaberi drugog korisnika ili uređuj postojeću knjižicu.";
-            ViewData["KorisnikText"] = GetKorisnikLabel(model.IdKorisnik);
-            ViewData["Title"] = "Nova knjizica";
-            return View(model);
-        }
+        Db.Knjizice.Add(entity);
+        await Db.SaveChangesAsync();
 
         _logger.LogInformation("Knjizica {IdKnjizica} kreirana za korisnika {IdKorisnik}.", entity.IdKnjizica, entity.IdKorisnik);
         TempData["NewId"] = entity.IdKnjizica;
@@ -320,7 +322,7 @@ public class KnjizicaController : BaseController
     private bool DodajGreskeZaDuplikatKnjizice(int idKorisnik, int? excludeId = null)
     {
         var postoji = Db.Knjizice.Any(k =>
-            k.IdKorisnik == idKorisnik && (!excludeId.HasValue || k.IdKnjizica != excludeId.Value));
+            k.IdKorisnik == idKorisnik && k.StatusAktivna && (!excludeId.HasValue || k.IdKnjizica != excludeId.Value));
 
         if (!postoji)
         {
@@ -331,6 +333,35 @@ public class KnjizicaController : BaseController
         ModelState.AddModelError(nameof(KnjizicaCreateModel.IdKorisnik), poruka);
         ViewData["PopupWarning"] = poruka;
         return true;
+    }
+
+    private KnjizicaEligibilityPageViewModel BuildEligibilityPageModel()
+    {
+        return new KnjizicaEligibilityPageViewModel
+        {
+            EligibleUsers = GetEligibleKorisniciZaKnjizicu()
+        };
+    }
+
+    private List<KnjizicaEligibleUserViewModel> GetEligibleKorisniciZaKnjizicu()
+    {
+        var korisniciSaKnjizicom = Db.Knjizice
+            .Where(k => k.StatusAktivna)
+            .Select(k => k.IdKorisnik)
+            .ToHashSet();
+
+        return Db.Korisnici
+            .Where(k => k.StatusAktivan)
+            .AsEnumerable()
+            .Where(k => !korisniciSaKnjizicom.Contains(k.IdKorisnik))
+            .Select(k => new KnjizicaEligibleUserViewModel
+            {
+                IdKorisnik = k.IdKorisnik,
+                ImePrezimeKorisnika = k.Ime + " " + k.Prezime,
+                KorisnickoIme = k.KorisnickoIme
+            })
+            .OrderBy(k => k.ImePrezimeKorisnika)
+            .ToList();
     }
 
     private List<KnjizicaIndexViewModel> BuildIndexModel(string? searchTerm)

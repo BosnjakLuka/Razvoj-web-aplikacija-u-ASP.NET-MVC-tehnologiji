@@ -19,7 +19,7 @@
     var hasMedaljaSuccess = TempData["MedaljaSuccess"] != null;
         var successMessage = TempData["Success"]?.ToString();
         var errorMessage = TempData["Error"]?.ToString();
-            var warningMessage = ViewData["PopupWarning"]?.ToString();
+            var warningMessage = ViewData["PopupWarning"]?.ToString() ?? TempData["PopupWarning"]?.ToString();
     }
     <header>
         <nav class="navbar navbar-expand-lg topbar">

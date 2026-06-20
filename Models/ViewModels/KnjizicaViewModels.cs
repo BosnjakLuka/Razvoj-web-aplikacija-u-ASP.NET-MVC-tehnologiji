@@ -14,3 +14,15 @@ public class KnjizicaCreateModel
 public class KnjizicaEditModel : KnjizicaCreateModel
 {
 }
+
+public class KnjizicaEligibleUserViewModel
+{
+    public int IdKorisnik { get; set; }
+    public string ImePrezimeKorisnika { get; set; } = string.Empty;
+    public string KorisnickoIme { get; set; } = string.Empty;
+}
+
+public class KnjizicaEligibilityPageViewModel
+{
+    public List<KnjizicaEligibleUserViewModel> EligibleUsers { get; set; } = new();
+}

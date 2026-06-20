@@ -15,17 +15,22 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using planinarenje.Entiteti;
+using planinarenje.Data;
 
 namespace planinarenje.Areas.Identity.Pages.Account
 {
     public class LoginModel : PageModel
     {
         private readonly SignInManager<AppUser> _signInManager;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly PlaninarstvoDbContext _dbContext;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<AppUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, PlaninarstvoDbContext dbContext, ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
+            _userManager = userManager;
+            _dbContext = dbContext;
             _logger = logger;
         }
 
@@ -116,6 +121,8 @@ namespace planinarenje.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
+                    var user = await _userManager.FindByEmailAsync(Input.Email);
+                    await _dbContext.ZabiljeziAuthDogadajAsync(TipAkcijeLoga.Prijava, user?.Id, user?.UserName, "Lokalna prijava");
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)

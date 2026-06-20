@@ -872,6 +872,24 @@ public class PlaninarstvoDbContext : IdentityDbContext<AppUser>
         return result;
     }
 
+    // Lab5 Faza 6: ručni audit zapis za autentikacijske događaje (prijava / odjava / registracija).
+    // Te radnje ne mijenjaju domenske entitete pa ih EF change-tracker ne hvata automatski,
+    // zato ih bilježimo izravno u LogoviAktivnosti iz Identity stranica.
+    public async Task ZabiljeziAuthDogadajAsync(TipAkcijeLoga akcija, string? appUserId, string? korisnickoIme, string? detalji = null)
+    {
+        LogoviAktivnosti.Add(new LogAktivnosti
+        {
+            VrijemeDogadaja = DateTime.UtcNow,
+            AppUserId = string.IsNullOrWhiteSpace(appUserId) ? "Sustav" : appUserId,
+            KorisnickoIme = korisnickoIme,
+            NazivEntiteta = nameof(AppUser),
+            IdEntiteta = string.IsNullOrWhiteSpace(appUserId) ? "Sustav" : appUserId,
+            Akcija = akcija,
+            Detalji = detalji
+        });
+        await SaveChangesAsync();
+    }
+
     private List<AuditZapisUIzradi> OnBeforeSaveChanges()
     {
         ChangeTracker.DetectChanges();
