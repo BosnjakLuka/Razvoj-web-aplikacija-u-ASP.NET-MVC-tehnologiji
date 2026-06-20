@@ -840,6 +840,13 @@ public class PlaninarstvoDbContext : IdentityDbContext<AppUser>
         modelBuilder.Entity<Posjet>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<Podrucje>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<Ruta>().HasQueryFilter(x => x.DeletedAt == null);
+
+        // Akcija se sprema kao tekst (Kreirano/Azurirano/Obrisano), ne kao int (0/1/2),
+        // da je log u bazi čitljiv bez potrebe za mapiranjem enum vrijednosti.
+        modelBuilder.Entity<LogAktivnosti>()
+            .Property(l => l.Akcija)
+            .HasConversion<string>()
+            .HasMaxLength(20);
     }
 
     // ---------------------------------------------------------------------
@@ -944,7 +951,11 @@ public class PlaninarstvoDbContext : IdentityDbContext<AppUser>
             }
         }
 
-        base.SaveChanges();
+        // Bitno: pozvati TOČNO isti overload (bool) kojeg ova klasa overrida.
+        // base.SaveChanges() (bez parametara) bi internalno virtualno pozvao
+        // SaveChanges(true), što bi se opet vratilo na naš override umjesto
+        // direktno na EF Core implementaciju, i audit zapis bi se izgubio.
+        base.SaveChanges(acceptAllChangesOnSuccess: true);
     }
 
     private async Task OnAfterSaveChangesAsync(List<AuditZapisUIzradi> pendingAuditEntries, CancellationToken cancellationToken)
@@ -960,7 +971,9 @@ public class PlaninarstvoDbContext : IdentityDbContext<AppUser>
             }
         }
 
-        await base.SaveChangesAsync(cancellationToken);
+        // Bitno: pozvati TOČNO isti overload (bool, token) kojeg ova klasa overrida -
+        // vidi komentar u OnAfterSaveChanges.
+        await base.SaveChangesAsync(acceptAllChangesOnSuccess: true, cancellationToken);
     }
 
     private static void DopuniGenerirunePKVrijednosti(AuditZapisUIzradi auditEntry)
@@ -994,9 +1007,15 @@ public class PlaninarstvoDbContext : IdentityDbContext<AppUser>
         private readonly string _appUserId;
         private readonly string? _korisnickoIme;
 
+        // Snapshot stanja u trenutku hvatanja (prije SaveChanges) - _entry.State se NE smije
+        // čitati kasnije u OnAfterSaveChanges, jer EF Core nakon uspješnog spremanja
+        // (acceptAllChangesOnSuccess: true) prebaci Added/Modified/Deleted natrag u Unchanged.
+        private readonly EntityState _izvornoStanje;
+
         public AuditZapisUIzradi(EntityEntry entry, string appUserId, string? korisnickoIme)
         {
             _entry = entry;
+            _izvornoStanje = entry.State;
             _appUserId = appUserId;
             _korisnickoIme = korisnickoIme;
         }
@@ -1006,7 +1025,7 @@ public class PlaninarstvoDbContext : IdentityDbContext<AppUser>
         public Dictionary<string, object?> StareVrijednosti { get; } = new();
         public Dictionary<string, object?> NoveVrijednosti { get; } = new();
 
-        public bool ImaPromjene => _entry.State switch
+        public bool ImaPromjene => _izvornoStanje switch
         {
             EntityState.Added => true,
             EntityState.Deleted => true,
@@ -1016,7 +1035,7 @@ public class PlaninarstvoDbContext : IdentityDbContext<AppUser>
 
         public LogAktivnosti IzgradiZapis()
         {
-            var akcija = _entry.State switch
+            var akcija = _izvornoStanje switch
             {
                 EntityState.Added => TipAkcijeLoga.Kreirano,
                 EntityState.Deleted => TipAkcijeLoga.Obrisano,
