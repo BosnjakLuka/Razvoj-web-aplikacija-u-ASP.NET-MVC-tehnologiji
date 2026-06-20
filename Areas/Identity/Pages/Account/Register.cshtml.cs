@@ -161,6 +161,7 @@ namespace planinarenje.Areas.Identity.Pages.Account
                     await _dbContext.SaveChangesAsync();
 
                     _logger.LogInformation("User created a new account with password.");
+                    await _dbContext.ZabiljeziAuthDogadajAsync(TipAkcijeLoga.Registracija, user.Id, user.UserName, "Lokalna registracija");
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

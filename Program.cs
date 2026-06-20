@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using planinarenje.Data;
@@ -195,6 +197,29 @@ if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(goo
         {
             options.ClientId = googleClientId;
             options.ClientSecret = googleClientSecret;
+
+            // Correlation cookie na Lax (umjesto None+Secure) - sprječava čest "Correlation failed"
+            // u dev okruženju kad se miješaju http/https; Lax cookie se i dalje šalje na
+            // top-level redirect natrag s Googlea.
+            options.CorrelationCookie.SameSite = SameSiteMode.Lax;
+
+            // Ako vanjska prijava padne (npr. "Correlation failed" zbog isteklog/duplog
+            // pokušaja), ne rušimo aplikaciju developerskom iznimkom - korisnika vraćamo
+            // na login uz žuto upozorenje da pokuša ponovno.
+            options.Events = new OAuthEvents
+            {
+                OnRemoteFailure = context =>
+                {
+                    var tempDataFactory = context.HttpContext.RequestServices.GetRequiredService<ITempDataDictionaryFactory>();
+                    var tempData = tempDataFactory.GetTempData(context.HttpContext);
+                    tempData["PopupWarning"] = "Prijava putem Googlea nije uspjela. Pokušajte ponovno.";
+                    tempData.Save();
+
+                    context.Response.Redirect("/Identity/Account/Login");
+                    context.HandleResponse();
+                    return Task.CompletedTask;
+                }
+            };
         });
 }
 

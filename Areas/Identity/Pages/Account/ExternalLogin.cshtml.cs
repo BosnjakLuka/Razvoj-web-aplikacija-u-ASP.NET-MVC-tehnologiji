@@ -142,6 +142,8 @@ namespace planinarenje.Areas.Identity.Pages.Account
             if (result.Succeeded)
             {
                 _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity.Name, info.LoginProvider);
+                var prijavljeni = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+                await _dbContext.ZabiljeziAuthDogadajAsync(TipAkcijeLoga.Prijava, prijavljeni?.Id, prijavljeni?.UserName, $"{info.LoginProvider} prijava");
                 return LocalRedirect(returnUrl);
             }
             if (result.IsLockedOut)
@@ -150,6 +152,17 @@ namespace planinarenje.Areas.Identity.Pages.Account
             }
             else
             {
+                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+
+                // Korisnik s ovim emailom već postoji, ali Google login nije povezan s tim računom.
+                // Ne prikazujemo formu za registraciju (vodila bi u duplikat / beskonačnu petlju) -
+                // šaljemo ga na login uz žuto upozorenje da se prijavi postojećim računom.
+                if (!string.IsNullOrEmpty(email) && await _userManager.FindByEmailAsync(email) != null)
+                {
+                    TempData["PopupWarning"] = "Korisnik s ovom email adresom već postoji. Prijavite se postojećim računom.";
+                    return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
+                }
+
                 // If the user does not have an account, then ask the user to create an account.
                 ReturnUrl = returnUrl;
                 ProviderDisplayName = info.ProviderDisplayName;
@@ -157,7 +170,7 @@ namespace planinarenje.Areas.Identity.Pages.Account
                 {
                     Input = new InputModel
                     {
-                        Email = info.Principal.FindFirstValue(ClaimTypes.Email)
+                        Email = email
                     };
                 }
                 return Page();
@@ -172,6 +185,13 @@ namespace planinarenje.Areas.Identity.Pages.Account
             if (info == null)
             {
                 ErrorMessage = "Error loading external login information during confirmation.";
+                return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
+            }
+
+            var postojeciKorisnik = await _userManager.FindByEmailAsync(Input.Email);
+            if (postojeciKorisnik != null)
+            {
+                TempData["PopupWarning"] = "Korisnik s ovom email adresom već postoji. Prijavite se postojećim računom.";
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
 
@@ -203,6 +223,7 @@ namespace planinarenje.Areas.Identity.Pages.Account
                     if (result.Succeeded)
                     {
                         _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
+                        await _dbContext.ZabiljeziAuthDogadajAsync(TipAkcijeLoga.Registracija, user.Id, user.UserName, $"{info.LoginProvider} registracija");
 
                         var userId = await _userManager.GetUserIdAsync(user);
                         var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
