@@ -7,6 +7,8 @@ public class PretragaStavka
     public string? Podnaslov { get; set; }
     public string Controller { get; set; } = string.Empty;
     public int Id { get; set; }
+    public string Tip { get; set; } = string.Empty;
+    public int Skor { get; set; }
 }
 
 // Grupa rezultata za jedan tip entiteta (npr. "Područja").
