@@ -79,8 +79,8 @@
             dropdown.innerHTML = '';
             aktivni = -1;
 
-            const stavke = (data && data.stavke) || [];
-            if (stavke.length === 0) {
+            const grupe = (data && data.grupe) || [];
+            if (grupe.length === 0) {
                 const prazno = document.createElement('div');
                 prazno.className = 'gs-dd-empty';
                 prazno.textContent = 'Nema rezultata.';
@@ -89,41 +89,42 @@
                 return;
             }
 
-            // Ravna lista najvjerojatnijih pogodaka (najbolji na vrhu), svaki s oznakom tipa.
-            stavke.forEach(function (s) {
-                const a = document.createElement('a');
-                a.className = 'gs-dd-item';
-                a.href = s.url || '#';
+            grupe.forEach(function (grupa) {
+                const head = document.createElement('div');
+                head.className = 'gs-dd-group';
+                const naziv = document.createElement('span');
+                naziv.textContent = grupa.naziv;
+                const broj = document.createElement('span');
+                broj.className = 'gs-dd-count';
+                broj.textContent = grupa.ukupno;
+                head.appendChild(naziv);
+                head.appendChild(broj);
+                dropdown.appendChild(head);
 
-                const red = document.createElement('span');
-                red.className = 'gs-dd-row';
+                (grupa.stavke || []).forEach(function (s) {
+                    const a = document.createElement('a');
+                    a.className = 'gs-dd-item';
+                    a.href = s.url || '#';
 
-                const naslov = document.createElement('span');
-                naslov.className = 'gs-dd-title';
-                naslov.textContent = s.naziv;
-                red.appendChild(naslov);
+                    const naslov = document.createElement('span');
+                    naslov.className = 'gs-dd-title';
+                    naslov.textContent = s.naziv;
+                    a.appendChild(naslov);
 
-                if (s.tip) {
-                    const tip = document.createElement('span');
-                    tip.className = 'gs-dd-tip';
-                    tip.textContent = s.tip;
-                    red.appendChild(tip);
-                }
-                a.appendChild(red);
+                    if (s.podnaslov) {
+                        const sub = document.createElement('span');
+                        sub.className = 'gs-dd-sub';
+                        sub.textContent = s.podnaslov;
+                        a.appendChild(sub);
+                    }
 
-                if (s.podnaslov) {
-                    const sub = document.createElement('span');
-                    sub.className = 'gs-dd-sub';
-                    sub.textContent = s.podnaslov;
-                    a.appendChild(sub);
-                }
+                    a.addEventListener('mouseenter', function () {
+                        aktivni = -1;
+                        dropdown.querySelectorAll('.gs-dd-item.active').forEach(function (el) { el.classList.remove('active'); });
+                    });
 
-                a.addEventListener('mouseenter', function () {
-                    aktivni = -1;
-                    dropdown.querySelectorAll('.gs-dd-item.active').forEach(function (el) { el.classList.remove('active'); });
+                    dropdown.appendChild(a);
                 });
-
-                dropdown.appendChild(a);
             });
 
             // Podnožje: idi na punu stranicu rezultata.

@@ -7,12 +7,6 @@ public class PretragaStavka
     public string? Podnaslov { get; set; }
     public string Controller { get; set; } = string.Empty;
     public int Id { get; set; }
-
-    // Čitljiv naziv tipa entiteta (npr. "Kontrolna točka") - prikazuje se kao oznaka u ravnoj listi.
-    public string Tip { get; set; } = string.Empty;
-
-    // Relevantnost pogotka (veće = bolje); koristi se za rangiranje "najvjerojatnijih" pogodaka.
-    public int Skor { get; set; }
 }
 
 // Grupa rezultata za jedan tip entiteta (npr. "Područja").
