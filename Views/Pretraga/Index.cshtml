@@ -49,6 +49,15 @@
                             {
                                 <span class="gs-item-sub">@s.Podnaslov</span>
                             }
+                            @if (s.Polja.Count > 0)
+                            {
+                                <span class="gs-item-fields">
+                                    @foreach (var polje in s.Polja)
+                                    {
+                                        <span class="gs-item-field"><strong>@polje.Key:</strong> @polje.Value</span>
+                                    }
+                                </span>
+                            }
                         </a>
                     }
                 </div>

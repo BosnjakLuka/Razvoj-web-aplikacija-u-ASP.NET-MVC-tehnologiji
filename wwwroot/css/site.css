@@ -645,6 +645,23 @@ a:hover {
     color: var(--text-muted);
 }
 
+.gs-item-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin-top: 4px;
+}
+
+.gs-item-field {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.gs-item-field strong {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
 .gs-group-more {
     display: block;
     padding: 10px 16px;

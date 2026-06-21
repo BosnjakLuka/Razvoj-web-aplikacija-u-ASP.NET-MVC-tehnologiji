@@ -80,7 +80,8 @@ public class PretragaController : BaseController
             .ToList();
         var podrucja = new PretragaGrupa { Naziv = "Područja", Controller = "Podrucje", Ikona = "geo-alt-fill", Ukupno = podrucjaRezultati.Count() };
         podrucja.Stavke = podrucjaRezultati
-            .Select(p => Stavka("Područje", "Podrucje", p.IdPodrucje, p.Naziv, p.Regija, term))
+            .Select(p => Stavka("Područje", "Podrucje", p.IdPodrucje, p.Naziv, p.Regija, term,
+                ("Regija", p.Regija), ("Opis", Skrati(p.Opis))))
             .OrderByDescending(s => s.Skor).ThenBy(s => s.Naziv)
             .Take(maxPoGrupi)
             .ToList();
@@ -96,7 +97,8 @@ public class PretragaController : BaseController
             .ToList();
         var kt = new PretragaGrupa { Naziv = "Kontrolne točke", Controller = "KontrolnaTocka", Ikona = "flag-fill", Ukupno = ktRezultati.Count() };
         kt.Stavke = ktRezultati
-            .Select(k => Stavka("Kontrolna točka", "KontrolnaTocka", k.IdKontrolnaTocka, k.Naziv, $"{k.TipKontrolneTocke} · {k.Podrucje.Naziv}", term))
+            .Select(k => Stavka("Kontrolna točka", "KontrolnaTocka", k.IdKontrolnaTocka, k.Naziv, $"{k.TipKontrolneTocke} · {k.Podrucje.Naziv}", term,
+                ("Područje", k.Podrucje.Naziv), ("GUID oznaka", k.GUIDOznaka), ("Koordinate", k.Koordinate), ("Opis", Skrati(k.Opis))))
             .OrderByDescending(s => s.Skor).ThenBy(s => s.Naziv)
             .Take(maxPoGrupi)
             .ToList();
@@ -112,7 +114,8 @@ public class PretragaController : BaseController
             .ToList();
         var rute = new PretragaGrupa { Naziv = "Rute", Controller = "Ruta", Ikona = "signpost-split-fill", Ukupno = ruteRezultati.Count() };
         rute.Stavke = ruteRezultati
-            .Select(r => Stavka("Ruta", "Ruta", r.IdRuta, r.Naziv, $"{r.Pocetak} → {r.Kraj}", term))
+            .Select(r => Stavka("Ruta", "Ruta", r.IdRuta, r.Naziv, $"{r.Pocetak} → {r.Kraj}", term,
+                ("Početak", r.Pocetak), ("Kraj", r.Kraj), ("Oznaka na terenu", r.OznakaNaTerenu)))
             .OrderByDescending(s => s.Skor).ThenBy(s => s.Naziv)
             .Take(maxPoGrupi)
             .ToList();
@@ -127,7 +130,8 @@ public class PretragaController : BaseController
             .ToList();
         var objekti = new PretragaGrupa { Naziv = "Planinarski objekti", Controller = "PlaninarskiObjekt", Ikona = "house-fill", Ukupno = objektiRezultati.Count() };
         objekti.Stavke = objektiRezultati
-            .Select(o => Stavka("Planinarski objekt", "PlaninarskiObjekt", o.IdPlaninarskiObjekt, o.Naziv, string.IsNullOrWhiteSpace(o.Adresa) ? o.TipObjekta.ToString() : o.Adresa, term))
+            .Select(o => Stavka("Planinarski objekt", "PlaninarskiObjekt", o.IdPlaninarskiObjekt, o.Naziv, string.IsNullOrWhiteSpace(o.Adresa) ? o.TipObjekta.ToString() : o.Adresa, term,
+                ("Tip", o.TipObjekta.ToString()), ("Adresa", o.Adresa), ("Odgovorna osoba", o.ImeOdgovorneOsobe)))
             .OrderByDescending(s => s.Skor).ThenBy(s => s.Naziv)
             .Take(maxPoGrupi)
             .ToList();
@@ -142,7 +146,8 @@ public class PretragaController : BaseController
             .ToList();
         var udruge = new PretragaGrupa { Naziv = "Planinarske udruge", Controller = "PlaninarskaUdruga", Ikona = "people-fill", Ukupno = udrugeRezultati.Count() };
         udruge.Stavke = udrugeRezultati
-            .Select(u => Stavka("Planinarska udruga", "PlaninarskaUdruga", u.IdPlaninarskaUdruga, u.Naziv, u.Grad, term))
+            .Select(u => Stavka("Planinarska udruga", "PlaninarskaUdruga", u.IdPlaninarskaUdruga, u.Naziv, u.Grad, term,
+                ("Grad", u.Grad), ("Županija", u.Zupanija)))
             .OrderByDescending(s => s.Skor).ThenBy(s => s.Naziv)
             .Take(maxPoGrupi)
             .ToList();
@@ -156,7 +161,8 @@ public class PretragaController : BaseController
             .ToList();
         var medalje = new PretragaGrupa { Naziv = "Medalje", Controller = "Medalja", Ikona = "award-fill", Ukupno = medaljeRezultati.Count() };
         medalje.Stavke = medaljeRezultati
-            .Select(m => Stavka("Medalja", "Medalja", m.IdMedalja, m.Naziv, null, term))
+            .Select(m => Stavka("Medalja", "Medalja", m.IdMedalja, m.Naziv, null, term,
+                ("Opis", Skrati(m.Opis))))
             .OrderByDescending(s => s.Skor).ThenBy(s => s.Naziv)
             .Take(maxPoGrupi)
             .ToList();
@@ -173,7 +179,8 @@ public class PretragaController : BaseController
                 .ToList();
             var korisnici = new PretragaGrupa { Naziv = "Korisnici", Controller = "Korisnik", Ikona = "person-fill", Ukupno = korisniciRezultati.Count() };
             korisnici.Stavke = korisniciRezultati
-                .Select(k => Stavka("Korisnik", "Korisnik", k.IdKorisnik, $"{k.Ime} {k.Prezime}", "@" + k.KorisnickoIme, term))
+                .Select(k => Stavka("Korisnik", "Korisnik", k.IdKorisnik, $"{k.Ime} {k.Prezime}", "@" + k.KorisnickoIme, term,
+                    ("Korisničko ime", k.KorisnickoIme)))
                 .OrderByDescending(s => s.Skor).ThenBy(s => s.Naziv)
                 .Take(maxPoGrupi)
                 .ToList();
@@ -190,8 +197,12 @@ public class PretragaController : BaseController
     }
 
     // Tvori stavku i odmah izračuna relevantnost na temelju naziva i upita.
-    private static PretragaStavka Stavka(string tip, string controller, int id, string naziv, string? podnaslov, string term)
-        => new PretragaStavka
+    // polja = sva ostala pretraživana svojstva entiteta (prikazana u rezultatu da je
+    // vidljivo po čemu je zapis pogodio upit, ne samo po Nazivu).
+    private static PretragaStavka Stavka(string tip, string controller, int id, string naziv, string? podnaslov, string term,
+        params (string Label, string? Vrijednost)[] polja)
+    {
+        var stavka = new PretragaStavka
         {
             Tip = tip,
             Controller = controller,
@@ -200,6 +211,25 @@ public class PretragaController : BaseController
             Podnaslov = podnaslov,
             Skor = IzracunajSkor(naziv, term)
         };
+
+        foreach (var (label, vrijednost) in polja)
+        {
+            if (!string.IsNullOrWhiteSpace(vrijednost))
+            {
+                stavka.Polja.Add(new KeyValuePair<string, string>(label, vrijednost));
+            }
+        }
+
+        return stavka;
+    }
+
+    // Skraćuje duži tekst (npr. Opis) na pregledan isječak za prikaz u rezultatu.
+    private static string? Skrati(string? tekst, int maxDuljina = 90)
+    {
+        if (string.IsNullOrWhiteSpace(tekst)) return null;
+        tekst = tekst.Trim();
+        return tekst.Length <= maxDuljina ? tekst : tekst[..maxDuljina].TrimEnd() + "…";
+    }
 
     // Heuristika relevantnosti (all case-insensitive).
     private static int IzracunajSkor(string naziv, string term)

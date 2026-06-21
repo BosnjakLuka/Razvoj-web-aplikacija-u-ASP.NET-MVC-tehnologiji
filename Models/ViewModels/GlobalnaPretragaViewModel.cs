@@ -9,6 +9,10 @@ public class PretragaStavka
     public int Id { get; set; }
     public string Tip { get; set; } = string.Empty;
     public int Skor { get; set; }
+
+    // Polja koja su sudjelovala u pretrazi (osim Naziva) - prikazuju se u rezultatu
+    // da je vidljivo zašto je zapis pogodio upit (npr. Opis, Koordinate, Adresa...).
+    public List<KeyValuePair<string, string>> Polja { get; set; } = new();
 }
 
 // Grupa rezultata za jedan tip entiteta (npr. "Područja").
