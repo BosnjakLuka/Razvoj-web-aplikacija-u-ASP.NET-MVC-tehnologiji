@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using planinarenje.Data;
 using planinarenje.Entiteti;
+using planinarenje.Mcp;
 using Serilog;
 using System.Globalization;
 
@@ -226,6 +227,13 @@ if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(goo
 builder.Services.AddRazorPages();
 builder.Services.AddSingleton<IEmailSender, NoOpEmailSender>();
 
+// MCP server: exposes read-only entity tools for agentic IDE access (e.g. Claude Code, Cursor).
+// Started with the public KontrolnaTocka tool set; replicate the same pattern for other entities.
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithTools<KontrolnaTockaMcpTools>();
+
 // Lab5 Faza 3: Web API dokumentacija (Swagger / OpenAPI) - samo u Development okruženju.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -333,6 +341,9 @@ app.MapControllerRoute(
 
 // Lab5 Faza 3: atributno rutirani Web API kontroleri (api/...).
 app.MapControllers();
+
+// MCP server endpoint for agentic IDE access (read-only entity tools).
+app.MapMcp("/mcp");
 
 app.MapRazorPages();
 
