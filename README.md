@@ -8,3 +8,9 @@ Planinar	luka@planinarenje.hr	Planinar@26!
 
 test za development stranu projekta 121 api testova
 dotnet test --logger "console;verbosity=detailed"
+
+MCP server test:
+http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=0562f307ceef34e709fc381c243012d36d0990aa50b0a0b6f6480896d5c78e55#tools
+
+Transport Type: Streamable HTTP
+URL:            http://localhost:5041/mcp
