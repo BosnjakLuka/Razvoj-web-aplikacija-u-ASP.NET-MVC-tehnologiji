@@ -13,11 +13,17 @@ using System.Globalization;
 
 // Lab5 Faza 6: Serilog logging mehanizam.
 // Konfiguriran prije WebApplication.CreateBuilder kako bi se uhvatile i greške iz startup faze.
+// Naziv log fajla sadrži točan trenutak pokretanja aplikacije (jedan fajl po pokretanju, ne po danu).
+var logFilePath = $"Logs/log-{DateTime.Now:dd-MM-yyyy_HH-mm-ss}.txt";
+
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(new ConfigurationBuilder()
         .AddJsonFile("appsettings.json")
         .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true)
         .Build())
+    .WriteTo.File(
+        logFilePath,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 
 try
@@ -228,11 +234,20 @@ builder.Services.AddRazorPages();
 builder.Services.AddSingleton<IEmailSender, NoOpEmailSender>();
 
 // MCP server: exposes read-only entity tools for agentic IDE access (e.g. Claude Code, Cursor).
-// Started with the public KontrolnaTocka tool set; replicate the same pattern for other entities.
 builder.Services
     .AddMcpServer()
     .WithHttpTransport()
-    .WithTools<KontrolnaTockaMcpTools>();
+    .WithTools<KontrolnaTockaMcpTools>()
+    .WithTools<KorisnikMcpTools>()
+    .WithTools<KnjizicaMcpTools>()
+    .WithTools<PosjetMcpTools>()
+    .WithTools<FotografijaMcpTools>()
+    .WithTools<RutaMcpTools>()
+    .WithTools<PodrucjeMcpTools>()
+    .WithTools<PlaninarskiObjektMcpTools>()
+    .WithTools<PlaninarskaUdrugaMcpTools>()
+    .WithTools<MedaljaMcpTools>()
+    .WithTools<KorisnikMedaljaMcpTools>();
 
 // Lab5 Faza 3: Web API dokumentacija (Swagger / OpenAPI) - samo u Development okruženju.
 builder.Services.AddEndpointsApiExplorer();
