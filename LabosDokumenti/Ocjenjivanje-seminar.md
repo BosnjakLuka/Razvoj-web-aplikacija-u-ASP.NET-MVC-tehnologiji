@@ -15,7 +15,7 @@ Predaja na rokovima. Ne mora svaki kriterij biti ispunjen.
 | Implementacija logging mehanizma | 2 | [x]
 | Responsive mobile/web UI | 2 | [-]
 | CRUD mora raditi bez grešaka | 2 | [-]
-| Expose MCP i pristup kroz agentic IDE | 2 | []
+| Expose MCP i pristup kroz agentic IDE | 2 | [x]
 | Okvirni dojam funkcionalnosti aplikacije (da nema 'crasheva') | 12 | [-]
 | Verifikacija razumijevanja koda (usmeno ispitivanje) | 40 | [-]
 
