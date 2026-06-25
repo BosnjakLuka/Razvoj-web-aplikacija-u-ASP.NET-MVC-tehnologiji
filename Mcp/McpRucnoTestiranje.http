@@ -1,0 +1,48 @@
+@baseUrl = http://localhost:5041
+
+### 1. Initialize handshake — dokazuje da MCP server zivi i odgovara na JSON-RPC protokol
+# @name initialize
+POST {{baseUrl}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {},
+    "clientInfo": { "name": "rucni-test", "version": "1.0" }
+  }
+}
+
+### 2. tools/list — dokazuje da server izlaze stvarne alate (pretrazi_kontrolne_tocke, dohvati_kontrolnu_tocku)
+# Mcp-Session-Id se uzima iz odgovora na zahtjev 1 (header "Mcp-Session-Id")
+# @name toolsList
+POST {{baseUrl}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Mcp-Session-Id: {{initialize.response.headers.Mcp-Session-Id}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/list"
+}
+
+### 3. tools/call — stvarni upit nad bazom za Juzni Velebit (idPodrucje = 13)
+POST {{baseUrl}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Mcp-Session-Id: {{initialize.response.headers.Mcp-Session-Id}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "pretrazi_kontrolne_tocke",
+    "arguments": { "idPodrucje": 13 }
+  }
+}
