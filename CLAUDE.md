@@ -26,7 +26,7 @@ Aplikacija je **digitalna planinarska knjižica** — zamjena za papirnatu bilje
 - **PlaninarskaUdruga** — upravlja objektima
 - **Medalja** / **KorisnikMedalja** — sustav nagrada za broj obilazaka
 
-> ⚠️ U `LabosDokumenti/Lab5.md` se profesorov primjer referira na “kviz”. Kod nas se to **mapira na `Posjet`** (npr. Dropzone upload veže fotografije na konkretni `Posjet`, ne na “kviz”).
+> ⚠️ U `LabosDokumenti/lab5/Lab5.md` se profesorov primjer referira na “kviz”. Kod nas se to **mapira na `Posjet`** (npr. Dropzone upload veže fotografije na konkretni `Posjet`, ne na “kviz”).
 
 ---
 
@@ -96,43 +96,50 @@ Connection string i provider su u `appsettings.json` / `appsettings.Development.
 | **Lab 2** | ✅ Predan | HTML binding, Razor view-ovi, _Layout, kostur dizajna (outdoor/hiking, tamno-plava + tamno-zelena paleta) |
 | **Lab 3** | ✅ Predan | EF Core + MySQL, migracije, custom routing (≥4 akcije), `semantic-model.md`, `sitemap.md` |
 | **Lab 4** | ✅ Predan | Kompletan CRUD za 11 entiteta, AJAX autocomplete dropdown, client+server validacija, flatpickr datepicker (partial view), JS animacije |
-| **Lab 5** | 🟡 U izradi | Web API + DTO, Identity (lokalna + Google OAuth), Dropzone upload, integracijski testovi za API — detaljan plan u `LabosDokumenti/PlanImplementacije-Lab5.md` |
+| **Lab 5** | ✅ Predan | Web API + DTO, Identity (lokalna + Google OAuth), Dropzone upload, integracijski testovi za API — detaljan plan u `LabosDokumenti/lab5/PlanImplementacije-Lab5.md` |
 
-Aktualne stvari koje se rade nalaze se u tom planu implementacije — provjeri ga prije nego se uhvatiš nekog Lab5 taska.
+Sve lab vježbe (1–5) su predane. Aktualni rad je na **projektnim/seminarskim kriterijima** iznad lab vježbi (AI integracija, global search, MCP expose, logging — gotovo; deploy, potpuna pokrivenost testovima, responsive polish, "okvirni dojam" i usmeno ispitivanje — još otvoreno). Izvor istine za to je `LabosDokumenti/Ocjenjivanje-seminar.md` (checkbox tablica bodova) — provjeri je prije nego procijeniš što je "gotovo". Za usmeni ispit pripremu pogledaj `LabosDokumenti/lab5/Lab5-Priprema-Obrana.md`.
 
 ---
 
 ## 5. Izvor istine — `LabosDokumenti/` (OBVEZNO PROČITATI PRIJE RADA)
 
-U `/LabosDokumenti/` postoji set markdown filea koji opisuju **što projekt mora biti i kako se to implementira**. Ovo nisu “nice to read”, **ovo je obveza kolegija**. Prije bilo kakve veće izmjene, otvori relevantne:
+U `/LabosDokumenti/` postoji set markdown filea koji opisuju **što projekt mora biti i kako se to implementira**. Ovo nisu “nice to read”, **ovo je obveza kolegija**. `LabosDokumenti/` je reorganiziran u podfoldere po labu (`lab1/`–`lab5/`); root foldera sadrži samo presječne dokumente. Prije bilo kakve veće izmjene, otvori relevantne:
+
+### Trenutno stanje i ocjenjivanje (provjeri prvo ovo)
+- `Ocjenjivanje-seminar.md` — **checkbox tablica bodova za cijeli seminar/projekt** (deploy, AI integracija, testovi, responsive, MCP, usmeni ispit...). Ovo je izvor istine za "što je gotovo" — ne pretpostavljaj na temelju koda.
+- `lab5/Lab5-Priprema-Obrana.md` — priprema za usmeno ispitivanje (40 bodova, najveća stavka)
+- `lab5/Checklist-Faza3.md`, `Checklist-Faza4.md`, `Checklist-Faza5.md` — checkliste odrađenih faza Lab5 implementacije
 
 ### Domenski model i podaci
-- `finalni_model_planinarska_aplikacija_ispravljeno.md` — **autoritativan model baze**: 11 tablica, svi atributi, tipovi, enumi, sve veze (1:1, 1:N, N:N). Ako mijenjaš model, ovo je referenca.
-- `dataset_planinarska_aplikacija.md` — konkretni seed podaci (područja Hrvatske, kontrolne točke, udruge, objekti — usklađeno s HPS izvorima)
-- `linq_upiti.md` — primjeri LINQ upita nad modelom
-- `Plan-Aplikacije-Planinarenje.md` — opći opis aplikacije (dupli sadržaj s finalnim modelom)
+- `semantic-model.md` (root) — **autoritativan sažetak modela baze** (klase, svojstva, veze); zamjenjuje stari `finalni_model_planinarska_aplikacija_ispravljeno.md` koji je uklonjen iz repozitorija
+- `lab1/dataset_planinarska_aplikacija.md` — konkretni seed podaci (područja Hrvatske, kontrolne točke, udruge, objekti — usklađeno s HPS izvorima)
+- `dataset_prosireni_kontrolne_tocke_i_rute.md` (root) — proširen seed dataset kontrolnih točaka i ruta
+- `lab1/linq_upiti.md` — primjeri LINQ upita nad modelom
+- `lab1/Plan-Aplikacije-Planinarenje.md`, `lab3/Plan-Aplikacije-Planinarenje.md` — opći opis aplikacije (dupli sadržaj, postoji u oba foldera)
 
 ### Lab specifikacije
-- `Lab-1.md`, `Lab_2_-_HTML_Binding.md`, `Lab3.md`, `Lab4.md`, `Lab5.md` — što svaki lab traži, kriteriji bodovanja
-- `lab3-implementacija-vodic.md` — korak-po-korak vodič za Lab3 (EF + routing setup)
-- `PlanImplementacije-Lab5.md` — **detaljan plan za Lab5** (faze 0–7, što treba dodati, redoslijed, autorizacijska matrica)
+- `lab1/Lab-1.md`, `lab2/Lab 2 - HTML Binding.md`, `lab3/Lab3.md`, `lab4/Lab4.md`, `lab5/Lab5.md` — što svaki lab traži, kriteriji bodovanja
+- `lab3/lab3-implementacija-vodic.md` — korak-po-korak vodič za Lab3 (EF + routing setup)
+- `lab5/PlanImplementacije-Lab5.md` — **detaljan plan za Lab5** (faze 0–7, što je dodano, redoslijed, autorizacijska matrica) — Lab5 je predan, file je historijska referenca
 
 ### Dizajn i UX
-- `kostur_dizajna.md` — vizualni identitet (outdoor/hiking, HPS inspiracija, modernizirana paleta), struktura početne stranice, pravila lista (kartice vs tablice), Details stranica
-- `ux-subagent-prompt.md`, `plan-uxSubagent_prompt.md` — UX smjernice u kratkom obliku
+- `lab2/kostur_dizajna.md` — vizualni identitet (outdoor/hiking, HPS inspiracija, modernizirana paleta), struktura početne stranice, pravila lista (kartice vs tablice), Details stranica
+- `lab2/ux-subagent-prompt.md`, `lab2/plan-uxSubagent.prompt.md` — UX smjernice u kratkom obliku
+- `lab2/dokazMockRepositoryDI.md`, `lab2/dokazPrompta.md` — dokazi AI/prompt rada za Lab2 (deliverable, ne dirati)
 
 ### Copilot promptovi (referentni — može se koristiti kao šablona za nove dijelove)
-- `_1-crud-copilot-prompt.md` — kako radi CRUD (soft delete, ViewModels, AJAX search, TryUpdateModelAsync pattern, validacijske anotacije)
-- `_2-autocomplete-validacija-copilot-prompt.md` — autocomplete dropdown + validacija
-- `_3-js-animacije-copilot-prompt.md` — JS animacije
-- `_4-datepicker-copilot-prompt.md` — flatpickr partial view
-- `summit-animacija-copilot-prompt.md`, `medal-animacija-copilot-prompt.md` — specifične animacije
+- `lab4/#1-crud-copilot-prompt.md` — kako radi CRUD (soft delete, ViewModels, AJAX search, TryUpdateModelAsync pattern, validacijske anotacije)
+- `lab4/#2-autocomplete-validacija-copilot-prompt.md` — autocomplete dropdown + validacija
+- `lab4/#3-js-animacije-copilot-prompt.md` — JS animacije
+- `lab4/#4-datepicker-copilot-prompt.md` — flatpickr partial view
+- `lab4/summit-animacija-copilot-prompt.md`, `lab4/medal-animacija-copilot-prompt.md` — specifične animacije
 
 ### Mali deliverable fileovi u rootu
 - `semantic-model.md` — sažeti popis klasa, svojstava, veza (Lab3 bod)
 - `sitemap.md` — za svaki URL: koji controller, koja akcija, koji view (Lab3 bod)
 
-> **Pravilo:** Ako mijenjaš shemu, model, ili kompletan novi modul — prvo otvori odgovarajući file iz `LabosDokumenti/` i potvrdi konzistentnost. Ne improviziraj nazive entiteta, polja ni enuma; svi su definirani u `finalni_model_planinarska_aplikacija_ispravljeno.md`.
+> **Pravilo:** Ako mijenjaš shemu, model, ili kompletan novi modul — prvo otvori odgovarajući file iz `LabosDokumenti/` i potvrdi konzistentnost. Ne improviziraj nazive entiteta, polja ni enuma; autoritativna referenca je `semantic-model.md`.
 
 ---
 
@@ -229,19 +236,19 @@ dotnet user-secrets set "Authentication:Google:ClientSecret" "..."
 - **User secrets** (`dotnet user-secrets`) — ne snimati ključeve u kod, nikada ne commitati `appsettings.*.json` sa pravim ključevima Google/FB OAuth.
 - **`.github/`** workflow fileovi — ne mijenjati osim ako se eksplicitno traži.
 - **`lab-1/`** — sadrži arhivski log AI agenta za Lab1 (deliverable), čisto historijski; ne dirati.
-- **`LabosDokumenti/`** — ovo su materijali kolegija i deliverabli. Pročitati smije i mora; mijenjati samo ako se eksplicitno traži dorada nekog .md filea koji je vlastiti deliverable (`semantic-model.md`, `sitemap.md`, `PlanImplementacije-Lab5.md`).
+- **`LabosDokumenti/`** — ovo su materijali kolegija i deliverabli. Pročitati smije i mora; mijenjati samo ako se eksplicitno traži dorada nekog .md filea koji je vlastiti deliverable (`semantic-model.md`, `sitemap.md`, `LabosDokumenti/lab5/PlanImplementacije-Lab5.md`, `LabosDokumenti/Ocjenjivanje-seminar.md`).
 - **Postojeće migracije u `Migrations/`** — nikada ne editirati datoteku migracije koja je već primijenjena na bazu. Ako treba korekcija, napravi novu migraciju.
 - **`.vs/`** Visual Studio cache — ignorirati.
 - **`temp.txt`** u rootu — ignorirati (privremena bilješka).
 
 ### Stvari koje treba uskladiti sa mnom prije promjene
 - Schema baze (dodavanje/uklanjanje tablica i kolona) — predloži migraciju, ali ne pokreni `database update` bez potvrde
-- Promjene u autorizacijskoj matrici (tko smije što) — provjeri prema `PlanImplementacije-Lab5.md` Faza 2
+- Promjene u autorizacijskoj matrici (tko smije što) — provjeri prema `LabosDokumenti/lab5/PlanImplementacije-Lab5.md` Faza 2
 - Promjene u routingu (`Program.cs` ili `[Route]` atributima) — može slomiti deliverable `sitemap.md`
 - Dodavanje novih NuGet paketa — ok, ali javi koji i zašto u commit poruci
 
 ### Stvari koje slobodno radi bez pitanja
-- View i CSS dorade unutar postojećih konvencija dizajna iz `kostur_dizajna.md`
+- View i CSS dorade unutar postojećih konvencija dizajna iz `LabosDokumenti/lab2/kostur_dizajna.md`
 - ViewModel i DTO refaktoriranja (sve dok ne lome bind)
 - Dodavanje LINQ upita, search filtera, novih akcija u postojeće kontrolere
 - Bugfixovi (ali objasni što i zašto)
@@ -252,11 +259,11 @@ dotnet user-secrets set "Authentication:Google:ClientSecret" "..."
 ## 9. Kako raditi sa mnom
 
 - **Hrvatski jezik** u svim odgovorima i kodu (UI tekst, ErrorMessage, komentari).
-- **Pitaj kad nije jasno** — ne pogađaj domenu. Ako se pojam ne nalazi u `finalni_model_planinarska_aplikacija_ispravljeno.md`, pitaj prije nego ga uvedeš.
+- **Pitaj kad nije jasno** — ne pogađaj domenu. Ako se pojam ne nalazi u `semantic-model.md`, pitaj prije nego ga uvedeš.
 - **Granularno po taskovima** — kolegij eksplicitno boduje “granularno izvođenje agenta po taskovima” (Lab1 kriterij). Ne diraj 50 stvari u jednom commitu; radije jedan task, jedan commit.
 - **Prvo jedan, pa replikacija** — kad treba dodati nešto za svih 11 entiteta (npr. API kontrolere, integracijske testove), prvo napraviti `PosjetApiController` / `PosjetApiTests` do kraja, testirati, pa po tom obrascu replicirati ostale. Lab5 dokument upozorava na “AI slop” ako se odmah krene paralelno na sve.
 - **Reci što nisi siguran** — bolje pitati nego izmišljati polja ili relacije.
-- **Ne lomi postojeće Lab1-4 ekrane** — bilo koja Lab5 izmjena mora ostaviti netaknutim CRUD, validaciju, autocomplete i datepicker.
+- **Ne lomi postojeće Lab1-5 ekrane** — bilo koja nova izmjena (AI integracija, MCP, global search...) mora ostaviti netaknutim CRUD, validaciju, autocomplete, datepicker, API i Identity/OAuth.
 
 ---
 
@@ -279,7 +286,7 @@ dotnet user-secrets set "Authentication:Google:ClientSecret" "..."
 - `Korisnik` N:N `Medalja` preko `KorisnikMedalja`
 
 ### Vizualni identitet (kratko)
-Outdoor / hiking portal, tamno-plava (navigacija) + tamno-zelena (akcent) + maslinasta (sekundarno) + bež (kartice) + bijela/svijetlo siva (površine) + narančasta/planinarska crvena (CTA). **Ne izgleda kao default Bootstrap.** Detalji u `LabosDokumenti/kostur_dizajna.md`.
+Outdoor / hiking portal, tamno-plava (navigacija) + tamno-zelena (akcent) + maslinasta (sekundarno) + bež (kartice) + bijela/svijetlo siva (površine) + narančasta/planinarska crvena (CTA). **Ne izgleda kao default Bootstrap.** Detalji u `LabosDokumenti/lab2/kostur_dizajna.md`.
 
 ---
 
