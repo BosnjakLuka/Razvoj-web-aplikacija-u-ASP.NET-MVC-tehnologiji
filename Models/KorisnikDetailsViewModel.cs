@@ -18,6 +18,7 @@ namespace planinarenje.Models
         public string? ProfilnaSlika { get; set; }
         public bool StatusAktivan { get; set; }
         public bool MozeUredivati { get; set; }
+        public bool JeVlasnik { get; set; }
         public string Uloga { get; set; } = "Korisnik";
         public bool MozePromijeniUlogu { get; set; }
 

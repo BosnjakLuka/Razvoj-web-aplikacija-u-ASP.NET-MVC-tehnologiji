@@ -57,7 +57,7 @@ public class KorisnikMedaljaController : BaseController
         return true;
     }
 
-    [AllowAnonymous]
+    [Authorize]
     public IActionResult Index()
     {
         var model = BuildIndexModel(null);
@@ -66,6 +66,7 @@ public class KorisnikMedaljaController : BaseController
     }
 
     [HttpGet]
+    [Authorize]
     public IActionResult Search(string? searchTerm)
     {
         var model = BuildIndexModel(searchTerm);
@@ -230,6 +231,7 @@ public class KorisnikMedaljaController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize]
     public IActionResult Details(int id)
     {
         var km = Db.KorisnikMedalje

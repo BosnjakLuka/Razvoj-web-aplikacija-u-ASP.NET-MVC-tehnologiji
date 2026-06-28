@@ -13,7 +13,7 @@ Predaja na rokovima. Ne mora svaki kriterij biti ispunjen.
 | AI integracija: unos podataka putem AI upita | 3 | [x]
 | Global search mogućnost pretrage izbornika i stranica | 2 | [x]
 | Implementacija logging mehanizma | 2 | [x]
-| Responsive mobile/web UI | 2 | [-]
+| Responsive mobile/web UI | 2 | [x]
 | CRUD mora raditi bez grešaka | 2 | [-]
 | Expose MCP i pristup kroz agentic IDE | 2 | [x]
 | Okvirni dojam funkcionalnosti aplikacije (da nema 'crasheva') | 12 | [-]

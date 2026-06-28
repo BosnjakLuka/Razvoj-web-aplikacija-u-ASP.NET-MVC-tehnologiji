@@ -66,7 +66,7 @@ namespace planinarenje.Controllers
             return postojiEmail || postojiKorisnickoIme;
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Planinar")]
         public IActionResult Index()
         {
             var model = BuildIndexModel(null);
@@ -75,6 +75,7 @@ namespace planinarenje.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,Planinar")]
         public IActionResult Search(string? searchTerm)
         {
             var model = BuildIndexModel(searchTerm);
@@ -295,8 +296,9 @@ namespace planinarenje.Controllers
                 return NotFound();
             }
 
-            var jeVlasnikIliAdmin = IsAdmin || await IsOwnerAsync(id);
-            if (!jeVlasnikIliAdmin)
+            var jeVlasnik = await IsOwnerAsync(id);
+            var jeVlasnikIliAdmin = IsAdmin || jeVlasnik;
+            if (!jeVlasnikIliAdmin && !IsPlaninar)
                 return Forbid();
 
             string? oib = null, jmbg = null;
@@ -329,6 +331,7 @@ namespace planinarenje.Controllers
                 ProfilnaSlika = FormatProfileSlika(korisnik.ProfilnaSlika),
                 StatusAktivan = korisnik.StatusAktivan,
                 MozeUredivati = jeVlasnikIliAdmin,
+                JeVlasnik = jeVlasnik,
                 Uloga = uloga,
                 MozePromijeniUlogu = IsAdmin,
                 Knjizica = korisnik.Knjizica != null ? new KnjizicaViewModel
