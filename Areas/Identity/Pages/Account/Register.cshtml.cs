@@ -94,6 +94,12 @@ namespace planinarenje.Areas.Identity.Pages.Account
             public string Prezime { get; set; }
 
             [Required]
+            [StringLength(50, MinimumLength = 3, ErrorMessage = "Korisničko ime mora imati između {2} i {1} znakova.")]
+            [RegularExpression("^[a-zA-Z0-9_.]+$", ErrorMessage = "Korisničko ime smije sadržavati samo slova, brojeve, točku i donju crtu.")]
+            [Display(Name = "Korisničko ime")]
+            public string KorisnickoIme { get; set; }
+
+            [Required]
             [StringLength(11, MinimumLength = 11, ErrorMessage = "OIB mora imati točno 11 znamenki.")]
             [RegularExpression("^[0-9]*$", ErrorMessage = "OIB smije sadržavati samo brojeve.")]
             [Display(Name = "OIB")]
@@ -138,6 +144,14 @@ namespace planinarenje.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
+                var korisnickoImeZauzeto = await _dbContext.Korisnici
+                    .AnyAsync(k => k.KorisnickoIme == Input.KorisnickoIme);
+                if (korisnickoImeZauzeto)
+                {
+                    ModelState.AddModelError("Input.KorisnickoIme", "Korisničko ime je već zauzeto.");
+                    return Page();
+                }
+
                 var user = CreateUser();
                 user.OIB = Input.OIB;
                 user.JMBG = Input.JMBG;
@@ -153,7 +167,7 @@ namespace planinarenje.Areas.Identity.Pages.Account
                         Ime = Input.Ime,
                         Prezime = Input.Prezime,
                         Email = Input.Email,
-                        KorisnickoIme = Input.Email,
+                        KorisnickoIme = Input.KorisnickoIme,
                         DatumRegistracije = DateTime.UtcNow,
                         StatusAktivan = true,
                         AppUserId = user.Id

@@ -34,6 +34,11 @@
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
+                <input asp-for="Input.KorisnickoIme" class="form-control" autocomplete="username" placeholder="Korisničko ime" />
+                <label asp-for="Input.KorisnickoIme"></label>
+                <span asp-validation-for="Input.KorisnickoIme" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
                 <input asp-for="Input.OIB" class="form-control" autocomplete="off" placeholder="OIB" />
                 <label asp-for="Input.OIB"></label>
                 <span asp-validation-for="Input.OIB" class="text-danger"></span>

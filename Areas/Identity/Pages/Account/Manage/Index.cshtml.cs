@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using planinarenje.Data;
 using planinarenje.Entiteti;
 
 namespace planinarenje.Areas.Identity.Pages.Account.Manage
@@ -17,13 +19,16 @@ namespace planinarenje.Areas.Identity.Pages.Account.Manage
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
+        private readonly PlaninarstvoDbContext _dbContext;
 
         public IndexModel(
             UserManager<AppUser> userManager,
-            SignInManager<AppUser> signInManager)
+            SignInManager<AppUser> signInManager,
+            PlaninarstvoDbContext dbContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _dbContext = dbContext;
         }
 
         /// <summary>
@@ -59,18 +64,26 @@ namespace planinarenje.Areas.Identity.Pages.Account.Manage
             [Phone]
             [Display(Name = "Phone number")]
             public string PhoneNumber { get; set; }
+
+            [Required]
+            [StringLength(50, MinimumLength = 3, ErrorMessage = "Korisničko ime mora imati između {2} i {1} znakova.")]
+            [RegularExpression("^[a-zA-Z0-9_.]+$", ErrorMessage = "Korisničko ime smije sadržavati samo slova, brojeve, točku i donju crtu.")]
+            [Display(Name = "Korisničko ime")]
+            public string KorisnickoIme { get; set; }
         }
 
         private async Task LoadAsync(AppUser user)
         {
             var userName = await _userManager.GetUserNameAsync(user);
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
+            var korisnik = await _dbContext.Korisnici.FirstOrDefaultAsync(k => k.AppUserId == user.Id);
 
             Username = userName;
 
             Input = new InputModel
             {
-                PhoneNumber = phoneNumber
+                PhoneNumber = phoneNumber,
+                KorisnickoIme = korisnik?.KorisnickoIme
             };
         }
 
@@ -109,6 +122,22 @@ namespace planinarenje.Areas.Identity.Pages.Account.Manage
                     StatusMessage = "Unexpected error when trying to set phone number.";
                     return RedirectToPage();
                 }
+            }
+
+            var korisnik = await _dbContext.Korisnici.FirstOrDefaultAsync(k => k.AppUserId == user.Id);
+            if (korisnik != null && korisnik.KorisnickoIme != Input.KorisnickoIme)
+            {
+                var korisnickoImeZauzeto = await _dbContext.Korisnici
+                    .AnyAsync(k => k.KorisnickoIme == Input.KorisnickoIme && k.IdKorisnik != korisnik.IdKorisnik);
+                if (korisnickoImeZauzeto)
+                {
+                    ModelState.AddModelError("Input.KorisnickoIme", "Korisničko ime je već zauzeto.");
+                    await LoadAsync(user);
+                    return Page();
+                }
+
+                korisnik.KorisnickoIme = Input.KorisnickoIme;
+                await _dbContext.SaveChangesAsync();
             }
 
             await _signInManager.RefreshSignInAsync(user);

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
@@ -51,6 +52,7 @@ public class ObavijestController : Controller
         return PartialView("_ObavijestListPartial", model);
     }
 
+    [Authorize]
     public IActionResult Create()
     {
         return View(new Obavijest
@@ -60,6 +62,7 @@ public class ObavijestController : Controller
         });
     }
 
+    [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Create(Obavijest obavijest)

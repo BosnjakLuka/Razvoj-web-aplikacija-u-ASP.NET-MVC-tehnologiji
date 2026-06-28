@@ -1,20 +1,40 @@
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using planinarenje.Data
 @using planinarenje.Entiteti
 
 @inject SignInManager<AppUser> SignInManager
 @inject UserManager<AppUser> UserManager
+@inject PlaninarstvoDbContext DbContext
+
+@{
+    var isSignedIn = SignInManager.IsSignedIn(User);
+    string? korisnickoIme = null;
+    if (isSignedIn)
+    {
+        var appUserId = UserManager.GetUserId(User);
+        korisnickoIme = DbContext.Korisnici
+            .Where(k => k.AppUserId == appUserId)
+            .Select(k => k.KorisnickoIme)
+            .FirstOrDefault() ?? UserManager.GetUserName(User);
+    }
+}
 
 <div class="dropdown profile-menu">
-    <button class="profile-icon-btn" type="button" id="profileMenuToggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Korisnički izbornik">
+    <button class="profile-icon-btn @(isSignedIn ? "profile-icon-btn--online" : "")" type="button" id="profileMenuToggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Korisnički izbornik">
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
             <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
             <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z" />
         </svg>
+        @if (isSignedIn)
+        {
+            <span class="profile-online-dot" aria-hidden="true"></span>
+        }
     </button>
     <ul class="dropdown-menu dropdown-menu-end profile-menu-dropdown" aria-labelledby="profileMenuToggle">
-        @if (SignInManager.IsSignedIn(User))
+        @if (isSignedIn)
         {
-            <li class="dropdown-header">Bok, @UserManager.GetUserName(User)!</li>
+            <li class="dropdown-header">Bok, @korisnickoIme!</li>
             <li><a id="manage" class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Moj profil</a></li>
             <li><hr class="dropdown-divider" /></li>
             <li>

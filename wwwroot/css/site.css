@@ -122,6 +122,7 @@ a:hover {
 
 /* Profil ikona (dropdown: registracija/prijava ili profil/odjava) */
 .profile-icon-btn {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -143,6 +144,17 @@ a:hover {
 
 .profile-menu-dropdown {
     min-width: 200px;
+}
+
+.profile-online-dot {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #2e7d32;
+    border: 2px solid var(--color-primary-blue);
 }
 
 /* Sub-nav: linkovi na entitete, smješten ispod hero/top navbara */
