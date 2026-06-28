@@ -37,7 +37,7 @@
             <h2 class="h4 mb-1">@Model.Ime @Model.Prezime</h2>
             <p class="text-muted mb-3">@Model.KorisnickoIme</p>
             
-            <div class="mb-3">
+            <div class="mb-3 d-flex flex-wrap justify-content-center gap-2">
                 @if (Model.StatusAktivan)
                 {
                     <span class="badge bg-success-subtle text-success fs-6"><i class="bi bi-check-circle me-1"></i>Aktivan korisnik</span>
@@ -46,8 +46,22 @@
                 {
                     <span class="badge bg-secondary-subtle text-secondary fs-6"><i class="bi bi-x-circle me-1"></i>Neaktivan korisnik</span>
                 }
+                <span class="badge bg-primary-subtle text-primary fs-6"><i class="bi bi-person-badge me-1"></i>@Model.Uloga</span>
             </div>
-            
+
+            @if (Model.MozePromijeniUlogu)
+            {
+                <form method="post" asp-action="PromijeniUlogu" asp-controller="Korisnik" asp-route-id="@Model.IdKorisnik" class="d-flex gap-2 mb-3">
+                    @Html.AntiForgeryToken()
+                    <select name="uloga" class="form-select form-select-sm">
+                        <option value="Korisnik" selected="@(Model.Uloga == "Korisnik")">Korisnik</option>
+                        <option value="Planinar" selected="@(Model.Uloga == "Planinar")">Planinar</option>
+                        <option value="Admin" selected="@(Model.Uloga == "Admin")">Admin</option>
+                    </select>
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">Promijeni ulogu</button>
+                </form>
+            }
+
             <div class="d-grid gap-2">
                 <a href="mailto:@Model.Email" class="btn btn-outline-primary"><i class="bi bi-envelope me-2"></i>Kontaktiraj</a>
             </div>
@@ -107,6 +121,10 @@
                     <div class="col-sm-6">
                         <label for="brojMobitela" class="form-label text-muted small">Broj mobitela</label>
                         <input type="text" id="brojMobitela" name="brojMobitela" class="form-control" value="@Model.BrojMobitela" />
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="datumRodenja" class="form-label text-muted small">Datum rođenja</label>
+                        <input type="date" id="datumRodenja" name="datumRodenja" class="form-control" value="@Model.DatumRodenja?.ToString("yyyy-MM-dd")" />
                     </div>
                     <div class="col-sm-6">
                         <label for="oib" class="form-label text-muted small">OIB</label>

@@ -24,39 +24,31 @@ public class KnjizicaController : BaseController
     [Authorize]
     public async Task<IActionResult> Index()
     {
+        ViewData["Title"] = "E-Knjizica";
+
         if (IsAdmin)
         {
-            var model = BuildIndexModel(null);
-            ViewData["Title"] = "E-Knjizica";
-            return View(model);
+            return View(BuildIndexModel(null));
         }
 
         var current = await GetCurrentKorisnikAsync();
         if (current == null) return Forbid();
 
-        var mine = Db.Knjizice
-            .Include(k => k.Korisnik)
-            .Where(k => k.StatusAktivna && k.IdKorisnik == current.IdKorisnik)
-            .Select(k => new KnjizicaIndexViewModel
-            {
-                IdKnjizica = k.IdKnjizica,
-                IdKorisnik = k.IdKorisnik,
-                ImePrezimeKorisnika = k.Korisnik != null ? k.Korisnik.Ime + " " + k.Korisnik.Prezime : "Nepoznat planer",
-                DatumKreiranja = k.DatumKreiranja,
-                StatusAktivna = k.StatusAktivna
-            })
-            .OrderByDescending(k => k.DatumKreiranja)
-            .ToList();
-
-        ViewData["Title"] = "E-Knjizica";
-        return View(mine);
+        return View(BuildIndexModel(null, current.IdKorisnik));
     }
 
     [HttpGet]
-    public IActionResult Search(string? searchTerm)
+    public async Task<IActionResult> Search(string? searchTerm)
     {
-        var model = BuildIndexModel(searchTerm);
-        return PartialView("_KnjizicaListPartial", model);
+        if (IsAdmin)
+        {
+            return PartialView("_KnjizicaListPartial", BuildIndexModel(searchTerm));
+        }
+
+        var current = await GetCurrentKorisnikAsync();
+        if (current == null) return Forbid();
+
+        return PartialView("_KnjizicaListPartial", BuildIndexModel(searchTerm, current.IdKorisnik));
     }
 
     [HttpGet]
@@ -364,11 +356,16 @@ public class KnjizicaController : BaseController
             .ToList();
     }
 
-    private List<KnjizicaIndexViewModel> BuildIndexModel(string? searchTerm)
+    private List<KnjizicaIndexViewModel> BuildIndexModel(string? searchTerm, int? scopeToKorisnikId = null)
     {
         var query = Db.Knjizice
             .Include(k => k.Korisnik)
             .Where(k => k.StatusAktivna && k.Korisnik != null && k.Korisnik.StatusAktivan);
+
+        if (scopeToKorisnikId.HasValue)
+        {
+            query = query.Where(k => k.IdKorisnik == scopeToKorisnikId.Value);
+        }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {

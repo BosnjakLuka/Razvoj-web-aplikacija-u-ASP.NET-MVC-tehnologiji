@@ -17,7 +17,7 @@ public static class IdentitySeed
             return;
         }
 
-        var roles = new[] { "Admin", "Planinar" };
+        var roles = new[] { "Admin", "Planinar", "Korisnik" };
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))

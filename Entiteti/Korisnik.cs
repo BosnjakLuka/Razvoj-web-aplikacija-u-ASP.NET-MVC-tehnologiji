@@ -24,6 +24,7 @@ public class Korisnik
     [MaxLength(100)]
     public string KorisnickoIme { get; set; } = string.Empty;
 
+    [Column(TypeName = "date")]
     public DateTime? DatumRodenja { get; set; }
     public DateTime DatumRegistracije { get; set; }
 

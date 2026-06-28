@@ -24,8 +24,16 @@ public class ObavijestController : BaseController
 
     public IActionResult Index()
     {
-        var model = _dbContext.Obavijesti
+        var query = _dbContext.Obavijesti
             .Include(o => o.Korisnik)
+            .AsQueryable();
+
+        if (User.Identity == null || !User.Identity.IsAuthenticated)
+        {
+            query = query.Where(o => o.JeAktivna);
+        }
+
+        var model = query
             .OrderByDescending(o => o.DatumObjave)
             .ToList();
 
@@ -37,6 +45,11 @@ public class ObavijestController : BaseController
         var query = _dbContext.Obavijesti
             .Include(o => o.Korisnik)
             .AsQueryable();
+
+        if (User.Identity == null || !User.Identity.IsAuthenticated)
+        {
+            query = query.Where(o => o.JeAktivna);
+        }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -91,32 +104,60 @@ public class ObavijestController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
-    public IActionResult Edit(int id)
+    [Authorize]
+    public async Task<IActionResult> Edit(int id)
     {
         var obavijest = _dbContext.Obavijesti
             .Include(o => o.Korisnik)
             .FirstOrDefault(o => o.IdObavijest == id);
         if (obavijest == null) return NotFound();
 
+        if (!IsAdmin && !await IsOwnerAsync(obavijest.IdKorisnik))
+            return Forbid();
+
+        ViewData["IsAdmin"] = IsAdmin;
         ViewData["KorisnikText"] = obavijest.Korisnik != null
             ? obavijest.Korisnik.Ime + " " + obavijest.Korisnik.Prezime + " (@" + obavijest.Korisnik.KorisnickoIme + ")"
             : GetKorisnikLabel(obavijest.IdKorisnik);
         return View(obavijest);
     }
 
+    [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, Obavijest obavijest)
+    public async Task<IActionResult> Edit(int id, Obavijest obavijest)
     {
         if (id != obavijest.IdObavijest) return NotFound();
 
+        var postojeca = _dbContext.Obavijesti.FirstOrDefault(o => o.IdObavijest == id);
+        if (postojeca == null) return NotFound();
+
+        if (!IsAdmin && !await IsOwnerAsync(postojeca.IdKorisnik))
+        {
+            _logger.LogWarning("Korisnik {AppUserId} bez prava pristupa pokušao je urediti obavijest {IdObavijest}.", AppUserId, id);
+            return Forbid();
+        }
+
+        // Autor se ne moze promijeniti kroz formu osim ako je Admin.
+        if (!IsAdmin)
+        {
+            obavijest.IdKorisnik = postojeca.IdKorisnik;
+        }
+        ModelState.Remove(nameof(Obavijest.IdKorisnik));
+
         if (!ModelState.IsValid)
         {
+            ViewData["IsAdmin"] = IsAdmin;
             ViewData["KorisnikText"] = GetKorisnikLabel(obavijest.IdKorisnik);
             return View(obavijest);
         }
 
-        _dbContext.Obavijesti.Update(obavijest);
+        postojeca.Naslov = obavijest.Naslov;
+        postojeca.Sadrzaj = obavijest.Sadrzaj;
+        postojeca.DatumObjave = obavijest.DatumObjave;
+        postojeca.JeAktivna = obavijest.JeAktivna;
+        postojeca.IdKorisnik = obavijest.IdKorisnik;
+
         _dbContext.SaveChanges();
         _logger.LogInformation("Obavijest {IdObavijest} ažurirana.", id);
         return RedirectToAction(nameof(Index));
@@ -132,9 +173,15 @@ public class ObavijestController : BaseController
 
         if (obavijest == null) return NotFound();
 
+        if (!obavijest.JeAktivna && (User.Identity == null || !User.Identity.IsAuthenticated))
+        {
+            return NotFound();
+        }
+
         return View(obavijest);
     }
 
+    [Authorize(Roles = "Admin")]
     public IActionResult Delete(int id)
     {
         var obavijest = _dbContext.Obavijesti
@@ -149,6 +196,7 @@ public class ObavijestController : BaseController
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
     public IActionResult DeleteConfirmed(int id)
     {
         var obavijest = _dbContext.Obavijesti.FirstOrDefault(o => o.IdObavijest == id);

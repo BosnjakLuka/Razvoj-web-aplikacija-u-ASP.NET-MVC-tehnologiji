@@ -300,11 +300,18 @@ namespace planinarenje.Controllers
                 return Forbid();
 
             string? oib = null, jmbg = null;
+            var uloga = "Korisnik";
             if (!string.IsNullOrEmpty(korisnik.AppUserId))
             {
                 var appUser = await UserMgr.FindByIdAsync(korisnik.AppUserId);
                 oib = appUser?.OIB;
                 jmbg = appUser?.JMBG;
+                if (appUser != null)
+                {
+                    var korisnikoveUloge = await UserMgr.GetRolesAsync(appUser);
+                    if (korisnikoveUloge.Contains("Admin")) uloga = "Admin";
+                    else if (korisnikoveUloge.Contains("Planinar")) uloga = "Planinar";
+                }
             }
 
             var model = new KorisnikDetailsViewModel
@@ -322,6 +329,8 @@ namespace planinarenje.Controllers
                 ProfilnaSlika = FormatProfileSlika(korisnik.ProfilnaSlika),
                 StatusAktivan = korisnik.StatusAktivan,
                 MozeUredivati = jeVlasnikIliAdmin,
+                Uloga = uloga,
+                MozePromijeniUlogu = IsAdmin,
                 Knjizica = korisnik.Knjizica != null ? new KnjizicaViewModel
                 {
                     IdKnjizica = korisnik.Knjizica.IdKnjizica,
@@ -367,7 +376,7 @@ namespace planinarenje.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public async Task<IActionResult> UrediOsobnePodatke(int id, string? brojMobitela, string? oib, string? jmbg)
+        public async Task<IActionResult> UrediOsobnePodatke(int id, string? brojMobitela, DateTime? datumRodenja, string? oib, string? jmbg)
         {
             var korisnik = await Db.Korisnici.FirstOrDefaultAsync(k => k.IdKorisnik == id && k.StatusAktivan);
             if (korisnik == null) return NotFound();
@@ -388,6 +397,7 @@ namespace planinarenje.Controllers
             }
 
             korisnik.BrojMobitela = string.IsNullOrWhiteSpace(brojMobitela) ? null : brojMobitela.Trim();
+            korisnik.DatumRodenja = datumRodenja;
             await Db.SaveChangesAsync();
 
             if (!string.IsNullOrEmpty(korisnik.AppUserId))
@@ -403,6 +413,41 @@ namespace planinarenje.Controllers
 
             _logger.LogInformation("Korisnik {IdKorisnik} ažurirao osobne podatke.", id);
             TempData["Success"] = "Osobni podaci su uspjesno azurirani.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // Samo Admin smije mijenjati ulogu drugom korisniku (Korisnik -> Planinar -> Admin).
+        private static readonly string[] DopusteneUloge = { "Korisnik", "Planinar", "Admin" };
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> PromijeniUlogu(int id, string uloga)
+        {
+            if (!DopusteneUloge.Contains(uloga))
+            {
+                TempData["Error"] = "Nepoznata uloga.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            var korisnik = await Db.Korisnici.FirstOrDefaultAsync(k => k.IdKorisnik == id && k.StatusAktivan);
+            if (korisnik == null || string.IsNullOrEmpty(korisnik.AppUserId))
+            {
+                return NotFound();
+            }
+
+            var appUser = await UserMgr.FindByIdAsync(korisnik.AppUserId);
+            if (appUser == null)
+            {
+                return NotFound();
+            }
+
+            var postojeceUloge = await UserMgr.GetRolesAsync(appUser);
+            await UserMgr.RemoveFromRolesAsync(appUser, postojeceUloge);
+            await UserMgr.AddToRoleAsync(appUser, uloga);
+
+            _logger.LogInformation("Admin {AppUserId} je promijenio ulogu korisnika {IdKorisnik} u {Uloga}.", AppUserId, id, uloga);
+            TempData["Success"] = "Uloga korisnika je uspjesno promijenjena.";
             return RedirectToAction(nameof(Details), new { id });
         }
 

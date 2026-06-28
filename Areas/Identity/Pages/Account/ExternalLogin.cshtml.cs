@@ -210,6 +210,8 @@ namespace planinarenje.Areas.Identity.Pages.Account
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
+                    await _userManager.AddToRoleAsync(user, "Korisnik");
+
                     _dbContext.Korisnici.Add(new Korisnik
                     {
                         Ime = Input.Ime,

@@ -138,7 +138,7 @@ namespace planinarenje.Controllers
             return Json(results);
         }
 
-        [Authorize(Roles = "Admin,Planinar")]
+        [Authorize]
         public async Task<IActionResult> Create()
         {
             PopulateKnjiziceByKorisnik();
@@ -169,7 +169,7 @@ namespace planinarenje.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Planinar")]
+        [Authorize]
         public async Task<IActionResult> Create(PosjetCreateModel model)
         {
             ValidatePosjetSelection(model);
@@ -218,7 +218,7 @@ namespace planinarenje.Controllers
                 DozivljajPosjeta = model.DozivljajPosjeta,
                 OpisIskustva = model.OpisIskustva,
                 UneseniGUID = kontrolnaTocka.GUIDOznaka,
-                JeLiPotvrdenPosjet = false,
+                JeLiPotvrdenPosjet = User.IsInRole("Admin") || User.IsInRole("Planinar"),
                 DatumKreiranjaZapisa = DateTime.UtcNow
             };
 
@@ -240,7 +240,7 @@ namespace planinarenje.Controllers
         // ID-eve iz baze. GUID i korisnik se NE popunjavaju (ostaju ručni / server-side).
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Planinar")]
+        [Authorize]
         public async Task<IActionResult> AiPrijedlog(string upit)
         {
             if (string.IsNullOrWhiteSpace(upit))
