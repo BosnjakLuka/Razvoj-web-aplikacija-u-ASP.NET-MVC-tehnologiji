@@ -1,19 +1,22 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
 using planinarenje.Entiteti;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace planinarenje.Controllers;
 
-public class ObavijestController : Controller
+public class ObavijestController : BaseController
 {
     private readonly PlaninarstvoDbContext _dbContext;
     private readonly ILogger<ObavijestController> _logger;
 
-    public ObavijestController(PlaninarstvoDbContext dbContext, ILogger<ObavijestController> logger)
+    public ObavijestController(UserManager<AppUser> userMgr, PlaninarstvoDbContext dbContext, ILogger<ObavijestController> logger)
+        : base(userMgr, dbContext)
     {
         _dbContext = dbContext;
         _logger = logger;
@@ -65,11 +68,19 @@ public class ObavijestController : Controller
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(Obavijest obavijest)
+    public async Task<IActionResult> Create(Obavijest obavijest)
     {
+        var korisnik = await GetCurrentKorisnikAsync();
+        if (korisnik == null)
+        {
+            return Forbid();
+        }
+
+        obavijest.IdKorisnik = korisnik.IdKorisnik;
+        ModelState.Remove(nameof(Obavijest.IdKorisnik));
+
         if (!ModelState.IsValid)
         {
-            ViewData["KorisnikText"] = GetKorisnikLabel(obavijest.IdKorisnik);
             return View(obavijest);
         }
 

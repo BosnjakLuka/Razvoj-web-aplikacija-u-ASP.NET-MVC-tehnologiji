@@ -43,20 +43,6 @@
             })
         </div>
 
-        <div class="mb-3">
-            <label asp-for="IdKorisnik" class="form-label">Autor</label>
-            @await Html.PartialAsync("_AutocompleteDropdown", null, new ViewDataDictionary(ViewData)
-            {
-                { "FieldName", "IdKorisnik" },
-                { "DisplayName", "Autor" },
-                { "SearchUrl", Url.Action("AutocompleteSearch", "Korisnik") },
-                { "CurrentId", Model?.IdKorisnik.ToString() },
-                { "CurrentText", ViewData["KorisnikText"]?.ToString() },
-                { "Placeholder", "Pretrazi korisnike..." },
-                { "IsRequired", true }
-            })
-        </div>
-
         <div class="form-check mb-4">
             <input asp-for="JeAktivna" class="form-check-input" />
             <label asp-for="JeAktivna" class="form-check-label"></label>

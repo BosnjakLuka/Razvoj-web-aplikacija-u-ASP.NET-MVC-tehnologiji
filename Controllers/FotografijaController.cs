@@ -58,7 +58,7 @@ public class FotografijaController : BaseController
         return "/Slike/Dizajn/hpo.jpg";
     }
 
-    [AllowAnonymous]
+    [Authorize(Roles = "Admin")]
     public IActionResult Index()
     {
         var model = BuildIndexModel(null);
@@ -67,6 +67,7 @@ public class FotografijaController : BaseController
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public IActionResult Search(string? searchTerm)
     {
         var model = BuildIndexModel(searchTerm);
@@ -234,8 +235,8 @@ public class FotografijaController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
-    [AllowAnonymous]
-    public IActionResult Details(int id)
+    [Authorize]
+    public async Task<IActionResult> Details(int id)
     {
         var f = Db.Fotografije
             .Include(x => x.Posjet)
@@ -243,6 +244,9 @@ public class FotografijaController : BaseController
             .FirstOrDefault(x => x.IdFotografija == id && x.DeletedAt == null);
 
         if (f == null) return NotFound();
+
+        if (!IsAdmin && (f.Posjet == null || !await IsOwnerAsync(f.Posjet.IdKorisnik)))
+            return Forbid();
 
         var kt = f.Posjet?.KontrolnaTocka;
 

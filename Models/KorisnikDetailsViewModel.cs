@@ -13,8 +13,11 @@ namespace planinarenje.Models
         public DateTime? DatumRodenja { get; set; }
         public DateTime DatumRegistracije { get; set; }
         public string? BrojMobitela { get; set; }
+        public string? OIB { get; set; }
+        public string? JMBG { get; set; }
         public string? ProfilnaSlika { get; set; }
         public bool StatusAktivan { get; set; }
+        public bool MozeUredivati { get; set; }
 
         public KnjizicaViewModel? Knjizica { get; set; }
         public List<PosjetViewModel> Posjeti { get; set; } = new();

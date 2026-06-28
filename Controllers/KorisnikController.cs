@@ -14,10 +14,15 @@ namespace planinarenje.Controllers
     public class KorisnikController : BaseController
     {
         private readonly ILogger<KorisnikController> _logger;
+        private readonly IWebHostEnvironment _env;
 
-        public KorisnikController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, ILogger<KorisnikController> logger)
+        private static readonly string[] DopusteneEkstenzijeSlike = { ".jpg", ".jpeg", ".png", ".webp" };
+        private const long MaxVelicinaSlike = 5 * 1024 * 1024; // 5 MB
+
+        public KorisnikController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, IWebHostEnvironment env, ILogger<KorisnikController> logger)
             : base(userMgr, db)
         {
+            _env = env;
             _logger = logger;
         }
 
@@ -290,8 +295,17 @@ namespace planinarenje.Controllers
                 return NotFound();
             }
 
-            if (!IsAdmin && !await IsOwnerAsync(id))
+            var jeVlasnikIliAdmin = IsAdmin || await IsOwnerAsync(id);
+            if (!jeVlasnikIliAdmin)
                 return Forbid();
+
+            string? oib = null, jmbg = null;
+            if (!string.IsNullOrEmpty(korisnik.AppUserId))
+            {
+                var appUser = await UserMgr.FindByIdAsync(korisnik.AppUserId);
+                oib = appUser?.OIB;
+                jmbg = appUser?.JMBG;
+            }
 
             var model = new KorisnikDetailsViewModel
             {
@@ -303,8 +317,11 @@ namespace planinarenje.Controllers
                 DatumRodenja = korisnik.DatumRodenja,
                 DatumRegistracije = korisnik.DatumRegistracije,
                 BrojMobitela = korisnik.BrojMobitela,
+                OIB = oib,
+                JMBG = jmbg,
                 ProfilnaSlika = FormatProfileSlika(korisnik.ProfilnaSlika),
                 StatusAktivan = korisnik.StatusAktivan,
+                MozeUredivati = jeVlasnikIliAdmin,
                 Knjizica = korisnik.Knjizica != null ? new KnjizicaViewModel
                 {
                     IdKnjizica = korisnik.Knjizica.IdKnjizica,
@@ -345,6 +362,100 @@ namespace planinarenje.Controllers
                 .ToList();
 
             return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> UrediOsobnePodatke(int id, string? brojMobitela, string? oib, string? jmbg)
+        {
+            var korisnik = await Db.Korisnici.FirstOrDefaultAsync(k => k.IdKorisnik == id && k.StatusAktivan);
+            if (korisnik == null) return NotFound();
+
+            if (!IsAdmin && !await IsOwnerAsync(id))
+                return Forbid();
+
+            if (!string.IsNullOrWhiteSpace(oib) && (oib.Length != 11 || !oib.All(char.IsDigit)))
+            {
+                TempData["Error"] = "OIB mora imati točno 11 znamenki.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (!string.IsNullOrWhiteSpace(jmbg) && (jmbg.Length != 13 || !jmbg.All(char.IsDigit)))
+            {
+                TempData["Error"] = "JMBG mora imati točno 13 znamenki.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            korisnik.BrojMobitela = string.IsNullOrWhiteSpace(brojMobitela) ? null : brojMobitela.Trim();
+            await Db.SaveChangesAsync();
+
+            if (!string.IsNullOrEmpty(korisnik.AppUserId))
+            {
+                var appUser = await UserMgr.FindByIdAsync(korisnik.AppUserId);
+                if (appUser != null)
+                {
+                    appUser.OIB = oib?.Trim() ?? string.Empty;
+                    appUser.JMBG = jmbg?.Trim() ?? string.Empty;
+                    await UserMgr.UpdateAsync(appUser);
+                }
+            }
+
+            _logger.LogInformation("Korisnik {IdKorisnik} ažurirao osobne podatke.", id);
+            TempData["Success"] = "Osobni podaci su uspjesno azurirani.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> UploadSlika(int id, IFormFile? file)
+        {
+            var korisnik = await Db.Korisnici.FirstOrDefaultAsync(k => k.IdKorisnik == id && k.StatusAktivan);
+            if (korisnik == null) return NotFound();
+
+            if (!IsAdmin && !await IsOwnerAsync(id))
+                return Forbid();
+
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { success = false, error = "Datoteka nije priložena." });
+            }
+
+            if (file.Length > MaxVelicinaSlike)
+            {
+                return BadRequest(new { success = false, error = "Datoteka je prevelika (maksimalno 5 MB)." });
+            }
+
+            var ekstenzija = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!DopusteneEkstenzijeSlike.Contains(ekstenzija))
+            {
+                return BadRequest(new { success = false, error = "Dopušteni su samo formati: JPG, PNG, WEBP." });
+            }
+
+            if (string.IsNullOrEmpty(file.ContentType) ||
+                !file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { success = false, error = "Datoteka mora biti slika." });
+            }
+
+            var webRoot = !string.IsNullOrEmpty(_env.WebRootPath) ? _env.WebRootPath : Path.Combine(_env.ContentRootPath, "wwwroot");
+            var apsolutniFolder = Path.Combine(webRoot, "uploads", "korisnici", id.ToString());
+            Directory.CreateDirectory(apsolutniFolder);
+
+            var spremljenoIme = $"{Guid.NewGuid()}{ekstenzija}";
+            var apsolutnaPutanja = Path.Combine(apsolutniFolder, spremljenoIme);
+
+            using (var stream = new FileStream(apsolutnaPutanja, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            korisnik.ProfilnaSlika = $"/uploads/korisnici/{id}/{spremljenoIme}";
+            await Db.SaveChangesAsync();
+
+            _logger.LogInformation("Korisnik {IdKorisnik} ažurirao profilnu sliku.", id);
+            return Json(new { success = true, url = korisnik.ProfilnaSlika });
         }
 
         private List<KorisnikIndexCardViewModel> BuildIndexModel(string? searchTerm)

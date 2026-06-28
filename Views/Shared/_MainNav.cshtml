@@ -22,7 +22,7 @@
                     <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="Posjet" asp-action="Index">Posjeti</a></li>
                 }
                 <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="Obavijest" asp-action="Index">Obavijesti</a></li>
-                @if (SignInManager.IsSignedIn(User))
+                @if (User.IsInRole("Admin"))
                 {
                     <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="Fotografija" asp-action="Index">Fotografije</a></li>
                 }

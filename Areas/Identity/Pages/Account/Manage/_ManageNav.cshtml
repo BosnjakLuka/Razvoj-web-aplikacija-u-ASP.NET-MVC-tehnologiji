@@ -1,9 +1,22 @@
+@using Microsoft.EntityFrameworkCore
+@using planinarenje.Data
 @inject SignInManager<AppUser> SignInManager
+@inject UserManager<AppUser> UserManager
+@inject PlaninarstvoDbContext DbContext
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+    var trenutniAppUserId = UserManager.GetUserId(User);
+    var ownKorisnikId = await DbContext.Korisnici
+        .Where(k => k.AppUserId == trenutniAppUserId)
+        .Select(k => (int?)k.IdKorisnik)
+        .FirstOrDefaultAsync();
 }
 <ul class="nav nav-pills flex-column">
-    <li class="nav-item"><a class="nav-link @ManageNavPages.IndexNavClass(ViewContext)" id="profile" asp-page="./Index">Profile</a></li>
+    @if (ownKorisnikId.HasValue)
+    {
+        <li class="nav-item"><a class="nav-link" id="profile" asp-controller="Korisnik" asp-action="Details" asp-route-id="@ownKorisnikId">Profile</a></li>
+    }
+    <li class="nav-item"><a class="nav-link @ManageNavPages.IndexNavClass(ViewContext)" id="username" asp-page="./Index">Username</a></li>
     <li class="nav-item"><a class="nav-link @ManageNavPages.EmailNavClass(ViewContext)" id="email" asp-page="./Email">Email</a></li>
     <li class="nav-item"><a class="nav-link @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="./ChangePassword">Password</a></li>
     @if (hasExternalLogins)

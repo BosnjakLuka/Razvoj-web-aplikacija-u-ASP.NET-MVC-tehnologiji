@@ -16,20 +16,24 @@
     <div class="col-lg-4">
         <div class="app-card h-auto text-center mb-4">
             <div class="mb-3">
-                @if (!string.IsNullOrEmpty(Model.ProfilnaSlika))
-                {
-                    <img src="@Model.ProfilnaSlika" alt="Profilna slika" class="img-fluid rounded-circle shadow-sm" style="width: 150px; height: 150px; object-fit: cover;" />
-                }
-                else
-                {
+                <img id="profilnaSlikaPreview" src="@(string.IsNullOrEmpty(Model.ProfilnaSlika) ? "" : Model.ProfilnaSlika)"
+                     alt="Profilna slika" class="img-fluid rounded-circle shadow-sm @(string.IsNullOrEmpty(Model.ProfilnaSlika) ? "d-none" : "")"
+                     style="width: 150px; height: 150px; object-fit: cover;" />
+                @{
                     var imeInicijal = !string.IsNullOrEmpty(Model.Ime) ? Model.Ime[0].ToString() : "?";
                     var prezimeInicijal = !string.IsNullOrEmpty(Model.Prezime) ? Model.Prezime[0].ToString() : "?";
-                    <div class="profile-placeholder">
-                        <span>@imeInicijal@prezimeInicijal</span>
-                    </div>
+                }
+                <div id="profilnaSlikaPlaceholder" class="profile-placeholder @(string.IsNullOrEmpty(Model.ProfilnaSlika) ? "" : "d-none")">
+                    <span>@imeInicijal@prezimeInicijal</span>
+                </div>
+                @if (Model.MozeUredivati)
+                {
+                    @Html.AntiForgeryToken()
+                    <form id="profilnaSlikaDropzone" class="dropzone border rounded mt-2" action="@Url.Action("UploadSlika", "Korisnik", new { id = Model.IdKorisnik })"></form>
+                    <p class="text-muted small mt-1 mb-0">JPG, PNG, WEBP — maks. 5 MB.</p>
                 }
             </div>
-            
+
             <h2 class="h4 mb-1">@Model.Ime @Model.Prezime</h2>
             <p class="text-muted mb-3">@Model.KorisnickoIme</p>
             
@@ -77,24 +81,59 @@
     <div class="col-lg-8">
         <div class="app-card h-auto mb-4">
             <h3 class="h5 border-bottom pb-2 mb-3">Osobni podaci</h3>
-            <div class="row g-3">
+            <div class="row g-3 mb-3">
+                <div class="col-sm-6">
+                    <label class="text-muted small">Ime i prezime</label>
+                    <div class="fw-medium">@Model.Ime @Model.Prezime</div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="text-muted small">Korisničko ime</label>
+                    <div class="fw-medium">@Model.KorisnickoIme</div>
+                </div>
                 <div class="col-sm-6">
                     <label class="text-muted small">E-mail adresa</label>
                     <div class="fw-medium">@Model.Email</div>
-                </div>
-                <div class="col-sm-6">
-                    <label class="text-muted small">Broj mobitela</label>
-                    <div class="fw-medium">@(string.IsNullOrEmpty(Model.BrojMobitela) ? "Nije navedeno" : Model.BrojMobitela)</div>
-                </div>
-                <div class="col-sm-6">
-                    <label class="text-muted small">Datum rođenja</label>
-                    <div class="fw-medium">@(Model.DatumRodenja?.ToString("dd.MM.yyyy.") ?? "Nije navedeno")</div>
                 </div>
                 <div class="col-sm-6">
                     <label class="text-muted small">Datum registracije</label>
                     <div class="fw-medium">@Model.DatumRegistracije.ToString("dd.MM.yyyy.")</div>
                 </div>
             </div>
+
+            @if (Model.MozeUredivati)
+            {
+                <form method="post" asp-action="UrediOsobnePodatke" asp-controller="Korisnik" asp-route-id="@Model.IdKorisnik" class="row g-3">
+                    @Html.AntiForgeryToken()
+                    <div class="col-sm-6">
+                        <label for="brojMobitela" class="form-label text-muted small">Broj mobitela</label>
+                        <input type="text" id="brojMobitela" name="brojMobitela" class="form-control" value="@Model.BrojMobitela" />
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="oib" class="form-label text-muted small">OIB</label>
+                        <input type="text" id="oib" name="oib" class="form-control" value="@Model.OIB" maxlength="11" />
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="jmbg" class="form-label text-muted small">JMBG</label>
+                        <input type="text" id="jmbg" name="jmbg" class="form-control" value="@Model.JMBG" maxlength="13" />
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary btn-sm">Spremi osobne podatke</button>
+                    </div>
+                </form>
+            }
+            else
+            {
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <label class="text-muted small">Broj mobitela</label>
+                        <div class="fw-medium">@(string.IsNullOrEmpty(Model.BrojMobitela) ? "Nije navedeno" : Model.BrojMobitela)</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="text-muted small">Datum rođenja</label>
+                        <div class="fw-medium">@(Model.DatumRodenja?.ToString("dd.MM.yyyy.") ?? "Nije navedeno")</div>
+                    </div>
+                </div>
+            }
         </div>
 
         <!-- Osvojene medalje -->
@@ -150,3 +189,48 @@
     </div>
 </div>
 </section>
+
+@section Scripts {
+    @if (Model.MozeUredivati)
+    {
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dropzone@5/dist/min/dropzone.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/dropzone@5/dist/min/dropzone.min.js"></script>
+        <script>
+            Dropzone.autoDiscover = false;
+
+            $(function () {
+                const dzEl = document.getElementById('profilnaSlikaDropzone');
+                if (dzEl) {
+                    const token = document.querySelector('#profilnaSlikaDropzone').closest('.text-center')
+                        .querySelector('input[name="__RequestVerificationToken"]').value;
+
+                    new Dropzone('#profilnaSlikaDropzone', {
+                        paramName: 'file',
+                        maxFiles: 1,
+                        maxFilesize: 5,
+                        acceptedFiles: '.jpg,.jpeg,.png,.webp',
+                        dictDefaultMessage: 'Povucite sliku ovdje ili kliknite za odabir',
+                        dictFileTooBig: 'Datoteka je prevelika ({{filesize}} MB). Maksimalno: {{maxFilesize}} MB.',
+                        dictInvalidFileType: 'Dopušteni su samo JPG, PNG i WEBP.',
+                        headers: { 'RequestVerificationToken': token },
+                        success: function (file, response) {
+                            if (response && response.url) {
+                                const img = document.getElementById('profilnaSlikaPreview');
+                                img.src = response.url;
+                                img.classList.remove('d-none');
+                                document.getElementById('profilnaSlikaPlaceholder').classList.add('d-none');
+                            }
+                            this.removeAllFiles();
+                        },
+                        error: function (file, message) {
+                            const msg = (message && message.error) ? message.error
+                                : (typeof message === 'string' ? message : 'Greška pri uploadu.');
+                            alert(msg);
+                            this.removeFile(file);
+                        }
+                    });
+                }
+            });
+        </script>
+    }
+}

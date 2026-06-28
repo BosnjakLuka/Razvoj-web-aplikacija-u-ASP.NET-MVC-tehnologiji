@@ -99,18 +99,6 @@ namespace planinarenje.Areas.Identity.Pages.Account
             [Display(Name = "Korisničko ime")]
             public string KorisnickoIme { get; set; }
 
-            [Required]
-            [StringLength(11, MinimumLength = 11, ErrorMessage = "OIB mora imati točno 11 znamenki.")]
-            [RegularExpression("^[0-9]*$", ErrorMessage = "OIB smije sadržavati samo brojeve.")]
-            [Display(Name = "OIB")]
-            public string OIB { get; set; }
-
-            [Required]
-            [StringLength(13, MinimumLength = 13, ErrorMessage = "JMBG mora imati točno 13 znamenki.")]
-            [RegularExpression("^[0-9]*$", ErrorMessage = "JMBG smije sadržavati samo brojeve.")]
-            [Display(Name = "JMBG")]
-            public string JMBG { get; set; }
-
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
@@ -153,8 +141,6 @@ namespace planinarenje.Areas.Identity.Pages.Account
                 }
 
                 var user = CreateUser();
-                user.OIB = Input.OIB;
-                user.JMBG = Input.JMBG;
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
