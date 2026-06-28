@@ -178,6 +178,21 @@ a:hover {
     overflow: hidden;
 }
 
+.ai-asistent-card {
+    background-color: var(--bg-surface-muted);
+    border-left: 4px solid var(--color-olive-sage);
+    box-shadow: none;
+}
+
+.ai-asistent-card h2 {
+    color: var(--color-hiking-green);
+    letter-spacing: 0.04em;
+}
+
+.ai-asistent-card .ai-primjer {
+    color: var(--text-main);
+}
+
 .stat-card .stat-value {
     font-size: 2.5rem;
     font-weight: 800;

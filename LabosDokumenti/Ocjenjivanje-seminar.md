@@ -10,12 +10,12 @@ Predaja na rokovima. Ne mora svaki kriterij biti ispunjen.
 | :--- | :---: |
 | Deploy na cloud provider (Google, Azure) | 3 | []
 | Kreiranje testova za sve endpointe | 2 | [-]
-| AI integracija: unos podataka putem AI upita | 3 | []
+| AI integracija: unos podataka putem AI upita | 3 | [x]
 | Global search mogućnost pretrage izbornika i stranica | 2 | [x]
 | Implementacija logging mehanizma | 2 | [x]
 | Responsive mobile/web UI | 2 | [-]
 | CRUD mora raditi bez grešaka | 2 | [-]
-| Expose MCP i pristup kroz agentic IDE | 2 | []
+| Expose MCP i pristup kroz agentic IDE | 2 | [x]
 | Okvirni dojam funkcionalnosti aplikacije (da nema 'crasheva') | 12 | [-]
 | Verifikacija razumijevanja koda (usmeno ispitivanje) | 40 | [-]
 

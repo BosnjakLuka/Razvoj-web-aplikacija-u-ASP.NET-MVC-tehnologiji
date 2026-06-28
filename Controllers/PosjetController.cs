@@ -7,8 +7,10 @@ using planinarenje.Entiteti;
 using planinarenje.Models;
 using planinarenje.Models.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Identity;
 
 namespace planinarenje.Controllers
@@ -17,16 +19,18 @@ namespace planinarenje.Controllers
     {
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<PosjetController> _logger;
+        private readonly planinarenje.Services.IAiUnosService _aiUnos;
 
         // Lab5 Faza 4: dopuštene ekstenzije i maksimalna veličina za Dropzone upload.
         private static readonly string[] DopusteneEkstenzije = { ".jpg", ".jpeg", ".png", ".webp" };
         private const long MaxVelicinaDatoteke = 5 * 1024 * 1024; // 5 MB
 
-        public PosjetController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, IWebHostEnvironment env, ILogger<PosjetController> logger)
+        public PosjetController(UserManager<AppUser> userMgr, PlaninarstvoDbContext db, IWebHostEnvironment env, ILogger<PosjetController> logger, planinarenje.Services.IAiUnosService aiUnos)
             : base(userMgr, db)
         {
             _env = env;
             _logger = logger;
+            _aiUnos = aiUnos;
         }
 
         // Helper za hrvatski opis doživljaja
@@ -135,15 +139,32 @@ namespace planinarenje.Controllers
         }
 
         [Authorize(Roles = "Admin,Planinar")]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             PopulateKnjiziceByKorisnik();
             PopulateRuteByKontrolnaTocka(null);
             ViewData["Title"] = "Novi posjet";
-            return View(new PosjetCreateModel
+
+            var model = new PosjetCreateModel
             {
                 DatumVrijemePosjeta = DateTime.Now
-            });
+            };
+
+            // Posjet se uvijek evidentira na prijavljenog korisnika (vidi forsiranje vlasništva
+            // u Create POST), pa polja Korisnik/Knjizica po defaultu popunjavamo iz prijave —
+            // bez AI-a, čisto na temelju trenutne sesije.
+            var korisnik = await GetCurrentKorisnikAsync();
+            if (korisnik != null)
+            {
+                model.IdKorisnik = korisnik.IdKorisnik;
+                model.IdKnjizica = await Db.Knjizice
+                    .Where(k => k.StatusAktivna && k.IdKorisnik == korisnik.IdKorisnik)
+                    .Select(k => k.IdKnjizica)
+                    .FirstOrDefaultAsync();
+                SetPosjetViewTexts(model.IdKorisnik, model.IdKnjizica, model.IdKontrolnaTocka, model.IdRuta);
+            }
+
+            return View(model);
         }
 
         [HttpPost]
@@ -209,6 +230,118 @@ namespace planinarenje.Controllers
             TempData["PosjetSuccess"] = true;
             TempData["Success"] = "Posjet je uspjesno dodan.";
             return RedirectToAction(nameof(Index));
+        }
+
+        // ---------------------------------------------------------------------
+        // AI integracija — prijedlog podataka o posjetu iz prirodnog jezika
+        // ---------------------------------------------------------------------
+        // POST /Posjet/AiPrijedlog — prima slobodan opis posjeta, vraća prefill podatke
+        // za Create formu. AI je samo "parser": izvuče nazive, a kontroler ih mapira na
+        // ID-eve iz baze. GUID i korisnik se NE popunjavaju (ostaju ručni / server-side).
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Planinar")]
+        public async Task<IActionResult> AiPrijedlog(string upit)
+        {
+            if (string.IsNullOrWhiteSpace(upit))
+            {
+                return BadRequest(new { poruka = "Unesite kratak opis posjeta." });
+            }
+
+            var prijedlog = await _aiUnos.IzvuciPodatkeAsync(upit);
+            var poruke = new List<string>();
+            if (!string.IsNullOrWhiteSpace(prijedlog.Napomena))
+            {
+                poruke.Add(prijedlog.Napomena!);
+            }
+
+            // Mapiranje naziva kontrolne točke na ID — normalizirano podudaranje riječi
+            // (neosjetljivo na dijakritiku i hrvatsku deklinaciju: Okić/Okića/Okiću/Okicu
+            // imaju isti prefiks "okic"), ne literalni Contains koji puca na padežima.
+            int? idKontrolnaTocka = null;
+            string? ktNaziv = null;
+            if (!string.IsNullOrWhiteSpace(prijedlog.KontrolnaTockaNaziv))
+            {
+                var upitneRijeci = KljucneRijeci(prijedlog.KontrolnaTockaNaziv);
+                var kandidati = Db.KontrolneTocke
+                    .Where(k => k.DeletedAt == null)
+                    .Select(k => new { k.IdKontrolnaTocka, k.Naziv })
+                    .ToList();
+
+                var najbolji = kandidati
+                    .Select(k => new { k.IdKontrolnaTocka, k.Naziv, Poeni = Poklapanje(upitneRijeci, KljucneRijeci(k.Naziv)) })
+                    .Where(x => x.Poeni > 0)
+                    .OrderByDescending(x => x.Poeni)
+                    .ThenBy(x => x.Naziv.Length)
+                    .FirstOrDefault();
+
+                if (najbolji != null)
+                {
+                    idKontrolnaTocka = najbolji.IdKontrolnaTocka;
+                    ktNaziv = najbolji.Naziv;
+                }
+                else
+                {
+                    poruke.Add($"Kontrolnu točku \"{prijedlog.KontrolnaTockaNaziv.Trim()}\" nisam pronašao u bazi — odaberite je ručno.");
+                }
+            }
+
+            // Ruta se traži samo unutar pronađene kontrolne točke, istim normaliziranim podudaranjem.
+            // Ako tekst ne uspije, a kontrolna točka ima samo jednu rutu, ta ruta je jedina razumna
+            // pretpostavka pa se automatski odabire.
+            int? idRuta = null;
+            string? rutaNaziv = null;
+            if (idKontrolnaTocka.HasValue)
+            {
+                var ruteKandidati = Db.Rute
+                    .Where(r => r.DeletedAt == null && r.IdKontrolnaTocka == idKontrolnaTocka.Value)
+                    .Select(r => new { r.IdRuta, r.Naziv })
+                    .ToList();
+
+                if (!string.IsNullOrWhiteSpace(prijedlog.RutaNaziv))
+                {
+                    var upitneRijeci = KljucneRijeci(prijedlog.RutaNaziv);
+                    var najbolja = ruteKandidati
+                        .Select(r => new { r.IdRuta, r.Naziv, Poeni = Poklapanje(upitneRijeci, KljucneRijeci(r.Naziv)) })
+                        .Where(x => x.Poeni > 0)
+                        .OrderByDescending(x => x.Poeni)
+                        .ThenBy(x => x.Naziv.Length)
+                        .FirstOrDefault();
+
+                    if (najbolja != null)
+                    {
+                        idRuta = najbolja.IdRuta;
+                        rutaNaziv = najbolja.Naziv;
+                    }
+                }
+
+                if (idRuta == null && ruteKandidati.Count == 1)
+                {
+                    idRuta = ruteKandidati[0].IdRuta;
+                    rutaNaziv = ruteKandidati[0].Naziv;
+                }
+                else if (idRuta == null && !string.IsNullOrWhiteSpace(prijedlog.RutaNaziv))
+                {
+                    poruke.Add($"Rutu \"{prijedlog.RutaNaziv.Trim()}\" nisam pronašao za tu točku — odaberite je ručno.");
+                }
+            }
+
+            _logger.LogInformation(
+                "AI prijedlog posjeta (korisnik {AppUserId}): KT={IdKontrolnaTocka}, Ruta={IdRuta}, Dozivljaj={Dozivljaj}.",
+                AppUserId, idKontrolnaTocka, idRuta, prijedlog.DozivljajPosjeta);
+
+            return Json(new
+            {
+                idKontrolnaTocka,
+                kontrolnaTockaNaziv = ktNaziv,
+                idRuta,
+                rutaNaziv,
+                datum = prijedlog.DatumVrijemePosjeta?.ToString("yyyy-MM-ddTHH:mm"),
+                dozivljaj = prijedlog.DozivljajPosjeta.HasValue ? (int?)prijedlog.DozivljajPosjeta.Value : null,
+                vrijemeUsponaMin = prijedlog.VrijemeUsponaMin,
+                opisIskustva = prijedlog.OpisIskustva,
+                poruka = poruke.Count > 0 ? string.Join(" ", poruke) : null
+            });
         }
 
         [Authorize]
@@ -729,6 +862,46 @@ namespace planinarenje.Controllers
                     AppUserId = p.Korisnik?.AppUserId
                 })
                 .ToList();
+        }
+
+        // Riječi koje se ne koriste za podudaranje naziva (prečesto se javljaju u različitim
+        // zapisima pa bi davale lažna podudaranja).
+        private static readonly HashSet<string> StopRijeciNaziva = new(StringComparer.Ordinal)
+        {
+            "vrh", "dom", "kuca", "kucica", "skloniste", "staza", "ruta", "tocka",
+            "vidikovac", "planinarski", "planinarska", "kontrolna", "podrucje",
+            "preko", "prema", "pod", "od", "do", "na", "kod", "pl"
+        };
+
+        // Razbija naziv na "ključne" riječi (min. 4 znaka, bez stop-riječi) za podudaranje
+        // neosjetljivo na hrvatsku deklinaciju (Okić/Okića/Okiću dijele prefiks "okic").
+        // Normalizacija dijakritike (planinarenje.Helpers.HrvatskiTekst) je zajednička s globalnom pretragom.
+        private static List<string> KljucneRijeci(string naziv)
+        {
+            var normalizirano = planinarenje.Helpers.HrvatskiTekst.Normaliziraj(naziv);
+            return Regex.Split(normalizirano, "[^a-z0-9]+")
+                .Where(t => t.Length >= 4 && !StopRijeciNaziva.Contains(t))
+                .ToList();
+        }
+
+        // Broji koliko se riječi iz AI upita poklapa (prefiksom od min. 4 znaka, što
+        // apsorbira hrvatske padežne nastavke) s riječima naziva iz baze.
+        private static int Poklapanje(List<string> upitneRijeci, List<string> nazivRijeci)
+        {
+            var brojac = 0;
+            foreach (var u in upitneRijeci)
+            {
+                foreach (var n in nazivRijeci)
+                {
+                    var duljina = Math.Min(4, Math.Min(u.Length, n.Length));
+                    if (duljina > 0 && u.Substring(0, duljina) == n.Substring(0, duljina))
+                    {
+                        brojac++;
+                        break;
+                    }
+                }
+            }
+            return brojac;
         }
 
         private void PopulateKnjiziceByKorisnik()

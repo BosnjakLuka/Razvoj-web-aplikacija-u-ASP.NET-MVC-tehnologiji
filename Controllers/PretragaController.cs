@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using planinarenje.Data;
 using planinarenje.Entiteti;
+using planinarenje.Helpers;
 using planinarenje.Models.ViewModels;
 
 namespace planinarenje.Controllers;
@@ -74,9 +75,9 @@ public class PretragaController : BaseController
         // --- Područja ---
         var podrucjaRezultati = Db.Podrucja.Where(p => p.DeletedAt == null)
             .Select(p => new { p.IdPodrucje, p.Naziv, p.Regija, p.Opis }).ToList()
-            .Where(p => p.Naziv.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                       (p.Regija != null && p.Regija.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
-                       (p.Opis != null && p.Opis.Contains(term, StringComparison.OrdinalIgnoreCase)))
+            .Where(p => HrvatskiTekst.SadrziNormalizirano(p.Naziv, term) ||
+                       HrvatskiTekst.SadrziNormalizirano(p.Regija, term) ||
+                       HrvatskiTekst.SadrziNormalizirano(p.Opis, term))
             .ToList();
         var podrucja = new PretragaGrupa { Naziv = "Područja", Controller = "Podrucje", Ikona = "geo-alt-fill", Ukupno = podrucjaRezultati.Count() };
         podrucja.Stavke = podrucjaRezultati
@@ -90,10 +91,10 @@ public class PretragaController : BaseController
         // --- Kontrolne točke ---
         var ktRezultati = Db.KontrolneTocke.Where(k => k.DeletedAt == null)
             .Select(k => new { k.IdKontrolnaTocka, k.Naziv, k.TipKontrolneTocke, k.GUIDOznaka, k.Opis, k.Koordinate, k.Podrucje }).ToList()
-            .Where(k => k.Naziv.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                       k.GUIDOznaka.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                       (k.Opis != null && k.Opis.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
-                       (k.Koordinate != null && k.Koordinate.Contains(term, StringComparison.OrdinalIgnoreCase)))
+            .Where(k => HrvatskiTekst.SadrziNormalizirano(k.Naziv, term) ||
+                       HrvatskiTekst.SadrziNormalizirano(k.GUIDOznaka, term) ||
+                       HrvatskiTekst.SadrziNormalizirano(k.Opis, term) ||
+                       HrvatskiTekst.SadrziNormalizirano(k.Koordinate, term))
             .ToList();
         var kt = new PretragaGrupa { Naziv = "Kontrolne točke", Controller = "KontrolnaTocka", Ikona = "flag-fill", Ukupno = ktRezultati.Count() };
         kt.Stavke = ktRezultati
@@ -107,10 +108,10 @@ public class PretragaController : BaseController
         // --- Rute ---
         var ruteRezultati = Db.Rute.Where(r => r.DeletedAt == null)
             .Select(r => new { r.IdRuta, r.Naziv, r.Pocetak, r.Kraj, r.OznakaNaTerenu }).ToList()
-            .Where(r => r.Naziv.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                       r.Pocetak.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                       r.Kraj.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                       (r.OznakaNaTerenu != null && r.OznakaNaTerenu.Contains(term, StringComparison.OrdinalIgnoreCase)))
+            .Where(r => HrvatskiTekst.SadrziNormalizirano(r.Naziv, term) ||
+                       HrvatskiTekst.SadrziNormalizirano(r.Pocetak, term) ||
+                       HrvatskiTekst.SadrziNormalizirano(r.Kraj, term) ||
+                       HrvatskiTekst.SadrziNormalizirano(r.OznakaNaTerenu, term))
             .ToList();
         var rute = new PretragaGrupa { Naziv = "Rute", Controller = "Ruta", Ikona = "signpost-split-fill", Ukupno = ruteRezultati.Count() };
         rute.Stavke = ruteRezultati
@@ -124,9 +125,9 @@ public class PretragaController : BaseController
         // --- Planinarski objekti ---
         var objektiRezultati = Db.PlaninarskiObjekti.Where(o => o.DeletedAt == null)
             .Select(o => new { o.IdPlaninarskiObjekt, o.Naziv, o.TipObjekta, o.Adresa, o.ImeOdgovorneOsobe }).ToList()
-            .Where(o => o.Naziv.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                       (o.Adresa != null && o.Adresa.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
-                       (o.ImeOdgovorneOsobe != null && o.ImeOdgovorneOsobe.Contains(term, StringComparison.OrdinalIgnoreCase)))
+            .Where(o => HrvatskiTekst.SadrziNormalizirano(o.Naziv, term) ||
+                       HrvatskiTekst.SadrziNormalizirano(o.Adresa, term) ||
+                       HrvatskiTekst.SadrziNormalizirano(o.ImeOdgovorneOsobe, term))
             .ToList();
         var objekti = new PretragaGrupa { Naziv = "Planinarski objekti", Controller = "PlaninarskiObjekt", Ikona = "house-fill", Ukupno = objektiRezultati.Count() };
         objekti.Stavke = objektiRezultati
@@ -140,9 +141,9 @@ public class PretragaController : BaseController
         // --- Planinarske udruge ---
         var udrugeRezultati = Db.PlaninarskeUdruge.Where(u => u.DeletedAt == null)
             .Select(u => new { u.IdPlaninarskaUdruga, u.Naziv, u.Grad, u.Zupanija }).ToList()
-            .Where(u => u.Naziv.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                       (u.Grad != null && u.Grad.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
-                       (u.Zupanija != null && u.Zupanija.Contains(term, StringComparison.OrdinalIgnoreCase)))
+            .Where(u => HrvatskiTekst.SadrziNormalizirano(u.Naziv, term) ||
+                       HrvatskiTekst.SadrziNormalizirano(u.Grad, term) ||
+                       HrvatskiTekst.SadrziNormalizirano(u.Zupanija, term))
             .ToList();
         var udruge = new PretragaGrupa { Naziv = "Planinarske udruge", Controller = "PlaninarskaUdruga", Ikona = "people-fill", Ukupno = udrugeRezultati.Count() };
         udruge.Stavke = udrugeRezultati
@@ -156,8 +157,8 @@ public class PretragaController : BaseController
         // --- Medalje ---
         var medaljeRezultati = Db.Medalje.Where(m => m.DeletedAt == null)
             .Select(m => new { m.IdMedalja, m.Naziv, m.Opis }).ToList()
-            .Where(m => m.Naziv.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                       (m.Opis != null && m.Opis.Contains(term, StringComparison.OrdinalIgnoreCase)))
+            .Where(m => HrvatskiTekst.SadrziNormalizirano(m.Naziv, term) ||
+                       HrvatskiTekst.SadrziNormalizirano(m.Opis, term))
             .ToList();
         var medalje = new PretragaGrupa { Naziv = "Medalje", Controller = "Medalja", Ikona = "award-fill", Ukupno = medaljeRezultati.Count() };
         medalje.Stavke = medaljeRezultati
@@ -173,9 +174,9 @@ public class PretragaController : BaseController
         {
             var korisniciRezultati = Db.Korisnici.Where(k => k.StatusAktivan)
                 .Select(k => new { k.IdKorisnik, k.Ime, k.Prezime, k.KorisnickoIme }).ToList()
-                .Where(k => k.Ime.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                           k.Prezime.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                           k.KorisnickoIme.Contains(term, StringComparison.OrdinalIgnoreCase))
+                .Where(k => HrvatskiTekst.SadrziNormalizirano(k.Ime, term) ||
+                           HrvatskiTekst.SadrziNormalizirano(k.Prezime, term) ||
+                           HrvatskiTekst.SadrziNormalizirano(k.KorisnickoIme, term))
                 .ToList();
             var korisnici = new PretragaGrupa { Naziv = "Korisnici", Controller = "Korisnik", Ikona = "person-fill", Ukupno = korisniciRezultati.Count() };
             korisnici.Stavke = korisniciRezultati
@@ -231,15 +232,15 @@ public class PretragaController : BaseController
         return tekst.Length <= maxDuljina ? tekst : tekst[..maxDuljina].TrimEnd() + "…";
     }
 
-    // Heuristika relevantnosti (all case-insensitive).
+    // Heuristika relevantnosti — neosjetljiva na velika/mala slova i hrvatsku dijakritiku
+    // (npr. upit "okic" jednako pogađa "Okić" kao i "okić").
     private static int IzracunajSkor(string naziv, string term)
     {
         if (string.IsNullOrEmpty(naziv)) return 0;
-        var cmp = StringComparison.OrdinalIgnoreCase;
-        if (string.Equals(naziv, term, cmp)) return 100;
-        if (naziv.StartsWith(term, cmp)) return 80;
-        if (naziv.Contains(" " + term, cmp)) return 60;
-        if (naziv.Contains(term, cmp)) return 40;
+        if (HrvatskiTekst.JednakoNormalizirano(naziv, term)) return 100;
+        if (HrvatskiTekst.PocinjeNormalizirano(naziv, term)) return 80;
+        if (HrvatskiTekst.SadrziNormalizirano(naziv, " " + term)) return 60;
+        if (HrvatskiTekst.SadrziNormalizirano(naziv, term)) return 40;
         return 15;
     }
 
