@@ -1,9 +1,39 @@
 @model planinarenje.Models.ViewModels.PosjetCreateModel
+@inject planinarenje.Services.IAiUnosService AiUnos
 
 <section class="mb-4">
     <h1 class="section-title mb-2">Novi posjet</h1>
     <p class="text-muted mb-0">Unesite podatke o posjetu kontrolnoj tocki.</p>
 </section>
+
+@if (AiUnos.JeDostupan)
+{
+    <div class="app-card mb-3 ai-asistent-card">
+        <h2 class="h6 text-uppercase fw-bold mb-2">AI asistent za brzi unos</h2>
+        <p class="text-muted small mb-2">
+            Opišite posjet prirodnim jezikom pa ćemo automatski popuniti formu ispod.
+            GUID oznaku sa žiga ipak upišite ručno radi potvrde obilaska.
+        </p>
+        <p class="text-muted small mb-2">
+            Najbolji redoslijed: <strong>1)</strong> naziv kontrolne točke, <strong>2)</strong> naziv
+            rute, <strong>3)</strong> datum i vrijeme (ili npr. "jučer u 11 sati", "prošlu subotu ujutro"),
+            <strong>4)</strong> opis, trajanje uspona i kakav je dojam bio.
+        </p>
+        <p class="small mb-2 ai-primjer">
+            Primjer: <em>"Bio sam na Sljemenu, rutom Gračani – Puntijarka – Sljeme, prošlu subotu
+            u 9 sati ujutro. Uspon je trajao oko 2 i pol sata, bilo je fizički naporno."</em>
+        </p>
+        <textarea id="aiUpit" class="form-control mb-2" rows="3"
+                  placeholder="Opišite svoj posjet..."></textarea>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" id="aiPopuni" class="btn btn-outline-success btn-sm">
+                <span class="ai-spinner spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                Popuni formu
+            </button>
+            <span id="aiStatus" class="small text-muted"></span>
+        </div>
+    </div>
+}
 
 <div class="app-card">
     <form asp-action="Create" method="post">
@@ -175,6 +205,75 @@
 
             loadRoutes(kontrolnaHidden ? kontrolnaHidden.value : '', $('#IdRuta').val());
             applyKnjizica(korisnikHidden.val());
+
+            // AI integracija: prirodni jezik -> prefill forme. AI je samo parser;
+            // submit i dalje ide kroz standardni Create POST sa svom validacijom.
+            const aiUrl = '@Url.Action("AiPrijedlog", "Posjet")';
+            const aiBtn = $('#aiPopuni');
+
+            function setAiStatus(text, vrsta) {
+                const $s = $('#aiStatus').removeClass('text-muted text-danger text-success');
+                $s.addClass(vrsta === 'greska' ? 'text-danger' : vrsta === 'ok' ? 'text-success' : 'text-muted');
+                $s.text(text || '');
+            }
+
+            aiBtn.on('click', function () {
+                const upit = ($('#aiUpit').val() || '').trim();
+                if (!upit) {
+                    setAiStatus('Upišite kratak opis posjeta.', 'greska');
+                    return;
+                }
+
+                const token = $('input[name="__RequestVerificationToken"]').first().val();
+                const $spinner = aiBtn.find('.ai-spinner');
+
+                $spinner.removeClass('d-none');
+                aiBtn.prop('disabled', true);
+                setAiStatus('AI obrađuje upit...', 'info');
+
+                $.ajax({
+                    url: aiUrl,
+                    method: 'POST',
+                    data: { upit: upit, __RequestVerificationToken: token },
+                    success: function (data) {
+                        if (data.idKontrolnaTocka) {
+                            $('#hidden_IdKontrolnaTocka').val(data.idKontrolnaTocka);
+                            $('#display_IdKontrolnaTocka').val(data.kontrolnaTockaNaziv || '');
+                            loadRoutes(data.idKontrolnaTocka, data.idRuta || '');
+                        }
+                        if (data.dozivljaj !== null && data.dozivljaj !== undefined) {
+                            $('#DozivljajPosjeta').val(String(data.dozivljaj));
+                        }
+                        if (data.vrijemeUsponaMin !== null && data.vrijemeUsponaMin !== undefined) {
+                            $('#VrijemeUsponaMin').val(data.vrijemeUsponaMin);
+                        }
+                        if (data.opisIskustva) {
+                            $('#OpisIskustva').val(data.opisIskustva);
+                        }
+                        const dpInput = document.getElementById('dp_DatumVrijemePosjeta');
+                        if (dpInput && dpInput._flatpickr && data.datum) {
+                            dpInput._flatpickr.setDate(new Date(data.datum), true);
+                        }
+
+                        if (data.poruka) {
+                            setAiStatus(data.poruka, 'greska');
+                        } else {
+                            setAiStatus('Forma je popunjena. Provjerite podatke i upišite GUID sa žiga.', 'ok');
+                        }
+                    },
+                    error: function (xhr) {
+                        let poruka = 'AI trenutno nije dostupan. Popunite formu ručno.';
+                        if (xhr.responseJSON && xhr.responseJSON.poruka) {
+                            poruka = xhr.responseJSON.poruka;
+                        }
+                        setAiStatus(poruka, 'greska');
+                    },
+                    complete: function () {
+                        $spinner.addClass('d-none');
+                        aiBtn.prop('disabled', false);
+                    }
+                });
+            });
         });
     </script>
 }

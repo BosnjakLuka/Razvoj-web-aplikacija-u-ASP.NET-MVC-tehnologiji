@@ -233,6 +233,10 @@ if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(goo
 builder.Services.AddRazorPages();
 builder.Services.AddSingleton<IEmailSender, NoOpEmailSender>();
 
+// AI integracija: unos podataka o posjetu iz prirodnog jezika (Gemini).
+// Typed HttpClient — ključ se čita iz konfiguracije (user secrets: "Gemini:ApiKey").
+builder.Services.AddHttpClient<planinarenje.Services.IAiUnosService, planinarenje.Services.GeminiAiUnosService>();
+
 // MCP server: exposes read-only entity tools for agentic IDE access (e.g. Claude Code, Cursor).
 builder.Services
     .AddMcpServer()
