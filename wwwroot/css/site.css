@@ -112,19 +112,70 @@ a:hover {
     color: var(--color-accent-orange);
 }
 
-.main-nav .nav-link {
-    color: rgba(255, 255, 255, 0.85) !important;
-    font-weight: 600;
-    font-size: 1.08rem;
-    padding: 0.5rem 1rem !important;
+.topbar-inner .global-search {
+    min-width: 0;
+}
+
+.topbar-inner .global-search-input {
+    min-width: 0;
+}
+
+/* Profil ikona (dropdown: registracija/prijava ili profil/odjava) */
+.profile-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: var(--text-inverse);
+    border: none;
+    flex-shrink: 0;
+    transition: background-color 0.2s ease;
+}
+
+.profile-icon-btn:hover,
+.profile-icon-btn:focus {
+    background-color: rgba(255, 255, 255, 0.28);
+    color: var(--text-inverse);
+}
+
+.profile-menu-dropdown {
+    min-width: 200px;
+}
+
+/* Sub-nav: linkovi na entitete, smješten ispod hero/top navbara */
+.subnav {
+    background-color: var(--bg-surface-light);
+    border-bottom: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-1);
+    padding: 0.25rem 0;
+}
+
+.subnav .navbar-nav {
+    justify-content: center;
+    width: 100%;
+}
+
+.subnav .nav-link {
+    color: var(--color-dark-blue) !important;
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 0.6rem 1.1rem !important;
     border-radius: var(--radius-sm);
     transition: all 0.2s ease;
 }
 
-.main-nav .nav-link:hover,
-.main-nav .nav-link.active {
-    color: var(--text-inverse) !important;
-    background-color: rgba(255, 255, 255, 0.15);
+.subnav .nav-link:hover,
+.subnav .nav-link.active {
+    color: var(--color-hiking-green) !important;
+    background-color: rgba(46, 125, 50, 0.08);
+}
+
+.subnav .navbar-toggler {
+    border-color: var(--border-strong);
+    margin: 0.4rem 0;
 }
 
 .breadcrumb-wrap {
