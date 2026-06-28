@@ -21,17 +21,17 @@ public class RutaController : BaseController
     }
 
     [AllowAnonymous]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        var model = BuildIndexModel(null);
+        var model = await BuildIndexModel(null);
         ViewData["Title"] = "Rute";
         return View(model);
     }
 
     [HttpGet]
-    public IActionResult Search(string? searchTerm)
+    public async Task<IActionResult> Search(string? searchTerm)
     {
-        var model = BuildIndexModel(searchTerm);
+        var model = await BuildIndexModel(searchTerm);
         return PartialView("_RutaListPartial", model);
     }
 
@@ -39,7 +39,7 @@ public class RutaController : BaseController
     public IActionResult AutocompleteSearch(string term)
     {
         var results = Db.Rute
-            .Where(r => r.DeletedAt == null && r.Naziv.Contains(term))
+            .Where(r => r.DeletedAt == null && r.JeOdobreno && r.Naziv.Contains(term))
             .OrderBy(r => r.Naziv)
             .Take(15)
             .Select(r => new
@@ -52,7 +52,7 @@ public class RutaController : BaseController
         return Json(results);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Planinar")]
     public IActionResult Create()
     {
         ViewData["Title"] = "Nova ruta";
@@ -61,7 +61,7 @@ public class RutaController : BaseController
 
     private bool ValidirajKontrolnuTocku(int idKontrolnaTocka)
     {
-        var postoji = Db.KontrolneTocke.Any(k => k.IdKontrolnaTocka == idKontrolnaTocka && k.DeletedAt == null);
+        var postoji = Db.KontrolneTocke.Any(k => k.IdKontrolnaTocka == idKontrolnaTocka && k.DeletedAt == null && k.JeOdobreno);
         if (postoji)
         {
             return true;
@@ -97,7 +97,7 @@ public class RutaController : BaseController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Planinar")]
     public async Task<IActionResult> Create(RutaCreateModel model)
     {
         if (!ModelState.IsValid)
@@ -121,6 +121,7 @@ public class RutaController : BaseController
             return View(model);
         }
 
+        var kreator = await GetCurrentKorisnikAsync();
         var entity = new Ruta
         {
             IdKontrolnaTocka = model.IdKontrolnaTocka,
@@ -135,7 +136,10 @@ public class RutaController : BaseController
             GodinaObnove = model.GodinaObnove,
             Napomena = model.Napomena,
             TezinaRute = model.TezinaRute,
-            GPXPath = model.GPXPath
+            GPXPath = model.GPXPath,
+            JeOdobreno = IsAdmin,
+            IdKreator = kreator?.IdKorisnik,
+            DatumPrijave = IsAdmin ? null : DateTime.UtcNow
         };
 
         try
@@ -153,11 +157,13 @@ public class RutaController : BaseController
 
         _logger.LogInformation("Ruta {IdRuta} kreirana ({Naziv}).", entity.IdRuta, entity.Naziv);
         TempData["NewId"] = entity.IdRuta;
-        TempData["Success"] = "Ruta je uspjesno dodana.";
+        TempData["Success"] = IsAdmin
+            ? "Ruta je uspjesno dodana."
+            : "Ruta je poslana na odobravanje administratoru.";
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Planinar")]
     [ActionName("Edit")]
     public async Task<IActionResult> EditGet(int id)
     {
@@ -167,6 +173,15 @@ public class RutaController : BaseController
         if (entity == null)
         {
             return NotFound();
+        }
+
+        if (!IsAdmin)
+        {
+            var korisnik = await GetCurrentKorisnikAsync();
+            if (!entity.JeOdobreno && entity.IdKreator != korisnik?.IdKorisnik)
+            {
+                return Forbid();
+            }
         }
 
         var model = new RutaEditModel
@@ -193,7 +208,7 @@ public class RutaController : BaseController
 
     [HttpPost, ActionName("Edit")]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Planinar")]
     public async Task<IActionResult> EditPost(int id, RutaEditModel model)
     {
         if (!ModelState.IsValid)
@@ -208,6 +223,12 @@ public class RutaController : BaseController
         if (entity == null)
         {
             return NotFound();
+        }
+
+        var korisnik = await GetCurrentKorisnikAsync();
+        if (!IsAdmin && !entity.JeOdobreno && entity.IdKreator != korisnik?.IdKorisnik)
+        {
+            return Forbid();
         }
 
         if (!ValidirajKontrolnuTocku(model.IdKontrolnaTocka))
@@ -238,6 +259,17 @@ public class RutaController : BaseController
         entity.TezinaRute = model.TezinaRute;
         entity.GPXPath = model.GPXPath;
 
+        if (IsAdmin)
+        {
+            entity.JeOdobreno = true;
+        }
+        else
+        {
+            entity.JeOdobreno = false;
+            entity.IdKreator = korisnik?.IdKorisnik;
+            entity.DatumPrijave = DateTime.UtcNow;
+        }
+
         try
         {
             await Db.SaveChangesAsync();
@@ -251,7 +283,9 @@ public class RutaController : BaseController
         }
 
         _logger.LogInformation("Ruta {IdRuta} ažurirana.", id);
-        TempData["Success"] = "Ruta je uspjesno azurirana.";
+        TempData["Success"] = IsAdmin
+            ? "Ruta je uspjesno azurirana."
+            : "Izmjena je poslana na odobravanje administratoru.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -290,14 +324,23 @@ public class RutaController : BaseController
     }
 
     [AllowAnonymous]
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
         var ruta = Db.Rute
             .Include(r => r.KontrolnaTocka)
             .FirstOrDefault(r => r.IdRuta == id && r.DeletedAt == null);
-        
+
         if (ruta == null)
             return NotFound();
+
+        if (!ruta.JeOdobreno && !IsAdmin)
+        {
+            var korisnik = await GetCurrentKorisnikAsync();
+            if (ruta.IdKreator != korisnik?.IdKorisnik)
+            {
+                return NotFound();
+            }
+        }
 
         ViewData["Title"] = ruta.Naziv;
         return View(ruta);
@@ -311,7 +354,7 @@ public class RutaController : BaseController
 
         var filtrirane = Db.Rute
             .Include(r => r.KontrolnaTocka)
-            .Where(r => r.TezinaRute == tezinaEnum && r.DeletedAt == null)
+            .Where(r => r.TezinaRute == tezinaEnum && r.DeletedAt == null && r.JeOdobreno)
             .ToList();
 
         ViewBag.Tezina = tezina;
@@ -356,11 +399,19 @@ public class RutaController : BaseController
         return o[..max].TrimEnd() + "...";
     }
 
-    private List<RutaIndexCardViewModel> BuildIndexModel(string? searchTerm)
+    private async Task<List<RutaIndexCardViewModel>> BuildIndexModel(string? searchTerm)
     {
+        var korisnik = await GetCurrentKorisnikAsync();
+        var idKorisnik = korisnik?.IdKorisnik;
+
         var query = Db.Rute
             .Include(r => r.KontrolnaTocka)
             .Where(r => r.DeletedAt == null && (r.KontrolnaTocka == null || r.KontrolnaTocka.DeletedAt == null));
+
+        if (!IsAdmin)
+        {
+            query = query.Where(r => r.JeOdobreno || (idKorisnik.HasValue && r.IdKreator == idKorisnik.Value));
+        }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -387,7 +438,8 @@ public class RutaController : BaseController
                 VisinskaRazlikaM = r.VisinskaRazlikaM,
                 TezinaTekst = DajNazivTezine(r.TezinaRute),
                 TezinaCssClass = DajCssKlasuObziromNaTezinu(r.TezinaRute),
-                OpisPreview = TrimOpis(r.Opis, 150)
+                OpisPreview = TrimOpis(r.Opis, 150),
+                JeOdobreno = r.JeOdobreno
             })
             .ToList();
     }

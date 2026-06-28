@@ -40,6 +40,15 @@ public class Ruta
 
     public DateTime? DeletedAt { get; set; }
 
+    // Odobravanje sadržaja kreiranog/uređenog od strane Planinar role — vidi AutorizacijaController.
+    public bool JeOdobreno { get; set; } = true;
+    public int? IdKreator { get; set; }
+    public DateTime? DatumPrijave { get; set; }
+
     public virtual KontrolnaTocka KontrolnaTocka { get; set; } = null!;
+
+    [ForeignKey("IdKreator")]
+    public virtual Korisnik? Kreator { get; set; }
+
     public virtual ICollection<Posjet> Posjeti { get; set; } = new List<Posjet>();
 }

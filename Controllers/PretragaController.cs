@@ -25,9 +25,9 @@ public class PretragaController : BaseController
     [HttpGet]
     [Route("pretraga")]
     [Route("[controller]/[action]")]
-    public IActionResult Index(string? q)
+    public async Task<IActionResult> Index(string? q)
     {
-        var model = SagradiModel(q, MaxPoGrupiStranica);
+        var model = await SagradiModel(q, MaxPoGrupiStranica);
         ViewData["Title"] = "Pretraga";
         return View(model);
     }
@@ -35,9 +35,9 @@ public class PretragaController : BaseController
     [HttpGet]
     [Route("pretraga/live")]
     [Route("[controller]/[action]")]
-    public IActionResult Live(string? q)
+    public async Task<IActionResult> Live(string? q)
     {
-        var model = SagradiModel(q, MaxPoGrupiLive);
+        var model = await SagradiModel(q, MaxPoGrupiLive);
 
         var payload = new
         {
@@ -62,7 +62,7 @@ public class PretragaController : BaseController
 
     // Gradi grupirani model s case-insensitive pretraživanjem i rangiranjem po relevantnosti.
     // Javni entiteti su dostupni svima; Korisnici samo Adminu (bez Email/OIB/JMBG u matchu).
-    private GlobalnaPretragaViewModel SagradiModel(string? q, int maxPoGrupi)
+    private async Task<GlobalnaPretragaViewModel> SagradiModel(string? q, int maxPoGrupi)
     {
         var model = new GlobalnaPretragaViewModel { Upit = q };
         if (!model.UpitJeValjan)
@@ -72,12 +72,18 @@ public class PretragaController : BaseController
 
         var term = q!.Trim();
 
+        var korisnik = await GetCurrentKorisnikAsync();
+        var idKorisnik = korisnik?.IdKorisnik;
+        bool VidljivoZaSve(bool jeOdobreno, int? idKreator) =>
+            jeOdobreno || IsAdmin || (idKorisnik.HasValue && idKreator == idKorisnik.Value);
+
         // --- Područja ---
         var podrucjaRezultati = Db.Podrucja.Where(p => p.DeletedAt == null)
-            .Select(p => new { p.IdPodrucje, p.Naziv, p.Regija, p.Opis }).ToList()
-            .Where(p => HrvatskiTekst.SadrziNormalizirano(p.Naziv, term) ||
+            .Select(p => new { p.IdPodrucje, p.Naziv, p.Regija, p.Opis, p.JeOdobreno, p.IdKreator }).ToList()
+            .Where(p => VidljivoZaSve(p.JeOdobreno, p.IdKreator) &&
+                       (HrvatskiTekst.SadrziNormalizirano(p.Naziv, term) ||
                        HrvatskiTekst.SadrziNormalizirano(p.Regija, term) ||
-                       HrvatskiTekst.SadrziNormalizirano(p.Opis, term))
+                       HrvatskiTekst.SadrziNormalizirano(p.Opis, term)))
             .ToList();
         var podrucja = new PretragaGrupa { Naziv = "Područja", Controller = "Podrucje", Ikona = "geo-alt-fill", Ukupno = podrucjaRezultati.Count() };
         podrucja.Stavke = podrucjaRezultati
@@ -90,11 +96,12 @@ public class PretragaController : BaseController
 
         // --- Kontrolne točke ---
         var ktRezultati = Db.KontrolneTocke.Where(k => k.DeletedAt == null)
-            .Select(k => new { k.IdKontrolnaTocka, k.Naziv, k.TipKontrolneTocke, k.GUIDOznaka, k.Opis, k.Koordinate, k.Podrucje }).ToList()
-            .Where(k => HrvatskiTekst.SadrziNormalizirano(k.Naziv, term) ||
+            .Select(k => new { k.IdKontrolnaTocka, k.Naziv, k.TipKontrolneTocke, k.GUIDOznaka, k.Opis, k.Koordinate, k.Podrucje, k.JeOdobreno, k.IdKreator }).ToList()
+            .Where(k => VidljivoZaSve(k.JeOdobreno, k.IdKreator) &&
+                       (HrvatskiTekst.SadrziNormalizirano(k.Naziv, term) ||
                        HrvatskiTekst.SadrziNormalizirano(k.GUIDOznaka, term) ||
                        HrvatskiTekst.SadrziNormalizirano(k.Opis, term) ||
-                       HrvatskiTekst.SadrziNormalizirano(k.Koordinate, term))
+                       HrvatskiTekst.SadrziNormalizirano(k.Koordinate, term)))
             .ToList();
         var kt = new PretragaGrupa { Naziv = "Kontrolne točke", Controller = "KontrolnaTocka", Ikona = "flag-fill", Ukupno = ktRezultati.Count() };
         kt.Stavke = ktRezultati
@@ -107,11 +114,12 @@ public class PretragaController : BaseController
 
         // --- Rute ---
         var ruteRezultati = Db.Rute.Where(r => r.DeletedAt == null)
-            .Select(r => new { r.IdRuta, r.Naziv, r.Pocetak, r.Kraj, r.OznakaNaTerenu }).ToList()
-            .Where(r => HrvatskiTekst.SadrziNormalizirano(r.Naziv, term) ||
+            .Select(r => new { r.IdRuta, r.Naziv, r.Pocetak, r.Kraj, r.OznakaNaTerenu, r.JeOdobreno, r.IdKreator }).ToList()
+            .Where(r => VidljivoZaSve(r.JeOdobreno, r.IdKreator) &&
+                       (HrvatskiTekst.SadrziNormalizirano(r.Naziv, term) ||
                        HrvatskiTekst.SadrziNormalizirano(r.Pocetak, term) ||
                        HrvatskiTekst.SadrziNormalizirano(r.Kraj, term) ||
-                       HrvatskiTekst.SadrziNormalizirano(r.OznakaNaTerenu, term))
+                       HrvatskiTekst.SadrziNormalizirano(r.OznakaNaTerenu, term)))
             .ToList();
         var rute = new PretragaGrupa { Naziv = "Rute", Controller = "Ruta", Ikona = "signpost-split-fill", Ukupno = ruteRezultati.Count() };
         rute.Stavke = ruteRezultati
@@ -124,10 +132,11 @@ public class PretragaController : BaseController
 
         // --- Planinarski objekti ---
         var objektiRezultati = Db.PlaninarskiObjekti.Where(o => o.DeletedAt == null)
-            .Select(o => new { o.IdPlaninarskiObjekt, o.Naziv, o.TipObjekta, o.Adresa, o.ImeOdgovorneOsobe }).ToList()
-            .Where(o => HrvatskiTekst.SadrziNormalizirano(o.Naziv, term) ||
+            .Select(o => new { o.IdPlaninarskiObjekt, o.Naziv, o.TipObjekta, o.Adresa, o.ImeOdgovorneOsobe, o.JeOdobreno, o.IdKreator }).ToList()
+            .Where(o => VidljivoZaSve(o.JeOdobreno, o.IdKreator) &&
+                       (HrvatskiTekst.SadrziNormalizirano(o.Naziv, term) ||
                        HrvatskiTekst.SadrziNormalizirano(o.Adresa, term) ||
-                       HrvatskiTekst.SadrziNormalizirano(o.ImeOdgovorneOsobe, term))
+                       HrvatskiTekst.SadrziNormalizirano(o.ImeOdgovorneOsobe, term)))
             .ToList();
         var objekti = new PretragaGrupa { Naziv = "Planinarski objekti", Controller = "PlaninarskiObjekt", Ikona = "house-fill", Ukupno = objektiRezultati.Count() };
         objekti.Stavke = objektiRezultati
@@ -140,10 +149,11 @@ public class PretragaController : BaseController
 
         // --- Planinarske udruge ---
         var udrugeRezultati = Db.PlaninarskeUdruge.Where(u => u.DeletedAt == null)
-            .Select(u => new { u.IdPlaninarskaUdruga, u.Naziv, u.Grad, u.Zupanija }).ToList()
-            .Where(u => HrvatskiTekst.SadrziNormalizirano(u.Naziv, term) ||
+            .Select(u => new { u.IdPlaninarskaUdruga, u.Naziv, u.Grad, u.Zupanija, u.JeOdobreno, u.IdKreator }).ToList()
+            .Where(u => VidljivoZaSve(u.JeOdobreno, u.IdKreator) &&
+                       (HrvatskiTekst.SadrziNormalizirano(u.Naziv, term) ||
                        HrvatskiTekst.SadrziNormalizirano(u.Grad, term) ||
-                       HrvatskiTekst.SadrziNormalizirano(u.Zupanija, term))
+                       HrvatskiTekst.SadrziNormalizirano(u.Zupanija, term)))
             .ToList();
         var udruge = new PretragaGrupa { Naziv = "Planinarske udruge", Controller = "PlaninarskaUdruga", Ikona = "people-fill", Ukupno = udrugeRezultati.Count() };
         udruge.Stavke = udrugeRezultati

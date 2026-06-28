@@ -8,4 +8,5 @@ public class PodrucjeIndexCardViewModel
     public string? OpisPreview { get; init; }
     public int MinimalanBrojKTZaObilazak { get; init; }
     public int UkupanBrojKT { get; init; }
+    public bool JeOdobreno { get; init; } = true;
 }

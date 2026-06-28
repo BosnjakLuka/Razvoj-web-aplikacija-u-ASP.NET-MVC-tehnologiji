@@ -18,6 +18,7 @@ else
                         <th>Regija</th>
                         <th>Min KT</th>
                         <th>Ukupno KT</th>
+                        <th>Status</th>
                         <th class="text-end">Akcije</th>
                     </tr>
                 </thead>
@@ -29,11 +30,24 @@ else
                             <td>@item.Regija</td>
                             <td>@item.MinimalanBrojKTZaObilazak</td>
                             <td>@item.UkupanBrojKT</td>
+                            <td>
+                                @if (item.JeOdobreno)
+                                {
+                                    <span class="badge bg-success-subtle text-success">Odobreno</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-subtle text-warning">Na čekanju</span>
+                                }
+                            </td>
                             <td class="text-end">
                                 <a asp-action="Details" asp-route-id="@item.IdPodrucje" class="btn btn-sm btn-outline-primary">Detalji</a>
-                                @if (User.IsInRole("Admin"))
+                                @if (User.IsInRole("Admin") || User.IsInRole("Planinar"))
                                 {
                                     <a asp-action="Edit" asp-route-id="@item.IdPodrucje" class="btn btn-sm btn-outline-secondary">Uredi</a>
+                                }
+                                @if (User.IsInRole("Admin"))
+                                {
                                     <a asp-action="Delete" asp-route-id="@item.IdPodrucje" class="btn btn-sm btn-outline-danger">Obrisi</a>
                                 }
                             </td>

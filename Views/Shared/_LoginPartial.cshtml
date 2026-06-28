@@ -36,6 +36,10 @@
         {
             <li class="dropdown-header">Bok, @korisnickoIme!</li>
             <li><a id="manage" class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Moj profil</a></li>
+            @if (User.IsInRole("Admin") || User.IsInRole("Planinar"))
+            {
+                <li><a id="autorizacija" class="dropdown-item" asp-controller="Autorizacija" asp-action="Index">Autorizacija</a></li>
+            }
             <li><hr class="dropdown-divider" /></li>
             <li>
                 <form id="logoutForm" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">

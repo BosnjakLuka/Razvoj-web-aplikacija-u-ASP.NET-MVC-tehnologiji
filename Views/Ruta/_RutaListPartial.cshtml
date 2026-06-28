@@ -19,6 +19,7 @@ else
                         <th>Tezina</th>
                         <th>Trajanje</th>
                         <th>Duljina</th>
+                        <th>Status</th>
                         <th class="text-end">Akcije</th>
                     </tr>
                 </thead>
@@ -31,11 +32,24 @@ else
                             <td>@ruta.TezinaTekst</td>
                             <td>@ruta.Trajanje</td>
                             <td>@ruta.DuljinaKm.ToString("F1") km</td>
+                            <td>
+                                @if (ruta.JeOdobreno)
+                                {
+                                    <span class="badge bg-success-subtle text-success">Odobreno</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-subtle text-warning">Na čekanju</span>
+                                }
+                            </td>
                             <td class="text-end">
                                 <a asp-action="Details" asp-route-id="@ruta.IdRuta" class="btn btn-sm btn-outline-primary">Detalji</a>
-                                @if (User.IsInRole("Admin"))
+                                @if (User.IsInRole("Admin") || User.IsInRole("Planinar"))
                                 {
                                     <a asp-action="Edit" asp-route-id="@ruta.IdRuta" class="btn btn-sm btn-outline-secondary">Uredi</a>
+                                }
+                                @if (User.IsInRole("Admin"))
+                                {
                                     <a asp-action="Delete" asp-route-id="@ruta.IdRuta" class="btn btn-sm btn-outline-danger">Obrisi</a>
                                 }
                             </td>

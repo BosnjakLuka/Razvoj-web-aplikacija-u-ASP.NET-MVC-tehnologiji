@@ -9,4 +9,5 @@ public class KontrolnaTockaIndexCardViewModel
     public string PodrucjeNaziv { get; init; } = string.Empty;
     public string? OpisPreview { get; init; }
     public string? GUIDOznaka { get; init; }
+    public bool JeOdobreno { get; init; } = true;
 }

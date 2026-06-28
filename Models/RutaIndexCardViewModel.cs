@@ -13,4 +13,5 @@ public class RutaIndexCardViewModel
     public string TezinaTekst { get; set; } = string.Empty;
     public string TezinaCssClass { get; set; } = string.Empty;
     public string? OpisPreview { get; set; }
+    public bool JeOdobreno { get; set; } = true;
 }

@@ -15,7 +15,7 @@
             <h1 class="section-title mb-2">Planinarske rute</h1>
             <p class="text-muted mb-0">Katalog ruta s brzim pretrazivanjem i CRUD akcijama.</p>
         </div>
-        @if (User.IsInRole("Admin"))
+        @if (User.IsInRole("Admin") || User.IsInRole("Planinar"))
         {
             <a asp-action="Create" class="btn btn-primary">Nova ruta</a>
         }
