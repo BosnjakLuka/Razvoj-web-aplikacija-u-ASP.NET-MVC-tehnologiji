@@ -216,6 +216,7 @@ public class FotografijaController : BaseController
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         var entity = await Db.Fotografije
+            .Include(f => f.Posjet)
             .FirstOrDefaultAsync(f => f.IdFotografija == id && f.DeletedAt == null);
         if (entity == null)
         {
