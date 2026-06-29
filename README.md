@@ -9,6 +9,10 @@ Planinar	luka@planinarenje.hr	Planinar@26!
 test za development stranu projekta 121 api testova
 dotnet test --logger "console;verbosity=detailed"
 
+cd "c:\Users\lukab\Documents\Projekt\Razvoj-web-aplikacija-u-ASP.NET-MVC-tehnologiji"
+dotnet test planinarenje.IntegrationTests/planinarenje.IntegrationTests.csproj
+
+
 MCP server test:
 http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=0562f307ceef34e709fc381c243012d36d0990aa50b0a0b6f6480896d5c78e55#tools
 
