@@ -15,3 +15,6 @@ obj/
 # Logs
 *.log
 Logs/
+# Deploy artifacts (built locally for Azure deploy, not source)
+publish/
+deploy.zip
