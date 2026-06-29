@@ -18,3 +18,10 @@ http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=0562f307ceef34e709fc381c243012d36d09
 
 Transport Type: Streamable HTTP
 URL:            http://localhost:5041/mcp
+
+Da promjena postane live, trenutno treba ručno:
+
+dotnet publish planinarenje.csproj (eksplicitno taj projekt, ne cijeli .slnx jer bi pokupio i planinarenje.IntegrationTests)
+Spakirati publish output u zip — ne PowerShell Compress-Archive (piše backslash separatore koji slome Linux App Service), nego ručno kroz System.IO.Compression.ZipArchive s normaliziranim / putanjama
+az webapp deploy (ili portal zip-deploy) na planinarenje-app resource
+Ako ima novih EF migracija — ručno dotnet ef database update protiv produkcijskog MySQL connection stringa (nema Database.Migrate() na startupu)
