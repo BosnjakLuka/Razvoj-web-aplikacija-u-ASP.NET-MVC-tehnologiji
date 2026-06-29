@@ -1,0 +1,764 @@
+/* ==========================================================================
+   GLOBAL DESIGN SYSTEM: Planinarska Knjižica
+   ========================================================================== */
+
+:root {
+    /* Color Palette - HPS Inspired & Hiking Aesthetic */
+    --color-primary-blue: #004b87;        /* Strong HPS Blue */
+    --color-dark-blue: #002d56;           /* Deep elevation / footer blue */
+    --color-hiking-green: #2e7d32;        /* Vibrant forest green */
+    --color-hiking-green-hover: #1f5f25;
+    --color-olive-sage: #6b8e23;          /* Secondary outdoor/trail accent */
+    --color-accent-orange: #d32f2f;       /* Hiking red/orange for CTA / badges */
+    
+    /* Backgrounds & Surfaces */
+    --bg-body-warm: #fcfbf9;              /* Warm beige / digital logbook paper */
+    --bg-surface-light: #ffffff;          /* Clean white for cards */
+    --bg-surface-muted: #f2efe9;          /* Slightly darker beige for contrasting sections */
+    
+    /* Text Colors */
+    --text-main: #2c3e50;                 /* Soft black/navy for readability */
+    --text-muted: #6c757d;                /* Secondary text */
+    --text-inverse: #ffffff;              /* Text on dark backgrounds */
+
+    /* Borders & Shadows (Tinted with primary blue for cohesion) */
+    --border-subtle: rgba(0, 75, 135, 0.1);
+    --border-strong: rgba(0, 75, 135, 0.2);
+    --shadow-1: 0 2px 4px rgba(0, 45, 86, 0.04), 0 1px 2px rgba(0, 45, 86, 0.02);
+    --shadow-2: 0 6px 12px rgba(0, 45, 86, 0.06), 0 2px 4px rgba(0, 45, 86, 0.04);
+    --shadow-3: 0 16px 32px rgba(0, 45, 86, 0.08), 0 4px 8px rgba(0, 45, 86, 0.04);
+
+    /* Geometry */
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-pill: 9999px;
+}
+
+/* ==========================================================================
+   GLOBAL TYPOGRAPHY & BODY
+   ========================================================================== */
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-body-warm);
+    color: var(--text-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, .section-title {
+    color: var(--color-dark-blue);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+a {
+    color: var(--color-hiking-green);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--color-olive-sage);
+}
+
+/* ==========================================================================
+   LAYOUT SHELL
+   ========================================================================== */
+
+.app-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.page-container {
+    flex: 1 0 auto;
+    padding: 2.5rem 0 4rem 0;
+    width: 100%;
+}
+
+/* ==========================================================================
+   TOPBAR & NAVIGATION
+   ========================================================================== */
+
+.topbar {
+    background-color: var(--color-primary-blue);
+    box-shadow: var(--shadow-2);
+    padding: 0.75rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.brand-mark {
+    color: var(--text-inverse) !important;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.brand-mark svg {
+    color: var(--color-accent-orange);
+}
+
+.topbar-inner .global-search {
+    min-width: 0;
+}
+
+.topbar-inner .global-search-input {
+    min-width: 0;
+}
+
+/* Profil ikona (dropdown: registracija/prijava ili profil/odjava) */
+.profile-icon-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: var(--text-inverse);
+    border: none;
+    flex-shrink: 0;
+    transition: background-color 0.2s ease;
+}
+
+.profile-icon-btn:hover,
+.profile-icon-btn:focus {
+    background-color: rgba(255, 255, 255, 0.28);
+    color: var(--text-inverse);
+}
+
+.profile-menu-dropdown {
+    min-width: 200px;
+}
+
+.profile-online-dot {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #2e7d32;
+    border: 2px solid var(--color-primary-blue);
+}
+
+/* Sub-nav: linkovi na entitete, smješten ispod hero/top navbara */
+.subnav {
+    background-color: var(--bg-surface-light);
+    border-bottom: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-1);
+    padding: 0.25rem 0;
+}
+
+.subnav .navbar-nav {
+    justify-content: center;
+    width: 100%;
+}
+
+.subnav .nav-link {
+    color: var(--color-dark-blue) !important;
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 0.6rem 1.1rem !important;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.subnav .nav-link:hover,
+.subnav .nav-link.active {
+    color: var(--color-hiking-green) !important;
+    background-color: rgba(46, 125, 50, 0.08);
+}
+
+.subnav .navbar-toggler {
+    border-color: var(--border-strong);
+    margin: 0.4rem 0;
+}
+
+.breadcrumb-wrap {
+    background-color: var(--bg-surface-light);
+    border-bottom: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-1);
+    padding: 0.75rem 0;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.breadcrumb-wrap a { color: var(--text-muted); }
+.breadcrumb-wrap .active { color: var(--color-hiking-green); }
+
+/* ==========================================================================
+   UI COMPONENTS (Cards, Panels, Badges)
+   ========================================================================== */
+
+.app-card {
+    background-color: var(--bg-surface-light);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-1);
+    padding: 1.5rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    height: 100%;
+}
+
+.app-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-2);
+    border-color: var(--border-strong);
+}
+
+.detail-panel {
+    background-color: var(--bg-surface-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-2);
+    border-top: 6px solid var(--color-hiking-green);
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background-color: var(--bg-surface-light);
+    border-radius: var(--radius-md);
+    border-left: 5px solid var(--color-hiking-green);
+    box-shadow: var(--shadow-1);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-asistent-card {
+    background-color: var(--bg-surface-muted);
+    border-left: 4px solid var(--color-olive-sage);
+    box-shadow: none;
+}
+
+.ai-asistent-card h2 {
+    color: var(--color-hiking-green);
+    letter-spacing: 0.04em;
+}
+
+.ai-asistent-card .ai-primjer {
+    color: var(--text-main);
+}
+
+.stat-card .stat-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--color-dark-blue);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.stat-card .stat-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.quick-link-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg-surface-light);
+    border-radius: var(--radius-sm);
+    padding: 1.25rem 1.5rem;
+    color: var(--color-primary-blue);
+    font-weight: 600;
+    font-size: 1.05rem;
+    box-shadow: var(--shadow-1);
+    border: 1px solid var(--border-subtle);
+    transition: all 0.2s ease;
+}
+
+.quick-link-card:hover {
+    background-color: var(--color-hiking-green);
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-2);
+    transform: translateX(4px);
+}
+
+.app-badge {
+    display: inline-block;
+    padding: 0.4em 0.85em;
+    border-radius: var(--radius-pill);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.app-badge.badge-primary { background-color: var(--color-primary-blue); color: var(--text-inverse); }
+.app-badge.badge-accent { background-color: var(--color-accent-orange); color: var(--text-inverse); }
+.app-badge.badge-success { background-color: var(--color-hiking-green); color: var(--text-inverse); }
+.app-badge.badge-subtle { background-color: var(--bg-surface-muted); color: var(--text-main); border: 1px solid var(--border-subtle); }
+
+.profile-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #666;
+}
+
+.section-title {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 0.75rem;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 4px;
+    background-color: var(--color-hiking-green);
+    border-radius: var(--radius-pill);
+}
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+
+.btn-primary {
+    background-color: var(--color-hiking-green);
+    border-color: var(--color-hiking-green);
+    font-weight: 600;
+    padding: 0.6rem 1.5rem;
+    border-radius: var(--radius-pill);
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-hiking-green-hover);
+    border-color: var(--color-hiking-green-hover);
+    box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3);
+}
+
+/* ==========================================================================
+   HERO & IMAGE INTEGRATIONS
+   ========================================================================== */
+
+.hero-section {
+    position: relative;
+    padding: 8rem 0;
+    display: flex;
+    align-items: center;
+    color: var(--text-inverse);
+}
+
+.bg-hero-hpo {
+    background-image: url('/Slike/Dizajn/hpo.jpg');
+    background-size: cover;
+    background-position: center 30%;
+    background-attachment: fixed; /* Parallax effect */
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 45, 86, 0.85) 0%, rgba(46, 125, 50, 0.75) 100%);
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-content h1 {
+    color: var(--text-inverse);
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.hero-actions {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Usage for karta-hpo.jpg */
+.img-karta-hpo {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-3);
+    border: 6px solid var(--bg-surface-light);
+    width: 100%;
+    height: auto;
+}
+
+/* Usage for karte1.jpg */
+.bg-texture-karte {
+    background-image: url('/Slike/Dizajn/karte1.jpg');
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(252, 251, 249, 0.94);
+    background-blend-mode: overlay;
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+/* ==========================================================================
+   FOOTER
+   ========================================================================== */
+
+.footer-shell {
+    background-color: var(--color-dark-blue);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 2.5rem 0;
+    margin-top: auto;
+}
+
+.footer-shell strong {
+    color: var(--text-inverse);
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .hero-section { padding: 5rem 0; }
+    .hero-content h1 { font-size: 2.5rem; }
+    .stat-card { margin-bottom: 1rem; }
+    .hero-actions { justify-content: center; }
+}
+
+.section-title.no-accent::after {
+    display: none;
+}
+
+/* Autocomplete dropdown */
+.autocomplete-wrapper {
+    z-index: 100;
+}
+
+.autocomplete-list {
+    background: var(--bg-surface-light);
+    border: 1px solid rgba(0,0,0,.15);
+    border-radius: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+    top: 100%;
+    z-index: 200;
+}
+
+.autocomplete-list li {
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    transition: background 0.12s;
+}
+
+.autocomplete-list li:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-list li:hover,
+.autocomplete-list li.active {
+    background: #e8f5e9;
+    color: #1b4332;
+}
+
+.autocomplete-list li.no-results {
+    color: #888;
+    cursor: default;
+    font-style: italic;
+}
+
+/* Validation messages */
+.field-validation-error,
+.text-danger.small {
+    font-size: 0.82rem;
+    margin-top: 3px;
+    display: block;
+}
+
+.input-validation-error {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.15rem rgba(220, 53, 69, 0.15) !important;
+}
+
+.field-validation-valid {
+    display: none;
+}
+
+/* Delete confirm animations */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+}
+
+@keyframes pulse-warning {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.08); opacity: 0.85; }
+}
+
+.delete-warning-icon {
+    animation: pulse-warning 1.6s ease-in-out infinite;
+    display: inline-block;
+    font-size: 2.5rem;
+    color: #dc3545;
+}
+
+.btn-delete-confirm:hover {
+    animation: shake 0.4s ease;
+}
+
+/* Navbar active underline */
+.navbar-nav .nav-link {
+    position: relative;
+}
+
+.navbar-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    right: 50%;
+    height: 2px;
+    background: #52b788;
+    transition: left 0.2s ease, right 0.2s ease;
+}
+
+.navbar-nav .nav-link.active::after,
+.navbar-nav .nav-link:hover::after {
+    left: 8px;
+    right: 8px;
+}
+
+/* ============================================================
+   Globalna (cross-entity) pretraga
+   ============================================================ */
+
+/* --- Navbar okvir + live dropdown --- */
+.global-search {
+    min-width: 200px;
+}
+
+.global-search-input {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    padding-left: 14px;
+}
+
+.global-search-input:focus {
+    background: #fff;
+    box-shadow: 0 0 0 0.18rem rgba(82, 183, 136, 0.35);
+    border-color: var(--color-hiking-green);
+}
+
+.global-search-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    min-width: 320px;
+    max-height: 70vh;
+    overflow-y: auto;
+    background: var(--bg-surface-light);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    z-index: 1050;
+    padding: 4px 0;
+}
+
+.gs-dd-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-primary-blue);
+    background: var(--bg-surface-muted);
+}
+
+.gs-dd-count {
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.gs-dd-item {
+    display: flex;
+    flex-direction: column;
+    padding: 7px 16px;
+    text-decoration: none;
+    color: var(--text-main);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.gs-dd-item:last-of-type {
+    border-bottom: none;
+}
+
+.gs-dd-item:hover,
+.gs-dd-item.active {
+    background: #e8f5e9;
+    color: #1b4332;
+}
+
+.gs-dd-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.gs-dd-sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.gs-dd-empty {
+    padding: 14px 16px;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+.gs-dd-all {
+    display: block;
+    text-align: center;
+    padding: 9px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--color-hiking-green);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.gs-dd-all:hover {
+    background: var(--bg-surface-muted);
+    color: var(--color-hiking-green-hover);
+}
+
+/* --- Puna stranica rezultata --- */
+.gs-page-form .form-control:focus {
+    border-color: var(--color-hiking-green);
+    box-shadow: 0 0 0 0.18rem rgba(82, 183, 136, 0.25);
+}
+
+.gs-group {
+    background: var(--bg-surface-light);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-left: 5px solid var(--color-hiking-green);
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+}
+
+.gs-group-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--bg-surface-muted);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.gs-group-head h2 {
+    color: var(--color-dark-blue);
+}
+
+.gs-group-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.gs-item {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 16px;
+    text-decoration: none;
+    color: var(--text-main);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.gs-item:last-child {
+    border-bottom: none;
+}
+
+.gs-item:hover {
+    background: #e8f5e9;
+}
+
+.gs-item-title {
+    font-weight: 600;
+    color: var(--color-primary-blue);
+}
+
+.gs-item-sub {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.gs-item-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin-top: 4px;
+}
+
+.gs-item-field {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.gs-item-field strong {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.gs-group-more {
+    display: block;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--color-hiking-green);
+    background: var(--bg-surface-light);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.gs-group-more:hover {
+    background: var(--bg-surface-muted);
+}
+
+.gs-empty {
+    background: var(--bg-surface-muted);
+    border: 1px dashed rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+}
