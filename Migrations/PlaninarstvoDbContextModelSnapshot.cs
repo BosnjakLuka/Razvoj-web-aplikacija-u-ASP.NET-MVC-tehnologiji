@@ -179,8 +179,7 @@ namespace planinarenje.Migrations
 
                     b.Property<string>("JMBG")
                         .IsRequired()
-                        .HasMaxLength(13)
-                        .HasColumnType("varchar(13)");
+                        .HasColumnType("longtext");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("tinyint(1)");
@@ -198,8 +197,7 @@ namespace planinarenje.Migrations
 
                     b.Property<string>("OIB")
                         .IsRequired()
-                        .HasMaxLength(11)
-                        .HasColumnType("varchar(11)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("longtext");
@@ -390,6 +388,9 @@ namespace planinarenje.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdKontrolnaTocka"));
 
+                    b.Property<DateTime?>("DatumPrijave")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime(6)");
 
@@ -398,8 +399,14 @@ namespace planinarenje.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<int?>("IdKreator")
+                        .HasColumnType("int");
+
                     b.Property<int>("IdPodrucje")
                         .HasColumnType("int");
+
+                    b.Property<bool>("JeOdobreno")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Koordinate")
                         .HasMaxLength(100)
@@ -427,6 +434,8 @@ namespace planinarenje.Migrations
                     b.HasIndex("GUIDOznaka")
                         .IsUnique();
 
+                    b.HasIndex("IdKreator");
+
                     b.HasIndex("IdPodrucje");
 
                     b.ToTable("KontrolneTocke");
@@ -437,6 +446,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 1,
                             GUIDOznaka = "KT-HPO-2-1-VIS",
                             IdPodrucje = 2,
+                            JeOdobreno = true,
                             Koordinate = "N/A",
                             NadmorskaVisina = 437,
                             Naziv = "Moslavačka gora – vrh Vis",
@@ -449,6 +459,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 2,
                             GUIDOznaka = "KT-HPO-4-4-SLJEME",
                             IdPodrucje = 4,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 53' 57.4'' E 15° 56' 50.6''",
                             NadmorskaVisina = 1033,
                             Naziv = "Sljeme – vrh",
@@ -461,6 +472,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 3,
                             GUIDOznaka = "KT-HPO-5-1-OKIC",
                             IdPodrucje = 5,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 44' 55.4'' E 15° 42' 24.0''",
                             NadmorskaVisina = 499,
                             Naziv = "Okić – vrh",
@@ -473,6 +485,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 4,
                             GUIDOznaka = "KT-HPO-5-4-JAPETIC",
                             IdPodrucje = 5,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 44' 56.3'' E 15° 36' 32.8''",
                             NadmorskaVisina = 879,
                             Naziv = "Japetić – vrh",
@@ -485,6 +498,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 5,
                             GUIDOznaka = "KT-HPO-11-2-ZAVIZAN",
                             IdPodrucje = 11,
+                            JeOdobreno = true,
                             Koordinate = "N/A",
                             NadmorskaVisina = 1676,
                             Naziv = "Veliki Zavižan – vrh",
@@ -497,6 +511,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 7,
                             GUIDOznaka = "KAP8371",
                             IdPodrucje = 1,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 28' 12.0'' E 17° 52' 30.0''",
                             NadmorskaVisina = 790,
                             Naziv = "Krndija – vrh Kapovac",
@@ -509,6 +524,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 8,
                             GUIDOznaka = "IVA5629",
                             IdPodrucje = 1,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 31' 10.0'' E 17° 40' 15.0''",
                             NadmorskaVisina = 913,
                             Naziv = "Papuk – vrh Ivačka glava",
@@ -521,6 +537,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 9,
                             GUIDOznaka = "BRE7412",
                             IdPodrucje = 1,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 16' 45.0'' E 17° 18' 20.0''",
                             NadmorskaVisina = 984,
                             Naziv = "Psunj – vrh Brezovo polje",
@@ -533,6 +550,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 10,
                             GUIDOznaka = "STA2087",
                             IdPodrucje = 2,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 53' 00.0'' E 17° 07' 30.0''",
                             NadmorskaVisina = 309,
                             Naziv = "Bilogora – Stankov vrh",
@@ -545,6 +563,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 11,
                             GUIDOznaka = "MOH6243",
                             IdPodrucje = 3,
+                            JeOdobreno = true,
                             Koordinate = "N 46° 24' 50.0'' E 16° 22' 10.0''",
                             NadmorskaVisina = 344,
                             Naziv = "Međimurske gorice – vrh Mohokos",
@@ -557,6 +576,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 12,
                             GUIDOznaka = "IVN3815",
                             IdPodrucje = 3,
+                            JeOdobreno = true,
                             Koordinate = "N 46° 10' 55.0'' E 16° 06' 45.0''",
                             NadmorskaVisina = 1060,
                             Naziv = "Ivanščica – vrh Ivanščica",
@@ -569,6 +589,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 13,
                             GUIDOznaka = "RAV9174",
                             IdPodrucje = 3,
+                            JeOdobreno = true,
                             Koordinate = "N 46° 04' 20.0'' E 15° 56' 30.0''",
                             NadmorskaVisina = 680,
                             Naziv = "Ravna gora – vrh (piramida)",
@@ -581,6 +602,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 14,
                             GUIDOznaka = "SUS4538",
                             IdPodrucje = 3,
+                            JeOdobreno = true,
                             Koordinate = "N 46° 11' 40.0'' E 15° 54' 20.0''",
                             NadmorskaVisina = 846,
                             Naziv = "Strahinjščica – vrh Sušec",
@@ -593,6 +615,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 15,
                             GUIDOznaka = "GRH7260",
                             IdPodrucje = 4,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 52' 30.0'' E 16° 03' 10.0''",
                             NadmorskaVisina = 492,
                             Naziv = "Grohot – vrh",
@@ -605,6 +628,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 16,
                             GUIDOznaka = "LIP3492",
                             IdPodrucje = 4,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 54' 10.0'' E 15° 55' 40.0''",
                             NadmorskaVisina = 709,
                             Naziv = "Lipa – vrh",
@@ -617,6 +641,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 17,
                             GUIDOznaka = "MEG8156",
                             IdPodrucje = 4,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 51' 45.0'' E 15° 56' 50.0''",
                             NadmorskaVisina = 579,
                             Naziv = "Medvedgrad",
@@ -629,6 +654,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 18,
                             GUIDOznaka = "PLE6703",
                             IdPodrucje = 5,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 43' 30.0'' E 15° 39' 20.0''",
                             NadmorskaVisina = 779,
                             Naziv = "Plešivica – vrh",
@@ -641,6 +667,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 19,
                             GUIDOznaka = "OST5281",
                             IdPodrucje = 5,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 44' 10.0'' E 15° 40' 55.0''",
                             NadmorskaVisina = 752,
                             Naziv = "Oštrc – vrh",
@@ -653,6 +680,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 20,
                             GUIDOznaka = "TUS9047",
                             IdPodrucje = 6,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 44' 00.0'' E 15° 30' 10.0''",
                             NadmorskaVisina = 585,
                             Naziv = "Tuščak – gradina",
@@ -665,6 +693,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 21,
                             GUIDOznaka = "SGE2634",
                             IdPodrucje = 6,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 42' 45.0'' E 15° 22' 30.0''",
                             NadmorskaVisina = 1178,
                             Naziv = "Sveta Gera – vrh",
@@ -677,6 +706,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 22,
                             GUIDOznaka = "PLI7819",
                             IdPodrucje = 6,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 43' 20.0'' E 15° 25' 50.0''",
                             NadmorskaVisina = 977,
                             Naziv = "Pliješ – vrh",
@@ -689,6 +719,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 23,
                             GUIDOznaka = "VOD4153",
                             IdPodrucje = 7,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 27' 10.0'' E 15° 32' 20.0''",
                             NadmorskaVisina = 538,
                             Naziv = "Vodenica – vrh",
@@ -701,6 +732,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 24,
                             GUIDOznaka = "PET6928",
                             IdPodrucje = 7,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 19' 20.0'' E 15° 47' 00.0''",
                             NadmorskaVisina = 512,
                             Naziv = "Petrova gora – vrh Petrovac",
@@ -713,6 +745,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 25,
                             GUIDOznaka = "KLE3047",
                             IdPodrucje = 8,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 17' 55.0'' E 15° 10' 40.0''",
                             NadmorskaVisina = 1181,
                             Naziv = "Klek – vrh",
@@ -725,6 +758,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 26,
                             GUIDOznaka = "BJE8592",
                             IdPodrucje = 8,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 15' 50.0'' E 14° 58' 30.0''",
                             NadmorskaVisina = 1534,
                             Naziv = "Bjelolasica – vrh Kula",
@@ -737,6 +771,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 27,
                             GUIDOznaka = "SAM1736",
                             IdPodrucje = 8,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 16' 20.0'' E 14° 55' 10.0''",
                             NadmorskaVisina = 1302,
                             Naziv = "Samarske stijene – vrh",
@@ -749,6 +784,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 28,
                             GUIDOznaka = "RIS4208",
                             IdPodrucje = 9,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 25' 35.0'' E 14° 45' 20.0''",
                             NadmorskaVisina = 1528,
                             Naziv = "Risnjak – vrh",
@@ -761,6 +797,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 29,
                             GUIDOznaka = "SNJ6371",
                             IdPodrucje = 9,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 26' 10.0'' E 14° 35' 40.0''",
                             NadmorskaVisina = 1505,
                             Naziv = "Snježnik – vrh",
@@ -773,6 +810,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 30,
                             GUIDOznaka = "SKR2845",
                             IdPodrucje = 9,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 24' 05.0'' E 15° 02' 15.0''",
                             NadmorskaVisina = 1043,
                             Naziv = "Skradski vrh",
@@ -785,6 +823,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 31,
                             GUIDOznaka = "VOJ7164",
                             IdPodrucje = 10,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 17' 10.0'' E 14° 11' 55.0''",
                             NadmorskaVisina = 1396,
                             Naziv = "Učka – vrh Vojak",
@@ -797,6 +836,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 32,
                             GUIDOznaka = "VPL3920",
                             IdPodrucje = 10,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 27' 20.0'' E 14° 13' 30.0''",
                             NadmorskaVisina = 1272,
                             Naziv = "Ćićarija – vrh Veliki Planik",
@@ -809,6 +849,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 33,
                             GUIDOznaka = "MRA8451",
                             IdPodrucje = 11,
+                            JeOdobreno = true,
                             Koordinate = "N 44° 46' 30.0'' E 14° 58' 50.0''",
                             NadmorskaVisina = 1699,
                             Naziv = "Mali Rajinac – vrh",
@@ -821,6 +862,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 34,
                             GUIDOznaka = "ZEC6237",
                             IdPodrucje = 12,
+                            JeOdobreno = true,
                             Koordinate = "N 44° 36' 15.0'' E 15° 03' 40.0''",
                             NadmorskaVisina = 1622,
                             Naziv = "Zečjak – vrh",
@@ -833,6 +875,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 35,
                             GUIDOznaka = "SAT1584",
                             IdPodrucje = 12,
+                            JeOdobreno = true,
                             Koordinate = "N 44° 34' 50.0'' E 15° 05' 10.0''",
                             NadmorskaVisina = 1622,
                             Naziv = "Šatorina – vrh",
@@ -845,6 +888,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 36,
                             GUIDOznaka = "VAG7302",
                             IdPodrucje = 13,
+                            JeOdobreno = true,
                             Koordinate = "N 44° 21' 50.0'' E 15° 30' 20.0''",
                             NadmorskaVisina = 1757,
                             Naziv = "Vaganski vrh",
@@ -857,6 +901,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 37,
                             GUIDOznaka = "SVB4916",
                             IdPodrucje = 13,
+                            JeOdobreno = true,
                             Koordinate = "N 44° 19' 40.0'' E 15° 30' 55.0''",
                             NadmorskaVisina = 1751,
                             Naziv = "Sveto brdo – vrh",
@@ -869,6 +914,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 38,
                             GUIDOznaka = "ANI2058",
                             IdPodrucje = 13,
+                            JeOdobreno = true,
                             Koordinate = "N 44° 18' 15.0'' E 15° 27' 40.0''",
                             NadmorskaVisina = 712,
                             Naziv = "Anića kuk – vrh",
@@ -881,6 +927,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 39,
                             GUIDOznaka = "OZE8743",
                             IdPodrucje = 14,
+                            JeOdobreno = true,
                             Koordinate = "N 44° 46' 10.0'' E 15° 44' 30.0''",
                             NadmorskaVisina = 1657,
                             Naziv = "Lička Plješivica – vrh Ozeblin",
@@ -893,6 +940,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 40,
                             GUIDOznaka = "POT5261",
                             IdPodrucje = 14,
+                            JeOdobreno = true,
                             Koordinate = "N 44° 10' 55.0'' E 16° 10' 20.0''",
                             NadmorskaVisina = 1425,
                             Naziv = "Poštak – vrh",
@@ -905,6 +953,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 41,
                             GUIDOznaka = "OBZ3179",
                             IdPodrucje = 15,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 01' 20.0'' E 14° 37' 50.0''",
                             NadmorskaVisina = 569,
                             Naziv = "Krk – vrh Obzova",
@@ -917,6 +966,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 42,
                             GUIDOznaka = "SIS6420",
                             IdPodrucje = 15,
+                            JeOdobreno = true,
                             Koordinate = "N 44° 52' 30.0'' E 14° 22' 10.0''",
                             NadmorskaVisina = 639,
                             Naziv = "Cres – vrh Sis",
@@ -929,6 +979,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 43,
                             GUIDOznaka = "VID8537",
                             IdPodrucje = 16,
+                            JeOdobreno = true,
                             Koordinate = "N 43° 18' 40.0'' E 16° 37' 20.0''",
                             NadmorskaVisina = 780,
                             Naziv = "Brač – vrh Vidova gora",
@@ -941,6 +992,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 44,
                             GUIDOznaka = "SNK2074",
                             IdPodrucje = 16,
+                            JeOdobreno = true,
                             Koordinate = "N 43° 10' 35.0'' E 16° 39' 50.0''",
                             NadmorskaVisina = 626,
                             Naziv = "Hvar – vrh Sv. Nikola",
@@ -953,6 +1005,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 45,
                             GUIDOznaka = "KOM9361",
                             IdPodrucje = 16,
+                            JeOdobreno = true,
                             Koordinate = "N 42° 57' 30.0'' E 16° 53' 15.0''",
                             NadmorskaVisina = 508,
                             Naziv = "Korčula – vrh Kom",
@@ -965,6 +1018,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 46,
                             GUIDOznaka = "DIN4728",
                             IdPodrucje = 17,
+                            JeOdobreno = true,
                             Koordinate = "N 43° 59' 25.0'' E 16° 22' 50.0''",
                             NadmorskaVisina = 1831,
                             Naziv = "Dinara – vrh Dinara (Sinjal)",
@@ -977,6 +1031,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 47,
                             GUIDOznaka = "SVL5839",
                             IdPodrucje = 17,
+                            JeOdobreno = true,
                             Koordinate = "N 43° 44' 10.0'' E 16° 28' 30.0''",
                             NadmorskaVisina = 1508,
                             Naziv = "Svilaja – vrh Svilaja",
@@ -989,6 +1044,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 48,
                             GUIDOznaka = "CAV7162",
                             IdPodrucje = 17,
+                            JeOdobreno = true,
                             Koordinate = "N 43° 51' 40.0'' E 16° 05' 20.0''",
                             NadmorskaVisina = 1147,
                             Naziv = "Promina – vrh Čavnovka",
@@ -1001,6 +1057,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 49,
                             GUIDOznaka = "LJU3084",
                             IdPodrucje = 18,
+                            JeOdobreno = true,
                             Koordinate = "N 43° 31' 20.0'' E 16° 31' 50.0''",
                             NadmorskaVisina = 1262,
                             Naziv = "Mosor – vrh Ljubljan",
@@ -1013,6 +1070,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 50,
                             GUIDOznaka = "BIR6597",
                             IdPodrucje = 18,
+                            JeOdobreno = true,
                             Koordinate = "N 43° 33' 50.0'' E 16° 24' 10.0''",
                             NadmorskaVisina = 631,
                             Naziv = "Kozjak – vrh Biranj",
@@ -1025,6 +1083,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 51,
                             GUIDOznaka = "SJU4213",
                             IdPodrucje = 19,
+                            JeOdobreno = true,
                             Koordinate = "N 43° 20' 10.0'' E 17° 03' 00.0''",
                             NadmorskaVisina = 1762,
                             Naziv = "Sv. Jure – vrh",
@@ -1037,6 +1096,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 52,
                             GUIDOznaka = "VOS8746",
                             IdPodrucje = 19,
+                            JeOdobreno = true,
                             Koordinate = "N 43° 18' 55.0'' E 17° 04' 20.0''",
                             NadmorskaVisina = 1421,
                             Naziv = "Vošac – vrh",
@@ -1049,6 +1109,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 53,
                             GUIDOznaka = "KIM3509",
                             IdPodrucje = 19,
+                            JeOdobreno = true,
                             Koordinate = "N 43° 19' 30.0'' E 17° 04' 50.0''",
                             NadmorskaVisina = 1536,
                             Naziv = "Kimet – vrh",
@@ -1061,6 +1122,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 54,
                             GUIDOznaka = "SIL2871",
                             IdPodrucje = 20,
+                            JeOdobreno = true,
                             Koordinate = "N 42° 55' 20.0'' E 17° 07' 30.0''",
                             NadmorskaVisina = 960,
                             Naziv = "Pelješac – vrh Sv. Ilija",
@@ -1073,6 +1135,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 55,
                             GUIDOznaka = "ILJ6034",
                             IdPodrucje = 20,
+                            JeOdobreno = true,
                             Koordinate = "N 42° 38' 40.0'' E 18° 15' 10.0''",
                             NadmorskaVisina = 1234,
                             Naziv = "Sniježnica – Ilijin vrh",
@@ -1085,6 +1148,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 56,
                             GUIDOznaka = "VSV7283",
                             IdPodrucje = 8,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 18' 40.0'' E 14° 39' 50.0''",
                             NadmorskaVisina = 1428,
                             Naziv = "Viševica – vrh",
@@ -1097,6 +1161,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 57,
                             GUIDOznaka = "CAR5190",
                             IdPodrucje = 1,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 14' 30.0'' E 18° 07' 20.0''",
                             NadmorskaVisina = 421,
                             Naziv = "Dilj gora – vrh Čardak",
@@ -1109,6 +1174,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 58,
                             GUIDOznaka = "ZBE8416",
                             IdPodrucje = 10,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 29' 10.0'' E 14° 08' 40.0''",
                             NadmorskaVisina = 1014,
                             Naziv = "Ćićarija – vrh Žbevnica",
@@ -1121,6 +1187,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 59,
                             GUIDOznaka = "VRA2758",
                             IdPodrucje = 3,
+                            JeOdobreno = true,
                             Koordinate = "N 46° 09' 00.0'' E 16° 27' 30.0''",
                             NadmorskaVisina = 643,
                             Naziv = "Kalnik – vrh Vranilac",
@@ -1133,6 +1200,7 @@ namespace planinarenje.Migrations
                             IdKontrolnaTocka = 60,
                             GUIDOznaka = "HOR6391",
                             IdPodrucje = 4,
+                            JeOdobreno = true,
                             Koordinate = "N 45° 52' 10.0'' E 15° 57' 20.0''",
                             NadmorskaVisina = 450,
                             Naziv = "Horvatovih 500 stuba",
@@ -1161,7 +1229,7 @@ namespace planinarenje.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<DateTime?>("DatumRodenja")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("date");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -1491,6 +1559,9 @@ namespace planinarenje.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("varchar(30)");
 
+                    b.Property<DateTime?>("DatumPrijave")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime(6)");
 
@@ -1501,6 +1572,12 @@ namespace planinarenje.Migrations
                     b.Property<string>("Grad")
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
+
+                    b.Property<int?>("IdKreator")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("JeOdobreno")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Naziv")
                         .IsRequired()
@@ -1522,6 +1599,8 @@ namespace planinarenje.Migrations
 
                     b.HasKey("IdPlaninarskaUdruga");
 
+                    b.HasIndex("IdKreator");
+
                     b.HasIndex("OIB")
                         .IsUnique();
 
@@ -1535,6 +1614,7 @@ namespace planinarenje.Migrations
                             BrojClanova = 350,
                             Email = "hpd.mosor@hps.hr",
                             Grad = "Split",
+                            JeOdobreno = true,
                             Naziv = "HPD Mosor",
                             OIB = "40461293872",
                             PostanskiBroj = "21000",
@@ -1547,6 +1627,7 @@ namespace planinarenje.Migrations
                             BrojClanova = 180,
                             Email = "hpd.gora@hps.hr",
                             Grad = "Zagreb",
+                            JeOdobreno = true,
                             Naziv = "HPD Gora",
                             OIB = "48938096579",
                             PostanskiBroj = "10000",
@@ -1559,6 +1640,7 @@ namespace planinarenje.Migrations
                             BrojClanova = 120,
                             Email = "pd.zavizan@hps.hr",
                             Grad = "Senj",
+                            JeOdobreno = true,
                             Naziv = "PD Zavižan",
                             OIB = "95873199484",
                             PostanskiBroj = "53270",
@@ -1571,6 +1653,7 @@ namespace planinarenje.Migrations
                             BrojClanova = 220,
                             Email = "pd.paklenica@hps.hr",
                             Grad = "Zadar",
+                            JeOdobreno = true,
                             Naziv = "PD Paklenica",
                             OIB = "92966614510",
                             PostanskiBroj = "23000",
@@ -1584,6 +1667,7 @@ namespace planinarenje.Migrations
                             BrojTelefona = "0991234567",
                             Email = "info@pddr-maks-plotnikov.hr",
                             Grad = "Samobor",
+                            JeOdobreno = true,
                             Naziv = "PD Dr. Maks Plotnikov",
                             OIB = "12345678901",
                             PostanskiBroj = "10430",
@@ -1603,12 +1687,18 @@ namespace planinarenje.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
 
+                    b.Property<DateTime?>("DatumPrijave")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Email")
                         .HasMaxLength(150)
                         .HasColumnType("varchar(150)");
+
+                    b.Property<int?>("IdKreator")
+                        .HasColumnType("int");
 
                     b.Property<int>("IdPlaninarskaUdruga")
                         .HasColumnType("int");
@@ -1625,6 +1715,9 @@ namespace planinarenje.Migrations
                     b.Property<string>("ImeOdgovorneOsobe")
                         .HasMaxLength(150)
                         .HasColumnType("varchar(150)");
+
+                    b.Property<bool>("JeOdobreno")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int?>("Kapacitet")
                         .HasColumnType("int");
@@ -1652,6 +1745,8 @@ namespace planinarenje.Migrations
 
                     b.HasKey("IdPlaninarskiObjekt");
 
+                    b.HasIndex("IdKreator");
+
                     b.HasIndex("IdPlaninarskaUdruga");
 
                     b.HasIndex("IdPodrucje");
@@ -1669,6 +1764,7 @@ namespace planinarenje.Migrations
                             ImaHranu = true,
                             ImaNocenje = true,
                             ImeOdgovorneOsobe = "Stjepan Jandrečić",
+                            JeOdobreno = true,
                             Kapacitet = 14,
                             NadmorskaVisina = 411,
                             Naziv = "Planinarski dom Dr. Maks Plotnikov",
@@ -1686,6 +1782,7 @@ namespace planinarenje.Migrations
                             ImaHranu = true,
                             ImaNocenje = true,
                             ImeOdgovorneOsobe = "Dežurni domar",
+                            JeOdobreno = true,
                             Kapacitet = 25,
                             NadmorskaVisina = 691,
                             Naziv = "Planinarski dom Željezničar",
@@ -1703,6 +1800,7 @@ namespace planinarenje.Migrations
                             ImaHranu = false,
                             ImaNocenje = true,
                             ImeOdgovorneOsobe = "Dežurni član društva",
+                            JeOdobreno = true,
                             Kapacitet = 12,
                             NadmorskaVisina = 328,
                             Naziv = "Planinarska kuća Sijaset",
@@ -1720,6 +1818,7 @@ namespace planinarenje.Migrations
                             ImaHranu = true,
                             ImaNocenje = true,
                             ImeOdgovorneOsobe = "Irena Šaran",
+                            JeOdobreno = true,
                             Kapacitet = 44,
                             NadmorskaVisina = 480,
                             Naziv = "Planinarski dom Paklenica",
@@ -1738,6 +1837,7 @@ namespace planinarenje.Migrations
                             ImaHranu = false,
                             ImaNocenje = true,
                             ImeOdgovorneOsobe = "Dežurna osoba društva",
+                            JeOdobreno = true,
                             Kapacitet = 20,
                             NadmorskaVisina = 872,
                             Naziv = "Planinarska kuća Lugarnica",
@@ -1755,8 +1855,17 @@ namespace planinarenje.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdPodrucje"));
 
+                    b.Property<DateTime?>("DatumPrijave")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("IdKreator")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("JeOdobreno")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("MinimalanBrojKTZaObilazak")
                         .HasColumnType("int");
@@ -1775,12 +1884,15 @@ namespace planinarenje.Migrations
 
                     b.HasKey("IdPodrucje");
 
+                    b.HasIndex("IdKreator");
+
                     b.ToTable("Podrucja");
 
                     b.HasData(
                         new
                         {
                             IdPodrucje = 1,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 2,
                             Naziv = "Slavonija",
                             Opis = "Nizinsko i brežuljkasto područje istočne Hrvatske s Papukom, Psunjem, Krndijom i drugim slavonskim gorjima.",
@@ -1789,6 +1901,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 2,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 1,
                             Naziv = "Moslavačka gora i Bilogora",
                             Opis = "Niža šumovita gorja s kraćim planinarskim usponima i manjim brojem kontrolnih točaka.",
@@ -1797,6 +1910,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 3,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 3,
                             Naziv = "Hrvatsko zagorje i Međimurje",
                             Opis = "Brežuljkasto područje s vidikovcima, utvrdama i poznatim vrhovima kao što su Ivanščica i Ravna gora.",
@@ -1805,6 +1919,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 4,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 2,
                             Naziv = "Medvednica",
                             Opis = "Planina iznad Zagreba s gusto razvijenom mrežom putova, domova i kontrolnih točaka.",
@@ -1813,6 +1928,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 5,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 2,
                             Naziv = "Samoborsko gorje",
                             Opis = "Popularno planinarsko područje zapadno od Zagreba, poznato po Okiću, Japetiću i Oštrcu.",
@@ -1821,6 +1937,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 6,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 1,
                             Naziv = "Žumberačka gora",
                             Opis = "Planinsko i granično područje s višim vrhovima i rjeđe naseljenim grebenima.",
@@ -1829,6 +1946,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 7,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 1,
                             Naziv = "Karlovačko pokuplje, Kordun i Banovina",
                             Opis = "Područje nižih gora i šumovitih uzvisina južno od Karlovca i prema Banovini.",
@@ -1837,6 +1955,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 8,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 4,
                             Naziv = "Gorski kotar - južni dio",
                             Opis = "Dio Gorskog kotara s višim vrhovima, stjenovitim skupinama i zahtjevnijim usponima.",
@@ -1845,6 +1964,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 9,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 3,
                             Naziv = "Gorski kotar - sjeverni dio",
                             Opis = "Šumovito i planinsko područje s vrhovima poput Risnjaka, Snježnika i Skradskog vrha.",
@@ -1853,6 +1973,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 10,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 2,
                             Naziv = "Istra",
                             Opis = "Područje Učke i Ćićarije s istaknutim obalnim i planinskim vidikovcima.",
@@ -1861,6 +1982,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 11,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 3,
                             Naziv = "Sjeverni Velebit",
                             Opis = "Visokoplaninsko područje s izrazito atraktivnim velebitskim vrhovima i oštrim kršem.",
@@ -1869,6 +1991,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 12,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 2,
                             Naziv = "Srednji Velebit",
                             Opis = "Središnji dio Velebita sa srednje zahtjevnim i zahtjevnim vrhovima i planinarskim kućama.",
@@ -1877,6 +2000,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 13,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 3,
                             Naziv = "Južni Velebit",
                             Opis = "Najviši i alpinistički najdojmljiviji dio Velebita s Vaganskim vrhom i Svetim brdom.",
@@ -1885,6 +2009,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 14,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 1,
                             Naziv = "Lika",
                             Opis = "Prostrano područje ličkih planina i osamljenih vrhova izvan glavnog velebitskog lanca.",
@@ -1893,6 +2018,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 15,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 1,
                             Naziv = "Jadranski otoci - sjeverni dio",
                             Opis = "Sjeverni jadranski otoci s nižim, ali vrlo atraktivnim otočnim vrhovima.",
@@ -1901,6 +2027,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 16,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 2,
                             Naziv = "Jadranski otoci - južni dio",
                             Opis = "Južni jadranski otoci s većim brojem otočnih vrhova i raznolikim podlogama.",
@@ -1909,6 +2036,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 17,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 2,
                             Naziv = "Dalmatinska zagora",
                             Opis = "Područje Dinare, Promine, Svilaje i drugih planina dalmatinskog zaleđa.",
@@ -1917,6 +2045,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 18,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 2,
                             Naziv = "Dalmacija",
                             Opis = "Priobalno i zaleđno područje srednje Dalmacije s planinama uz obalu i u zaleđu.",
@@ -1925,6 +2054,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 19,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 3,
                             Naziv = "Biokovo i Zagora",
                             Opis = "Krševito visokoplaninsko područje Biokova i zaleđa s vrlo izraženim visinskim razlikama.",
@@ -1933,6 +2063,7 @@ namespace planinarenje.Migrations
                         new
                         {
                             IdPodrucje = 20,
+                            JeOdobreno = true,
                             MinimalanBrojKTZaObilazak = 1,
                             Naziv = "Dubrovačko područje",
                             Opis = "Južnohrvatsko područje s manjim brojem, ali vrlo atraktivnih kontrolnih točaka.",
@@ -2084,6 +2215,9 @@ namespace planinarenje.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdRuta"));
 
+                    b.Property<DateTime?>("DatumPrijave")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime(6)");
 
@@ -2100,6 +2234,12 @@ namespace planinarenje.Migrations
 
                     b.Property<int>("IdKontrolnaTocka")
                         .HasColumnType("int");
+
+                    b.Property<int?>("IdKreator")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("JeOdobreno")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Kraj")
                         .IsRequired()
@@ -2139,6 +2279,8 @@ namespace planinarenje.Migrations
 
                     b.HasIndex("IdKontrolnaTocka");
 
+                    b.HasIndex("IdKreator");
+
                     b.ToTable("Rute");
 
                     b.HasData(
@@ -2149,6 +2291,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_vis.gpx",
                             GodinaObnove = 2023,
                             IdKontrolnaTocka = 1,
+                            JeOdobreno = true,
                             Kraj = "Vrh Vis",
                             Napomena = "Pogodna za početnike.",
                             Naziv = "Kutina – Humka – Vis",
@@ -2166,6 +2309,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_sljeme.gpx",
                             GodinaObnove = 2022,
                             IdKontrolnaTocka = 2,
+                            JeOdobreno = true,
                             Kraj = "Sljeme",
                             Napomena = "Jedna od najčešće korištenih ruta na Medvednici.",
                             Naziv = "Gračani – Puntijarka – Sljeme",
@@ -2183,6 +2327,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_okic.gpx",
                             GodinaObnove = 2021,
                             IdKontrolnaTocka = 3,
+                            JeOdobreno = true,
                             Kraj = "Okić – vrh",
                             Napomena = "Strmiji završni dio prema gradini.",
                             Naziv = "Klake – pl. dom pod Okićem – Okić-grad",
@@ -2200,6 +2345,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_japetic.gpx",
                             GodinaObnove = 2020,
                             IdKontrolnaTocka = 4,
+                            JeOdobreno = true,
                             Kraj = "Japetić – vrh",
                             Napomena = "Ruta je pregledna i često korištena.",
                             Naziv = "Šoićeva kuća – Japetić",
@@ -2217,6 +2363,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_zavizan.gpx",
                             GodinaObnove = 2024,
                             IdKontrolnaTocka = 5,
+                            JeOdobreno = true,
                             Kraj = "Veliki Zavižan",
                             Napomena = "U nepovoljnim uvjetima potreban dodatni oprez.",
                             Naziv = "Dom Zavižan – Veliki Zavižan – dom Zavižan",
@@ -2234,6 +2381,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_ivacka.gpx",
                             GodinaObnove = 2023,
                             IdKontrolnaTocka = 8,
+                            JeOdobreno = true,
                             Kraj = "Ivačka glava",
                             Napomena = "Dobro markiran put kroz park prirode Papuk.",
                             Naziv = "Jankovac – Ivačka glava",
@@ -2251,6 +2399,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_psunj.gpx",
                             GodinaObnove = 2022,
                             IdKontrolnaTocka = 9,
+                            JeOdobreno = true,
                             Kraj = "Brezovo polje",
                             Napomena = "Slabije markiran u gornjem dijelu.",
                             Naziv = "Brestovac – Brezovo polje",
@@ -2268,6 +2417,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_ivanscica.gpx",
                             GodinaObnove = 2023,
                             IdKontrolnaTocka = 12,
+                            JeOdobreno = true,
                             Kraj = "Ivanščica",
                             Napomena = "Dug, ali dobro markiran put.",
                             Naziv = "Ivanec – Ivanščica vrh",
@@ -2285,6 +2435,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_susec.gpx",
                             GodinaObnove = 2021,
                             IdKontrolnaTocka = 14,
+                            JeOdobreno = true,
                             Kraj = "Sušec",
                             Napomena = "Pogodan za poluizlete.",
                             Naziv = "Radoboj – Sušec",
@@ -2302,6 +2453,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_grohot.gpx",
                             GodinaObnove = 2024,
                             IdKontrolnaTocka = 15,
+                            JeOdobreno = true,
                             Kraj = "Grohot",
                             Napomena = "Idealan za kratke popodnevne ture.",
                             Naziv = "Šestine – Grohot",
@@ -2319,6 +2471,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_medvedgrad.gpx",
                             GodinaObnove = 2024,
                             IdKontrolnaTocka = 17,
+                            JeOdobreno = true,
                             Kraj = "Medvedgrad",
                             Napomena = "Popularna obiteljska ruta.",
                             Naziv = "Šestinski dol – Medvedgrad",
@@ -2336,6 +2489,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_plesivica.gpx",
                             GodinaObnove = 2021,
                             IdKontrolnaTocka = 18,
+                            JeOdobreno = true,
                             Kraj = "Plešivica – vrh",
                             Napomena = "Lijep pogled na vinograde tijekom uspona.",
                             Naziv = "Poljanica – Plešivica",
@@ -2353,6 +2507,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_ostrc.gpx",
                             GodinaObnove = 2022,
                             IdKontrolnaTocka = 19,
+                            JeOdobreno = true,
                             Kraj = "Oštrc – vrh",
                             Napomena = "Atraktivan grebenski put s pogledima.",
                             Naziv = "Japetić dom – Oštrc",
@@ -2370,6 +2525,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_svetagera.gpx",
                             GodinaObnove = 2021,
                             IdKontrolnaTocka = 21,
+                            JeOdobreno = true,
                             Kraj = "Sveta Gera",
                             Napomena = "Potrebna dobra kondicija za dulji uspon.",
                             Naziv = "Budinjak – Sveta Gera",
@@ -2387,6 +2543,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_klek.gpx",
                             GodinaObnove = 2023,
                             IdKontrolnaTocka = 25,
+                            JeOdobreno = true,
                             Kraj = "Klek – vrh",
                             Napomena = "Završni dio zahtijeva osnovnu opremu i iskustvo.",
                             Naziv = "Bjelsko – Klek",
@@ -2404,6 +2561,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_bjelolasica.gpx",
                             GodinaObnove = 2024,
                             IdKontrolnaTocka = 26,
+                            JeOdobreno = true,
                             Kraj = "Bjelolasica – Kula",
                             Napomena = "Relativno lagodan pristup s makadama.",
                             Naziv = "Begovo Razdolje – Bjelolasica",
@@ -2421,6 +2579,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_risnjak.gpx",
                             GodinaObnove = 2024,
                             IdKontrolnaTocka = 28,
+                            JeOdobreno = true,
                             Kraj = "Risnjak – vrh",
                             Napomena = "Prolaz kroz NP Risnjak; plaćanje ulaznice.",
                             Naziv = "Crni Lug – Risnjak",
@@ -2438,6 +2597,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_snjeznik.gpx",
                             GodinaObnove = 2023,
                             IdKontrolnaTocka = 29,
+                            JeOdobreno = true,
                             Kraj = "Snježnik – vrh",
                             Napomena = "Može imati snijega do kasnog proljeća.",
                             Naziv = "Platak – Snježnik",
@@ -2455,6 +2615,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_vojak.gpx",
                             GodinaObnove = 2024,
                             IdKontrolnaTocka = 31,
+                            JeOdobreno = true,
                             Kraj = "Učka – Vojak",
                             Napomena = "Najpopularnija ruta na Učki.",
                             Naziv = "Poklon – Vojak",
@@ -2472,6 +2633,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_mrajinac.gpx",
                             GodinaObnove = 2023,
                             IdKontrolnaTocka = 33,
+                            JeOdobreno = true,
                             Kraj = "Mali Rajinac",
                             Napomena = "Ozbiljan krški teren; potrebna dobra oprema.",
                             Naziv = "Alan – Mali Rajinac",
@@ -2489,6 +2651,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_vaganski.gpx",
                             GodinaObnove = 2024,
                             IdKontrolnaTocka = 36,
+                            JeOdobreno = true,
                             Kraj = "Vaganski vrh",
                             Napomena = "Cijeli dan hoda; potrebna odlična kondicija.",
                             Naziv = "Starigrad Paklenica – Vaganski vrh",
@@ -2506,6 +2669,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_anicakuk.gpx",
                             GodinaObnove = 2022,
                             IdKontrolnaTocka = 38,
+                            JeOdobreno = true,
                             Kraj = "Anića kuk – vrh",
                             Napomena = "Završni dio tehnički zahtjevan.",
                             Naziv = "Velika Paklenica – Anića kuk",
@@ -2523,6 +2687,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_ozeblin.gpx",
                             GodinaObnove = 2021,
                             IdKontrolnaTocka = 39,
+                            JeOdobreno = true,
                             Kraj = "Ozeblin",
                             Napomena = "Slabije markiran gornji dio; potrebna navigacija.",
                             Naziv = "Glogovac – Ozeblin",
@@ -2540,6 +2705,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_obzova.gpx",
                             GodinaObnove = 2023,
                             IdKontrolnaTocka = 41,
+                            JeOdobreno = true,
                             Kraj = "Obzova – vrh",
                             Napomena = "Ljeti ponijeti dovoljno vode.",
                             Naziv = "Baška – Obzova",
@@ -2557,6 +2723,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_vidovagora.gpx",
                             GodinaObnove = 2024,
                             IdKontrolnaTocka = 43,
+                            JeOdobreno = true,
                             Kraj = "Vidova gora",
                             Napomena = "Popularna turistička ruta s izvrsnim vidikom.",
                             Naziv = "Nerežišća – Vidova gora",
@@ -2574,6 +2741,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_dinara.gpx",
                             GodinaObnove = 2024,
                             IdKontrolnaTocka = 46,
+                            JeOdobreno = true,
                             Kraj = "Dinara (Sinjal)",
                             Napomena = "Obavezna točka za srebrnu značku HPO-a. Zahtjevan pristup.",
                             Naziv = "Glavaš – Dinara (Sinjal)",
@@ -2591,6 +2759,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_svilaja.gpx",
                             GodinaObnove = 2022,
                             IdKontrolnaTocka = 47,
+                            JeOdobreno = true,
                             Kraj = "Svilaja – vrh",
                             Napomena = "Zahtjevan uspon po toplom vremenu.",
                             Naziv = "Muć – Svilaja",
@@ -2608,6 +2777,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_mosor.gpx",
                             GodinaObnove = 2023,
                             IdKontrolnaTocka = 49,
+                            JeOdobreno = true,
                             Kraj = "Mosor – Ljubljan",
                             Napomena = "Popularna splitska planinarska ruta.",
                             Naziv = "Dugopolje – Ljubljan",
@@ -2625,6 +2795,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_svjure_biokovo.gpx",
                             GodinaObnove = 2024,
                             IdKontrolnaTocka = 51,
+                            JeOdobreno = true,
                             Kraj = "Sv. Jure",
                             Napomena = "Iznimno zahtjevna ruta; cijeli dan hoda.",
                             Naziv = "Bast – Sv. Jure Biokovo",
@@ -2642,6 +2813,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_vosac.gpx",
                             GodinaObnove = 2023,
                             IdKontrolnaTocka = 52,
+                            JeOdobreno = true,
                             Kraj = "Vošac – vrh",
                             Napomena = "Strm, ali dobro markiran pristup.",
                             Naziv = "Makarska – Vošac",
@@ -2659,6 +2831,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_svilija_peljesac.gpx",
                             GodinaObnove = 2022,
                             IdKontrolnaTocka = 54,
+                            JeOdobreno = true,
                             Kraj = "Sv. Ilija Pelješac",
                             Napomena = "Zahtjevan uspon, posebno ljeti.",
                             Naziv = "Orebić – Sv. Ilija Pelješac",
@@ -2676,6 +2849,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_snijeznica.gpx",
                             GodinaObnove = 2021,
                             IdKontrolnaTocka = 55,
+                            JeOdobreno = true,
                             Kraj = "Sniježnica – Ilijin vrh",
                             Napomena = "Ljeti ponijeti dovoljno vode; manje markacija.",
                             Naziv = "Pridvorje – Sniježnica",
@@ -2693,6 +2867,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_kapovac.gpx",
                             GodinaObnove = 2022,
                             IdKontrolnaTocka = 7,
+                            JeOdobreno = true,
                             Kraj = "Kapovac",
                             Napomena = "Dulji pristup kroz slavonsku šumu.",
                             Naziv = "Našice – Kapovac",
@@ -2710,6 +2885,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_plijes.gpx",
                             GodinaObnove = 2023,
                             IdKontrolnaTocka = 22,
+                            JeOdobreno = true,
                             Kraj = "Pliješ – vrh",
                             Napomena = "Umjeren pristup šumskim putevima.",
                             Naziv = "Budinjak – Pliješ",
@@ -2727,6 +2903,7 @@ namespace planinarenje.Migrations
                             GPXPath = "C:\\GPX\\ruta_vranilac.gpx",
                             GodinaObnove = 2022,
                             IdKontrolnaTocka = 59,
+                            JeOdobreno = true,
                             Kraj = "Vranilac – vrh",
                             Napomena = "Završni dio zahtijeva pažnju.",
                             Naziv = "Kalnik selo – Vranilac",
@@ -2814,11 +2991,17 @@ namespace planinarenje.Migrations
 
             modelBuilder.Entity("planinarenje.Entiteti.KontrolnaTocka", b =>
                 {
+                    b.HasOne("planinarenje.Entiteti.Korisnik", "Kreator")
+                        .WithMany()
+                        .HasForeignKey("IdKreator");
+
                     b.HasOne("planinarenje.Entiteti.Podrucje", "Podrucje")
                         .WithMany("KontrolneTocke")
                         .HasForeignKey("IdPodrucje")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Kreator");
 
                     b.Navigation("Podrucje");
                 });
@@ -2862,8 +3045,21 @@ namespace planinarenje.Migrations
                     b.Navigation("Korisnik");
                 });
 
+            modelBuilder.Entity("planinarenje.Entiteti.PlaninarskaUdruga", b =>
+                {
+                    b.HasOne("planinarenje.Entiteti.Korisnik", "Kreator")
+                        .WithMany()
+                        .HasForeignKey("IdKreator");
+
+                    b.Navigation("Kreator");
+                });
+
             modelBuilder.Entity("planinarenje.Entiteti.PlaninarskiObjekt", b =>
                 {
+                    b.HasOne("planinarenje.Entiteti.Korisnik", "Kreator")
+                        .WithMany()
+                        .HasForeignKey("IdKreator");
+
                     b.HasOne("planinarenje.Entiteti.PlaninarskaUdruga", "PlaninarskaUdruga")
                         .WithMany("PlaninarskiObjekti")
                         .HasForeignKey("IdPlaninarskaUdruga")
@@ -2876,9 +3072,20 @@ namespace planinarenje.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Kreator");
+
                     b.Navigation("PlaninarskaUdruga");
 
                     b.Navigation("Podrucje");
+                });
+
+            modelBuilder.Entity("planinarenje.Entiteti.Podrucje", b =>
+                {
+                    b.HasOne("planinarenje.Entiteti.Korisnik", "Kreator")
+                        .WithMany()
+                        .HasForeignKey("IdKreator");
+
+                    b.Navigation("Kreator");
                 });
 
             modelBuilder.Entity("planinarenje.Entiteti.Posjet", b =>
@@ -2924,7 +3131,13 @@ namespace planinarenje.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("planinarenje.Entiteti.Korisnik", "Kreator")
+                        .WithMany()
+                        .HasForeignKey("IdKreator");
+
                     b.Navigation("KontrolnaTocka");
+
+                    b.Navigation("Kreator");
                 });
 
             modelBuilder.Entity("planinarenje.Entiteti.Knjizica", b =>

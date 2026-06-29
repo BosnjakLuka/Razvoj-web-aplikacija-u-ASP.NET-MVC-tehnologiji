@@ -10,6 +10,7 @@ public class PlaninarskaUdrugaIndexViewModel
     public string? Grad { get; set; }
     public string? Zupanija { get; set; }
     public int? BrojClanova { get; set; }
+    public bool JeOdobreno { get; set; } = true;
 }
 
 public class PlaninarskaUdrugaDetailsViewModel

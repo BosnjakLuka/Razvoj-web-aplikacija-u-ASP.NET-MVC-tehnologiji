@@ -32,17 +32,17 @@ public class PlaninarskaUdrugaController : BaseController
     }
 
     [AllowAnonymous]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        var model = BuildIndexModel(null);
+        var model = await BuildIndexModel(null);
         ViewData["Title"] = "Udruge";
         return View(model);
     }
 
     [HttpGet]
-    public IActionResult Search(string? searchTerm)
+    public async Task<IActionResult> Search(string? searchTerm)
     {
-        var model = BuildIndexModel(searchTerm);
+        var model = await BuildIndexModel(searchTerm);
         return PartialView("_PlaninarskaUdrugaListPartial", model);
     }
 
@@ -50,7 +50,7 @@ public class PlaninarskaUdrugaController : BaseController
     public IActionResult AutocompleteSearch(string term)
     {
         var results = Db.PlaninarskeUdruge
-            .Where(u => u.DeletedAt == null && u.Naziv.Contains(term))
+            .Where(u => u.DeletedAt == null && u.JeOdobreno && u.Naziv.Contains(term))
             .OrderBy(u => u.Naziv)
             .Take(15)
             .Select(u => new
@@ -63,7 +63,7 @@ public class PlaninarskaUdrugaController : BaseController
         return Json(results);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Planinar")]
     public IActionResult Create()
     {
         ViewData["Title"] = "Nova udruga";
@@ -88,7 +88,7 @@ public class PlaninarskaUdrugaController : BaseController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Planinar")]
     public async Task<IActionResult> Create(PlaninarskaUdrugaCreateModel model)
     {
         if (!ModelState.IsValid)
@@ -103,6 +103,7 @@ public class PlaninarskaUdrugaController : BaseController
             return View(model);
         }
 
+        var kreator = await GetCurrentKorisnikAsync();
         var entity = new PlaninarskaUdruga
         {
             OIB = model.OIB,
@@ -113,7 +114,10 @@ public class PlaninarskaUdrugaController : BaseController
             PostanskiBroj = model.PostanskiBroj,
             Grad = model.Grad,
             Zupanija = model.Zupanija,
-            BrojClanova = model.BrojClanova
+            BrojClanova = model.BrojClanova,
+            JeOdobreno = IsAdmin,
+            IdKreator = kreator?.IdKorisnik,
+            DatumPrijave = IsAdmin ? null : DateTime.UtcNow
         };
 
         try
@@ -130,11 +134,13 @@ public class PlaninarskaUdrugaController : BaseController
 
         _logger.LogInformation("Planinarska udruga {IdPlaninarskaUdruga} kreirana ({Naziv}).", entity.IdPlaninarskaUdruga, entity.Naziv);
         TempData["NewId"] = entity.IdPlaninarskaUdruga;
-        TempData["Success"] = "Udruga je uspjesno dodana.";
+        TempData["Success"] = IsAdmin
+            ? "Udruga je uspjesno dodana."
+            : "Udruga je poslana na odobravanje administratoru.";
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Planinar")]
     [ActionName("Edit")]
     public async Task<IActionResult> EditGet(int id)
     {
@@ -143,6 +149,15 @@ public class PlaninarskaUdrugaController : BaseController
         if (entity == null)
         {
             return NotFound();
+        }
+
+        if (!IsAdmin)
+        {
+            var korisnik = await GetCurrentKorisnikAsync();
+            if (!entity.JeOdobreno && entity.IdKreator != korisnik?.IdKorisnik)
+            {
+                return Forbid();
+            }
         }
 
         var model = new PlaninarskaUdrugaEditModel
@@ -164,7 +179,7 @@ public class PlaninarskaUdrugaController : BaseController
 
     [HttpPost, ActionName("Edit")]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Planinar")]
     public async Task<IActionResult> EditPost(int id, PlaninarskaUdrugaEditModel model)
     {
         if (!ModelState.IsValid)
@@ -178,6 +193,12 @@ public class PlaninarskaUdrugaController : BaseController
         if (entity == null)
         {
             return NotFound();
+        }
+
+        var korisnik = await GetCurrentKorisnikAsync();
+        if (!IsAdmin && !entity.JeOdobreno && entity.IdKreator != korisnik?.IdKorisnik)
+        {
+            return Forbid();
         }
 
         if (DodajGreskeZaDuplikatUdruge(model.OIB, id))
@@ -196,6 +217,17 @@ public class PlaninarskaUdrugaController : BaseController
         entity.Zupanija = model.Zupanija;
         entity.BrojClanova = model.BrojClanova;
 
+        if (IsAdmin)
+        {
+            entity.JeOdobreno = true;
+        }
+        else
+        {
+            entity.JeOdobreno = false;
+            entity.IdKreator = korisnik?.IdKorisnik;
+            entity.DatumPrijave = DateTime.UtcNow;
+        }
+
         try
         {
             await Db.SaveChangesAsync();
@@ -208,7 +240,9 @@ public class PlaninarskaUdrugaController : BaseController
         }
 
         _logger.LogInformation("Planinarska udruga {IdPlaninarskaUdruga} ažurirana.", id);
-        TempData["Success"] = "Udruga je uspjesno azurirana.";
+        TempData["Success"] = IsAdmin
+            ? "Udruga je uspjesno azurirana."
+            : "Izmjena je poslana na odobravanje administratoru.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -245,13 +279,22 @@ public class PlaninarskaUdrugaController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
         var u = Db.PlaninarskeUdruge
             .Include(x => x.PlaninarskiObjekti)
             .FirstOrDefault(x => x.IdPlaninarskaUdruga == id && x.DeletedAt == null);
 
         if (u == null) return NotFound();
+
+        if (!u.JeOdobreno && !IsAdmin)
+        {
+            var korisnikVeza = await GetCurrentKorisnikAsync();
+            if (u.IdKreator != korisnikVeza?.IdKorisnik)
+            {
+                return NotFound();
+            }
+        }
 
         var objekti = u.PlaninarskiObjekti
             .Where(o => o.DeletedAt == null)
@@ -283,10 +326,18 @@ public class PlaninarskaUdrugaController : BaseController
         return View(model);
     }
 
-    private List<PlaninarskaUdrugaIndexViewModel> BuildIndexModel(string? searchTerm)
+    private async Task<List<PlaninarskaUdrugaIndexViewModel>> BuildIndexModel(string? searchTerm)
     {
+        var korisnik = await GetCurrentKorisnikAsync();
+        var idKorisnik = korisnik?.IdKorisnik;
+
         var query = Db.PlaninarskeUdruge
             .Where(u => u.DeletedAt == null);
+
+        if (!IsAdmin)
+        {
+            query = query.Where(u => u.JeOdobreno || (idKorisnik.HasValue && u.IdKreator == idKorisnik.Value));
+        }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -307,7 +358,8 @@ public class PlaninarskaUdrugaController : BaseController
                 OIB = u.OIB,
                 Grad = u.Grad,
                 Zupanija = u.Zupanija,
-                BrojClanova = u.BrojClanova
+                BrojClanova = u.BrojClanova,
+                JeOdobreno = u.JeOdobreno
             })
             .ToList();
     }

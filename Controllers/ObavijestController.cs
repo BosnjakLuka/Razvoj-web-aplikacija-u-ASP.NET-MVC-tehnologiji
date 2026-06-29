@@ -1,18 +1,22 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using planinarenje.Data;
 using planinarenje.Entiteti;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace planinarenje.Controllers;
 
-public class ObavijestController : Controller
+public class ObavijestController : BaseController
 {
     private readonly PlaninarstvoDbContext _dbContext;
     private readonly ILogger<ObavijestController> _logger;
 
-    public ObavijestController(PlaninarstvoDbContext dbContext, ILogger<ObavijestController> logger)
+    public ObavijestController(UserManager<AppUser> userMgr, PlaninarstvoDbContext dbContext, ILogger<ObavijestController> logger)
+        : base(userMgr, dbContext)
     {
         _dbContext = dbContext;
         _logger = logger;
@@ -20,8 +24,16 @@ public class ObavijestController : Controller
 
     public IActionResult Index()
     {
-        var model = _dbContext.Obavijesti
+        var query = _dbContext.Obavijesti
             .Include(o => o.Korisnik)
+            .AsQueryable();
+
+        if (User.Identity == null || !User.Identity.IsAuthenticated)
+        {
+            query = query.Where(o => o.JeAktivna);
+        }
+
+        var model = query
             .OrderByDescending(o => o.DatumObjave)
             .ToList();
 
@@ -33,6 +45,11 @@ public class ObavijestController : Controller
         var query = _dbContext.Obavijesti
             .Include(o => o.Korisnik)
             .AsQueryable();
+
+        if (User.Identity == null || !User.Identity.IsAuthenticated)
+        {
+            query = query.Where(o => o.JeAktivna);
+        }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -51,6 +68,7 @@ public class ObavijestController : Controller
         return PartialView("_ObavijestListPartial", model);
     }
 
+    [Authorize]
     public IActionResult Create()
     {
         return View(new Obavijest
@@ -60,13 +78,22 @@ public class ObavijestController : Controller
         });
     }
 
+    [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(Obavijest obavijest)
+    public async Task<IActionResult> Create(Obavijest obavijest)
     {
+        var korisnik = await GetCurrentKorisnikAsync();
+        if (korisnik == null)
+        {
+            return Forbid();
+        }
+
+        obavijest.IdKorisnik = korisnik.IdKorisnik;
+        ModelState.Remove(nameof(Obavijest.IdKorisnik));
+
         if (!ModelState.IsValid)
         {
-            ViewData["KorisnikText"] = GetKorisnikLabel(obavijest.IdKorisnik);
             return View(obavijest);
         }
 
@@ -77,32 +104,60 @@ public class ObavijestController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    public IActionResult Edit(int id)
+    [Authorize]
+    public async Task<IActionResult> Edit(int id)
     {
         var obavijest = _dbContext.Obavijesti
             .Include(o => o.Korisnik)
             .FirstOrDefault(o => o.IdObavijest == id);
         if (obavijest == null) return NotFound();
 
+        if (!IsAdmin && !await IsOwnerAsync(obavijest.IdKorisnik))
+            return Forbid();
+
+        ViewData["IsAdmin"] = IsAdmin;
         ViewData["KorisnikText"] = obavijest.Korisnik != null
             ? obavijest.Korisnik.Ime + " " + obavijest.Korisnik.Prezime + " (@" + obavijest.Korisnik.KorisnickoIme + ")"
             : GetKorisnikLabel(obavijest.IdKorisnik);
         return View(obavijest);
     }
 
+    [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, Obavijest obavijest)
+    public async Task<IActionResult> Edit(int id, Obavijest obavijest)
     {
         if (id != obavijest.IdObavijest) return NotFound();
 
+        var postojeca = _dbContext.Obavijesti.FirstOrDefault(o => o.IdObavijest == id);
+        if (postojeca == null) return NotFound();
+
+        if (!IsAdmin && !await IsOwnerAsync(postojeca.IdKorisnik))
+        {
+            _logger.LogWarning("Korisnik {AppUserId} bez prava pristupa pokušao je urediti obavijest {IdObavijest}.", AppUserId, id);
+            return Forbid();
+        }
+
+        // Autor se ne moze promijeniti kroz formu osim ako je Admin.
+        if (!IsAdmin)
+        {
+            obavijest.IdKorisnik = postojeca.IdKorisnik;
+        }
+        ModelState.Remove(nameof(Obavijest.IdKorisnik));
+
         if (!ModelState.IsValid)
         {
+            ViewData["IsAdmin"] = IsAdmin;
             ViewData["KorisnikText"] = GetKorisnikLabel(obavijest.IdKorisnik);
             return View(obavijest);
         }
 
-        _dbContext.Obavijesti.Update(obavijest);
+        postojeca.Naslov = obavijest.Naslov;
+        postojeca.Sadrzaj = obavijest.Sadrzaj;
+        postojeca.DatumObjave = obavijest.DatumObjave;
+        postojeca.JeAktivna = obavijest.JeAktivna;
+        postojeca.IdKorisnik = obavijest.IdKorisnik;
+
         _dbContext.SaveChanges();
         _logger.LogInformation("Obavijest {IdObavijest} ažurirana.", id);
         return RedirectToAction(nameof(Index));
@@ -118,9 +173,15 @@ public class ObavijestController : Controller
 
         if (obavijest == null) return NotFound();
 
+        if (!obavijest.JeAktivna && (User.Identity == null || !User.Identity.IsAuthenticated))
+        {
+            return NotFound();
+        }
+
         return View(obavijest);
     }
 
+    [Authorize(Roles = "Admin")]
     public IActionResult Delete(int id)
     {
         var obavijest = _dbContext.Obavijesti
@@ -135,6 +196,7 @@ public class ObavijestController : Controller
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
     public IActionResult DeleteConfirmed(int id)
     {
         var obavijest = _dbContext.Obavijesti.FirstOrDefault(o => o.IdObavijest == id);

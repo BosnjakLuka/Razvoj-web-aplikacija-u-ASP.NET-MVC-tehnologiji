@@ -20,17 +20,17 @@ namespace planinarenje.Controllers
         }
 
         [AllowAnonymous]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var model = BuildIndexModel(null);
+            var model = await BuildIndexModel(null);
             ViewData["Title"] = "Kontrolne tocke";
             return View(model);
         }
 
         [HttpGet]
-        public IActionResult Search(string? searchTerm)
+        public async Task<IActionResult> Search(string? searchTerm)
         {
-            var model = BuildIndexModel(searchTerm);
+            var model = await BuildIndexModel(searchTerm);
             return PartialView("_KontrolnaTockaListPartial", model);
         }
 
@@ -38,7 +38,7 @@ namespace planinarenje.Controllers
         public IActionResult AutocompleteSearch(string term)
         {
             var results = Db.KontrolneTocke
-                .Where(k => k.DeletedAt == null && k.Naziv.Contains(term))
+                .Where(k => k.DeletedAt == null && k.JeOdobreno && k.Naziv.Contains(term))
                 .OrderBy(k => k.Naziv)
                 .Take(15)
                 .Select(k => new
@@ -52,7 +52,7 @@ namespace planinarenje.Controllers
             return Json(results);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Planinar")]
         public IActionResult Create()
         {
             ViewData["Title"] = "Nova kontrolna tocka";
@@ -61,7 +61,7 @@ namespace planinarenje.Controllers
 
         private bool ValidirajPodrucje(int idPodrucje)
         {
-            var postoji = Db.Podrucja.Any(p => p.IdPodrucje == idPodrucje && p.DeletedAt == null);
+            var postoji = Db.Podrucja.Any(p => p.IdPodrucje == idPodrucje && p.DeletedAt == null && p.JeOdobreno);
             if (postoji)
             {
                 return true;
@@ -110,7 +110,7 @@ namespace planinarenje.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Planinar")]
         public async Task<IActionResult> Create(KontrolnaTockaCreateModel model)
         {
             if (!ModelState.IsValid)
@@ -141,6 +141,7 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
+            var kreator = await GetCurrentKorisnikAsync();
             var entity = new KontrolnaTocka
             {
                 Naziv = model.Naziv,
@@ -150,7 +151,10 @@ namespace planinarenje.Controllers
                 NadmorskaVisina = model.NadmorskaVisina,
                 Opis = model.Opis,
                 Koordinate = model.Koordinate,
-                OpisZiga = model.OpisZiga
+                OpisZiga = model.OpisZiga,
+                JeOdobreno = IsAdmin,
+                IdKreator = kreator?.IdKorisnik,
+                DatumPrijave = IsAdmin ? null : DateTime.UtcNow
             };
 
             try
@@ -168,12 +172,14 @@ namespace planinarenje.Controllers
 
             _logger.LogInformation("Kontrolna točka {IdKontrolnaTocka} kreirana ({Naziv}).", entity.IdKontrolnaTocka, entity.Naziv);
             TempData["NewId"] = entity.IdKontrolnaTocka;
-            TempData["Success"] = "Kontrolna tocka je uspjesno dodana.";
+            TempData["Success"] = IsAdmin
+                ? "Kontrolna tocka je uspjesno dodana."
+                : "Kontrolna tocka je poslana na odobravanje administratoru.";
             return RedirectToAction(nameof(Index));
         }
 
         [ActionName("Edit")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Planinar")]
         public async Task<IActionResult> EditGet(int id)
         {
             var entity = await Db.KontrolneTocke
@@ -182,6 +188,15 @@ namespace planinarenje.Controllers
             if (entity is null)
             {
                 return NotFound();
+            }
+
+            if (!IsAdmin)
+            {
+                var korisnik = await GetCurrentKorisnikAsync();
+                if (!entity.JeOdobreno && entity.IdKreator != korisnik?.IdKorisnik)
+                {
+                    return Forbid();
+                }
             }
 
             var model = new KontrolnaTockaEditModel
@@ -203,7 +218,7 @@ namespace planinarenje.Controllers
 
         [HttpPost, ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Planinar")]
         public async Task<IActionResult> EditPost(int id, KontrolnaTockaEditModel model)
         {
             if (!ModelState.IsValid)
@@ -218,6 +233,12 @@ namespace planinarenje.Controllers
             if (entity is null)
             {
                 return NotFound();
+            }
+
+            var korisnik = await GetCurrentKorisnikAsync();
+            if (!IsAdmin && !entity.JeOdobreno && entity.IdKreator != korisnik?.IdKorisnik)
+            {
+                return Forbid();
             }
 
             if (!ValidirajPodrucje(model.IdPodrucje))
@@ -250,6 +271,17 @@ namespace planinarenje.Controllers
             entity.Koordinate = model.Koordinate;
             entity.OpisZiga = model.OpisZiga;
 
+            if (IsAdmin)
+            {
+                entity.JeOdobreno = true;
+            }
+            else
+            {
+                entity.JeOdobreno = false;
+                entity.IdKreator = korisnik?.IdKorisnik;
+                entity.DatumPrijave = DateTime.UtcNow;
+            }
+
             try
             {
                 await Db.SaveChangesAsync();
@@ -263,7 +295,9 @@ namespace planinarenje.Controllers
             }
 
             _logger.LogInformation("Kontrolna točka {IdKontrolnaTocka} ažurirana.", id);
-            TempData["Success"] = "Kontrolna tocka je uspjesno azurirana.";
+            TempData["Success"] = IsAdmin
+                ? "Kontrolna tocka je uspjesno azurirana."
+                : "Izmjena je poslana na odobravanje administratoru.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -303,7 +337,7 @@ namespace planinarenje.Controllers
 
         [Route("vrh/{id:int}")]
         [Route("[controller]/[action]/{id:int}")]
-        public IActionResult Details(int id)
+        public async Task<IActionResult> Details(int id)
         {
             var kontrolnaTocka = Db.KontrolneTocke
                 .Include(k => k.Podrucje)
@@ -312,6 +346,16 @@ namespace planinarenje.Controllers
             {
                 return NotFound();
             }
+
+            if (!kontrolnaTocka.JeOdobreno && !IsAdmin)
+            {
+                var korisnik = await GetCurrentKorisnikAsync();
+                if (kontrolnaTocka.IdKreator != korisnik?.IdKorisnik)
+                {
+                    return NotFound();
+                }
+            }
+
             ViewData["Title"] = kontrolnaTocka.Naziv;
             return View(kontrolnaTocka);
         }
@@ -343,11 +387,19 @@ namespace planinarenje.Controllers
             return normalized[..maxLength].TrimEnd() + "...";
         }
 
-        private List<KontrolnaTockaIndexCardViewModel> BuildIndexModel(string? searchTerm)
+        private async Task<List<KontrolnaTockaIndexCardViewModel>> BuildIndexModel(string? searchTerm)
         {
+            var korisnik = await GetCurrentKorisnikAsync();
+            var idKorisnik = korisnik?.IdKorisnik;
+
             var query = Db.KontrolneTocke
                 .Include(k => k.Podrucje)
                 .Where(k => k.DeletedAt == null && (k.Podrucje == null || k.Podrucje.DeletedAt == null));
+
+            if (!IsAdmin)
+            {
+                query = query.Where(k => k.JeOdobreno || (idKorisnik.HasValue && k.IdKreator == idKorisnik.Value));
+            }
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
@@ -368,7 +420,8 @@ namespace planinarenje.Controllers
                     NadmorskaVisina = k.NadmorskaVisina,
                     PodrucjeNaziv = k.Podrucje != null ? k.Podrucje.Naziv : "Nepoznato podrucje",
                     OpisPreview = TrimOpis(k.Opis, 140),
-                    GUIDOznaka = k.GUIDOznaka
+                    GUIDOznaka = k.GUIDOznaka,
+                    JeOdobreno = k.JeOdobreno
                 })
                 .ToList();
         }

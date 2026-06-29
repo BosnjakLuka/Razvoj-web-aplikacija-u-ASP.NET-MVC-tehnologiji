@@ -41,6 +41,14 @@ public class PlaninarskiObjekt
 
     public DateTime? DeletedAt { get; set; }
 
+    // Odobravanje sadržaja kreiranog/uređenog od strane Planinar role — vidi AutorizacijaController.
+    public bool JeOdobreno { get; set; } = true;
+    public int? IdKreator { get; set; }
+    public DateTime? DatumPrijave { get; set; }
+
     public virtual Podrucje Podrucje { get; set; } = null!;
     public virtual PlaninarskaUdruga PlaninarskaUdruga { get; set; } = null!;
+
+    [ForeignKey("IdKreator")]
+    public virtual Korisnik? Kreator { get; set; }
 }

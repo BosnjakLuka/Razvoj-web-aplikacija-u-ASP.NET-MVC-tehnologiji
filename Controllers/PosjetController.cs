@@ -126,7 +126,7 @@ namespace planinarenje.Controllers
         public IActionResult RuteZaKontrolnuTocku(int kontrolnaTockaId)
         {
             var results = Db.Rute
-                .Where(r => r.DeletedAt == null && r.IdKontrolnaTocka == kontrolnaTockaId)
+                .Where(r => r.DeletedAt == null && r.JeOdobreno && r.IdKontrolnaTocka == kontrolnaTockaId)
                 .OrderBy(r => r.Naziv)
                 .Select(r => new
                 {
@@ -138,7 +138,7 @@ namespace planinarenje.Controllers
             return Json(results);
         }
 
-        [Authorize(Roles = "Admin,Planinar")]
+        [Authorize]
         public async Task<IActionResult> Create()
         {
             PopulateKnjiziceByKorisnik();
@@ -169,7 +169,7 @@ namespace planinarenje.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Planinar")]
+        [Authorize]
         public async Task<IActionResult> Create(PosjetCreateModel model)
         {
             ValidatePosjetSelection(model);
@@ -186,7 +186,7 @@ namespace planinarenje.Controllers
 
             var kontrolnaTocka = Db.KontrolneTocke
                 .AsNoTracking()
-                .FirstOrDefault(k => k.DeletedAt == null && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
+                .FirstOrDefault(k => k.DeletedAt == null && k.JeOdobreno && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
             if (kontrolnaTocka == null)
             {
                 _logger.LogWarning("Pokušaj kreiranja posjeta s nevaljanom kontrolnom točkom {IdKontrolnaTocka}.", model.IdKontrolnaTocka);
@@ -218,7 +218,7 @@ namespace planinarenje.Controllers
                 DozivljajPosjeta = model.DozivljajPosjeta,
                 OpisIskustva = model.OpisIskustva,
                 UneseniGUID = kontrolnaTocka.GUIDOznaka,
-                JeLiPotvrdenPosjet = false,
+                JeLiPotvrdenPosjet = User.IsInRole("Admin") || User.IsInRole("Planinar"),
                 DatumKreiranjaZapisa = DateTime.UtcNow
             };
 
@@ -240,7 +240,7 @@ namespace planinarenje.Controllers
         // ID-eve iz baze. GUID i korisnik se NE popunjavaju (ostaju ručni / server-side).
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Planinar")]
+        [Authorize]
         public async Task<IActionResult> AiPrijedlog(string upit)
         {
             if (string.IsNullOrWhiteSpace(upit))
@@ -264,7 +264,7 @@ namespace planinarenje.Controllers
             {
                 var upitneRijeci = KljucneRijeci(prijedlog.KontrolnaTockaNaziv);
                 var kandidati = Db.KontrolneTocke
-                    .Where(k => k.DeletedAt == null)
+                    .Where(k => k.DeletedAt == null && k.JeOdobreno)
                     .Select(k => new { k.IdKontrolnaTocka, k.Naziv })
                     .ToList();
 
@@ -294,7 +294,7 @@ namespace planinarenje.Controllers
             if (idKontrolnaTocka.HasValue)
             {
                 var ruteKandidati = Db.Rute
-                    .Where(r => r.DeletedAt == null && r.IdKontrolnaTocka == idKontrolnaTocka.Value)
+                    .Where(r => r.DeletedAt == null && r.JeOdobreno && r.IdKontrolnaTocka == idKontrolnaTocka.Value)
                     .Select(r => new { r.IdRuta, r.Naziv })
                     .ToList();
 
@@ -400,7 +400,7 @@ namespace planinarenje.Controllers
 
             var kontrolnaTocka = Db.KontrolneTocke
                 .AsNoTracking()
-                .FirstOrDefault(k => k.DeletedAt == null && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
+                .FirstOrDefault(k => k.DeletedAt == null && k.JeOdobreno && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
             if (kontrolnaTocka == null)
             {
                 ModelState.AddModelError(nameof(model.IdKontrolnaTocka), "Kontrolna tocka nije valjana.");
@@ -520,7 +520,7 @@ namespace planinarenje.Controllers
             if (kontrolnaTockaId.HasValue)
             {
                 routes = Db.Rute
-                    .Where(r => r.DeletedAt == null && r.IdKontrolnaTocka == kontrolnaTockaId.Value)
+                    .Where(r => r.DeletedAt == null && r.JeOdobreno && r.IdKontrolnaTocka == kontrolnaTockaId.Value)
                     .OrderBy(r => r.Naziv)
                     .Select(r => new SelectListItem
                     {
@@ -546,7 +546,7 @@ namespace planinarenje.Controllers
         {
             var kontrolnaTocka = Db.KontrolneTocke
                 .AsNoTracking()
-                .FirstOrDefault(k => k.DeletedAt == null && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
+                .FirstOrDefault(k => k.DeletedAt == null && k.JeOdobreno && k.IdKontrolnaTocka == model.IdKontrolnaTocka);
 
             if (kontrolnaTocka == null)
             {
@@ -555,7 +555,7 @@ namespace planinarenje.Controllers
 
             var ruta = Db.Rute
                 .AsNoTracking()
-                .FirstOrDefault(r => r.DeletedAt == null && r.IdRuta == model.IdRuta);
+                .FirstOrDefault(r => r.DeletedAt == null && r.JeOdobreno && r.IdRuta == model.IdRuta);
 
             if (ruta == null || ruta.IdKontrolnaTocka != model.IdKontrolnaTocka)
             {

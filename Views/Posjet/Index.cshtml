@@ -15,7 +15,7 @@
             <h1 class="section-title no-accent mb-2">Evidencija posjeta</h1>
             <p class="text-muted mb-0">Prikaz svih ostvarenih planinarskih aktivnosti.</p>
         </div>
-        @if (User.IsInRole("Admin") || User.IsInRole("Planinar"))
+        @if (User.Identity?.IsAuthenticated == true)
         {
             <a asp-action="Create" class="btn btn-primary">Novi posjet</a>
         }

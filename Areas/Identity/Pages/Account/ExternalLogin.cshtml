@@ -10,7 +10,7 @@
 
 <p id="external-login-description" class="text-info">
     Uspješno ste se autentificirali putem <strong>@Model.ProviderDisplayName</strong>.
-    Molimo dovršite profil ispod (ime, prezime, OIB i JMBG) i kliknite „Dovrši registraciju"
+    Molimo dovršite profil ispod (ime, prezime i korisničko ime) i kliknite „Dovrši registraciju"
     kako biste se prijavili.
 </p>
 
@@ -34,14 +34,9 @@
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="Input.OIB" class="form-control" autocomplete="off" placeholder="OIB" />
-                <label asp-for="Input.OIB"></label>
-                <span asp-validation-for="Input.OIB" class="text-danger"></span>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.JMBG" class="form-control" autocomplete="off" placeholder="JMBG" />
-                <label asp-for="Input.JMBG"></label>
-                <span asp-validation-for="Input.JMBG" class="text-danger"></span>
+                <input asp-for="Input.KorisnickoIme" class="form-control" autocomplete="username" placeholder="Korisničko ime" />
+                <label asp-for="Input.KorisnickoIme"></label>
+                <span asp-validation-for="Input.KorisnickoIme" class="text-danger"></span>
             </div>
             <button type="submit" class="w-100 btn btn-lg btn-primary">Dovrši registraciju</button>
         </form>

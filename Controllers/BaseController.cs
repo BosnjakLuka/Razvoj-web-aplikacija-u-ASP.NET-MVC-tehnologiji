@@ -21,6 +21,12 @@ public abstract class BaseController : Controller
 
     protected bool IsAdmin => User.IsInRole("Admin");
 
+    protected bool IsPlaninar => User.IsInRole("Planinar");
+
+    // Admin i Planinar smiju kreirati/uređivati javni katalog sadržaj (KontrolnaTocka, Ruta,
+    // Podrucje, PlaninarskiObjekt, PlaninarskaUdruga) — vidi AutorizacijaController za odobravanje.
+    protected bool MozeUredivatiSadrzaj => IsAdmin || IsPlaninar;
+
     protected async Task<Korisnik?> GetCurrentKorisnikAsync()
     {
         var id = AppUserId;

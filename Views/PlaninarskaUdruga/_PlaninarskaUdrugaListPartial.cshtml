@@ -17,6 +17,7 @@ else
                     <th>OIB</th>
                     <th>Grad</th>
                     <th class="text-end">Broj clanova</th>
+                    <th>Status</th>
                     <th class="text-end pe-4">Akcije</th>
                 </tr>
             </thead>
@@ -28,11 +29,24 @@ else
                         <td class="text-muted font-monospace small">@item.OIB</td>
                         <td>@(string.IsNullOrWhiteSpace(item.Grad) ? "N/A" : item.Grad)</td>
                         <td class="text-end">@(item.BrojClanova.HasValue ? item.BrojClanova.Value.ToString() : "-")</td>
+                        <td>
+                            @if (item.JeOdobreno)
+                            {
+                                <span class="badge bg-success-subtle text-success">Odobreno</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning-subtle text-warning">Na čekanju</span>
+                            }
+                        </td>
                         <td class="text-end pe-4">
                             <a asp-action="Details" asp-route-id="@item.IdPlaninarskaUdruga" class="btn btn-sm btn-outline-primary">Detalji</a>
-                            @if (User.IsInRole("Admin"))
+                            @if (User.IsInRole("Admin") || User.IsInRole("Planinar"))
                             {
                                 <a asp-action="Edit" asp-route-id="@item.IdPlaninarskaUdruga" class="btn btn-sm btn-outline-secondary">Uredi</a>
+                            }
+                            @if (User.IsInRole("Admin"))
+                            {
                                 <a asp-action="Delete" asp-route-id="@item.IdPlaninarskaUdruga" class="btn btn-sm btn-outline-danger">Obrisi</a>
                             }
                         </td>

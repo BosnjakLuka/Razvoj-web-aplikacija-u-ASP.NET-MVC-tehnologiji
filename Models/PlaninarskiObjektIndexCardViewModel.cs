@@ -13,4 +13,5 @@ public class PlaninarskiObjektIndexCardViewModel
     public bool ImaNocenje { get; set; }
     public bool ImaHranu { get; set; }
     public string? OpisPreview { get; set; }
+    public bool JeOdobreno { get; set; } = true;
 }

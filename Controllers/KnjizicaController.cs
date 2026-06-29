@@ -24,39 +24,34 @@ public class KnjizicaController : BaseController
     [Authorize]
     public async Task<IActionResult> Index()
     {
-        if (IsAdmin)
+        ViewData["Title"] = "E-Knjizica";
+
+        var current = await GetCurrentKorisnikAsync();
+        ViewData["CanCreateOwn"] = current != null &&
+            !Db.Knjizice.Any(k => k.IdKorisnik == current.IdKorisnik && k.StatusAktivna);
+
+        if (IsAdmin || IsPlaninar)
         {
-            var model = BuildIndexModel(null);
-            ViewData["Title"] = "E-Knjizica";
-            return View(model);
+            return View(BuildIndexModel(null));
+        }
+
+        if (current == null) return Forbid();
+
+        return View(BuildIndexModel(null, current.IdKorisnik));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Search(string? searchTerm)
+    {
+        if (IsAdmin || IsPlaninar)
+        {
+            return PartialView("_KnjizicaListPartial", BuildIndexModel(searchTerm));
         }
 
         var current = await GetCurrentKorisnikAsync();
         if (current == null) return Forbid();
 
-        var mine = Db.Knjizice
-            .Include(k => k.Korisnik)
-            .Where(k => k.StatusAktivna && k.IdKorisnik == current.IdKorisnik)
-            .Select(k => new KnjizicaIndexViewModel
-            {
-                IdKnjizica = k.IdKnjizica,
-                IdKorisnik = k.IdKorisnik,
-                ImePrezimeKorisnika = k.Korisnik != null ? k.Korisnik.Ime + " " + k.Korisnik.Prezime : "Nepoznat planer",
-                DatumKreiranja = k.DatumKreiranja,
-                StatusAktivna = k.StatusAktivna
-            })
-            .OrderByDescending(k => k.DatumKreiranja)
-            .ToList();
-
-        ViewData["Title"] = "E-Knjizica";
-        return View(mine);
-    }
-
-    [HttpGet]
-    public IActionResult Search(string? searchTerm)
-    {
-        var model = BuildIndexModel(searchTerm);
-        return PartialView("_KnjizicaListPartial", model);
+        return PartialView("_KnjizicaListPartial", BuildIndexModel(searchTerm, current.IdKorisnik));
     }
 
     [HttpGet]
@@ -104,44 +99,74 @@ public class KnjizicaController : BaseController
             return RedirectToAction(nameof(Create));
         }
 
-        // Knjizice.IdKorisnik ima jedinstveni indeks, pa soft-obrisana knjizica (StatusAktivna = false)
-        // i dalje zauzima taj indeks. Zato ne smijemo ubaciti novi red - ako za korisnika postoji
-        // ranije obrisana knjizica, samo je reaktiviramo; inace kreiramo novu.
-        var postojeca = await Db.Knjizice.FirstOrDefaultAsync(k => k.IdKorisnik == korisnikId);
+        var entity = await KreirajIliReaktivirajKnjizicuAsync(korisnikId);
+        if (entity == null)
+        {
+            TempData["PopupWarning"] = "Knjizica za ovog korisnika već postoji.";
+            TempData["Error"] = "Knjizica za ovog korisnika već postoji.";
+            return RedirectToAction(nameof(Create));
+        }
+
+        _logger.LogInformation("Knjizica {IdKnjizica} dodijeljena korisniku {IdKorisnik} (admin {AppUserId}).", entity.IdKnjizica, korisnikId, AppUserId);
+        TempData["NewId"] = entity.IdKnjizica;
+        TempData["Success"] = "Knjizica je uspjesno dodana.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    // Bilo koji prijavljeni korisnik (Korisnik, Planinar ili Admin) smije sam sebi kreirati
+    // knjižicu ako je još nema - ne treba čekati admina da je dodijeli.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize]
+    public async Task<IActionResult> KreirajVlastitu()
+    {
+        var current = await GetCurrentKorisnikAsync();
+        if (current == null) return Forbid();
+
+        var entity = await KreirajIliReaktivirajKnjizicuAsync(current.IdKorisnik);
+        if (entity == null)
+        {
+            TempData["Error"] = "Već imaš aktivnu knjižicu.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        _logger.LogInformation("Knjizica {IdKnjizica} kreirana samostalno za korisnika {IdKorisnik}.", entity.IdKnjizica, current.IdKorisnik);
+        TempData["NewId"] = entity.IdKnjizica;
+        TempData["Success"] = "Knjizica je uspjesno kreirana.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    // Knjizice.IdKorisnik ima jedinstveni indeks, pa soft-obrisana knjizica (StatusAktivna = false)
+    // i dalje zauzima taj indeks. Zato ne smijemo ubaciti novi red - ako za korisnika postoji
+    // ranije obrisana knjizica, samo je reaktiviramo; inace kreiramo novu. Vraca null ako korisnik
+    // već ima aktivnu knjižicu.
+    private async Task<Knjizica?> KreirajIliReaktivirajKnjizicuAsync(int idKorisnik)
+    {
+        var postojeca = await Db.Knjizice.FirstOrDefaultAsync(k => k.IdKorisnik == idKorisnik);
         if (postojeca != null)
         {
             if (postojeca.StatusAktivna)
             {
-                TempData["PopupWarning"] = "Knjizica za ovog korisnika već postoji.";
-                TempData["Error"] = "Knjizica za ovog korisnika već postoji.";
-                return RedirectToAction(nameof(Create));
+                return null;
             }
 
             postojeca.StatusAktivna = true;
             postojeca.DatumKreiranja = DateTime.UtcNow;
             postojeca.Napomena = null;
             await Db.SaveChangesAsync();
-
-            _logger.LogInformation("Knjizica {IdKnjizica} reaktivirana za korisnika {IdKorisnik}.", postojeca.IdKnjizica, korisnikId);
-            TempData["NewId"] = postojeca.IdKnjizica;
-            TempData["Success"] = "Knjizica je uspjesno dodana.";
-            return RedirectToAction(nameof(Index));
+            return postojeca;
         }
 
         var entity = new Knjizica
         {
-            IdKorisnik = korisnikId,
+            IdKorisnik = idKorisnik,
             DatumKreiranja = DateTime.UtcNow,
             StatusAktivna = true
         };
 
         Db.Knjizice.Add(entity);
         await Db.SaveChangesAsync();
-
-        _logger.LogInformation("Knjizica {IdKnjizica} kreirana za korisnika {IdKorisnik}.", entity.IdKnjizica, entity.IdKorisnik);
-        TempData["NewId"] = entity.IdKnjizica;
-        TempData["Success"] = "Knjizica je uspjesno dodana.";
-        return RedirectToAction(nameof(Index));
+        return entity;
     }
 
     [Authorize]
@@ -364,11 +389,16 @@ public class KnjizicaController : BaseController
             .ToList();
     }
 
-    private List<KnjizicaIndexViewModel> BuildIndexModel(string? searchTerm)
+    private List<KnjizicaIndexViewModel> BuildIndexModel(string? searchTerm, int? scopeToKorisnikId = null)
     {
         var query = Db.Knjizice
             .Include(k => k.Korisnik)
             .Where(k => k.StatusAktivna && k.Korisnik != null && k.Korisnik.StatusAktivan);
+
+        if (scopeToKorisnikId.HasValue)
+        {
+            query = query.Where(k => k.IdKorisnik == scopeToKorisnikId.Value);
+        }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {

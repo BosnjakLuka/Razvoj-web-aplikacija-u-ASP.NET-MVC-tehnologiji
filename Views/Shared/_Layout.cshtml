@@ -23,46 +23,33 @@
     }
     <header>
         <nav class="navbar navbar-expand-lg topbar">
-            <div class="container">
-                <a class="brand-mark" asp-area="" asp-controller="Home" asp-action="Index">
+            <div class="container topbar-inner d-flex flex-nowrap align-items-center gap-2 gap-lg-3">
+                <a class="brand-mark flex-shrink-0" asp-area="" asp-controller="Home" asp-action="Index">
                     <!-- Hiking ikona placeholder -->
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-geo-alt-fill" viewBox="0 0 16 16">
                         <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/>
                     </svg>
-                    <span>Planinarska Knjižica</span>
+                    <span class="d-none d-sm-inline">Planinarska Knjižica</span>
                 </a>
-                <button class="navbar-toggler outline-none" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation" style="border-color: rgba(255,255,255,0.3);">
-                    <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
-                </button>
-                <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1 ms-4 main-nav flex-wrap">
-                        <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="Home" asp-action="Index">Naslovnica</a></li>
-                        <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="KontrolnaTocka" asp-action="Index">Kontrolne točke</a></li>
-                        <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="Ruta" asp-action="Index">Rute</a></li>
-                        <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="Podrucje" asp-action="Index">Područja</a></li>
-                        <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="PlaninarskiObjekt" asp-action="Index">Objekti</a></li>
-                        <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="PlaninarskaUdruga" asp-action="Index">Udruge</a></li>
-                        <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="Korisnik" asp-action="Index">Korisnici</a></li>
-                        <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="Knjizica" asp-action="Index">E-Knjizica</a></li>
-                        <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="Posjet" asp-action="Index">Posjeti</a></li>
-                        <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="Obavijest" asp-action="Index">Obavijesti</a></li>
-                        <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="Fotografija" asp-action="Index">Fotografije</a></li>
-                        <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="KorisnikMedalja" asp-action="Index">Dodijeljene medalje</a></li>
-                        <li class="nav-item text-nowrap"><a class="nav-link" asp-controller="Medalja" asp-action="Index">Sve medalje</a></li>
-                    </ul>
-                    <form class="global-search position-relative me-lg-3 my-2 my-lg-0"
-                          method="get" action="@Url.Action("Index", "Pretraga")" role="search"
-                          autocomplete="off" data-live-url="@Url.Action("Live", "Pretraga")">
-                        <input type="text" name="q" id="globalSearchInput"
-                               class="form-control form-control-sm global-search-input"
-                               placeholder="Pretraži…" aria-label="Globalna pretraga" autocomplete="off" />
-                        <div class="global-search-dropdown shadow d-none" id="globalSearchDropdown" role="listbox"></div>
-                    </form>
+                <a class="brand-mark flex-shrink-0" asp-controller="Home" asp-action="Index">Naslovnica</a>
+                <form class="global-search position-relative flex-grow-1"
+                      method="get" action="@Url.Action("Index", "Pretraga")" role="search"
+                      autocomplete="off" data-live-url="@Url.Action("Live", "Pretraga")">
+                    <input type="text" name="q" id="globalSearchInput"
+                           class="form-control form-control-sm global-search-input"
+                           placeholder="Pretraži…" aria-label="Globalna pretraga" autocomplete="off" />
+                    <div class="global-search-dropdown shadow d-none" id="globalSearchDropdown" role="listbox"></div>
+                </form>
+                <div class="flex-shrink-0">
                     <partial name="_LoginPartial" />
                 </div>
             </div>
         </nav>
+
+        @if (ViewData["Title"]?.ToString() != "Naslovnica")
+        {
+            <partial name="_MainNav" />
+        }
     </header>
 
     <!-- Meta-red / Breadcrumbs Placeholder -->

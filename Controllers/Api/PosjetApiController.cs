@@ -109,12 +109,12 @@ public class PosjetApiController : ApiBaseController
         }
 
         var kontrolnaTocka = await Db.KontrolneTocke
-            .FirstOrDefaultAsync(k => k.IdKontrolnaTocka == dto.IdKontrolnaTocka);
+            .FirstOrDefaultAsync(k => k.IdKontrolnaTocka == dto.IdKontrolnaTocka && k.DeletedAt == null && k.JeOdobreno);
         if (kontrolnaTocka == null)
             return BadRequest("Kontrolna točka nije pronađena.");
 
         var ruta = await Db.Rute
-            .FirstOrDefaultAsync(r => r.IdRuta == dto.IdRuta);
+            .FirstOrDefaultAsync(r => r.IdRuta == dto.IdRuta && r.DeletedAt == null && r.JeOdobreno);
         if (ruta == null)
             return BadRequest("Ruta nije pronađena.");
 
@@ -169,11 +169,11 @@ public class PosjetApiController : ApiBaseController
         }
 
         var kontrolnaTocka = await Db.KontrolneTocke
-            .FirstOrDefaultAsync(k => k.IdKontrolnaTocka == dto.IdKontrolnaTocka);
+            .FirstOrDefaultAsync(k => k.IdKontrolnaTocka == dto.IdKontrolnaTocka && k.DeletedAt == null && k.JeOdobreno);
         if (kontrolnaTocka == null)
             return BadRequest("Kontrolna točka nije pronađena.");
 
-        if (!await Db.Rute.AnyAsync(r => r.IdRuta == dto.IdRuta))
+        if (!await Db.Rute.AnyAsync(r => r.IdRuta == dto.IdRuta && r.DeletedAt == null && r.JeOdobreno))
             return BadRequest("Ruta nije pronađena.");
 
         if (!await Db.Knjizice.AnyAsync(k => k.IdKnjizica == dto.IdKnjizica && k.StatusAktivna))

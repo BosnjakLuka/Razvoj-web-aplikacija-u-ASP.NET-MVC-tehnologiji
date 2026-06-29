@@ -18,20 +18,32 @@
             <h1 class="section-title mb-2">Planinarske knjizice</h1>
             <p class="text-muted mb-0">Popis evidencijskih knjizica planinara i njihov status.</p>
         </div>
-        @if (User.IsInRole("Admin"))
-        {
-            <a asp-action="Create" class="btn btn-primary">Nova knjizica</a>
-        }
+        <div class="d-flex gap-2">
+            @if ((bool?)ViewData["CanCreateOwn"] == true)
+            {
+                <form method="post" asp-action="KreirajVlastitu">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success">Kreiraj svoju knjizicu</button>
+                </form>
+            }
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-action="Create" class="btn btn-primary">Nova knjizica</a>
+            }
+        </div>
     </div>
 </section>
 
-<div class="app-card mb-4">
-    <input type="text" id="searchInput" class="form-control" placeholder="Pretrazi knjizice..." />
-</div>
+@if (User.IsInRole("Admin") || User.IsInRole("Planinar"))
+{
+    <div class="app-card mb-4">
+        <input type="text" id="searchInput" class="form-control" placeholder="Pretrazi knjizice..." />
+    </div>
 
-<div id="searchSpinner" class="text-center py-2 d-none">
-    <div class="spinner-border spinner-border-sm text-success" role="status"></div>
-</div>
+    <div id="searchSpinner" class="text-center py-2 d-none">
+        <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+    </div>
+}
 
 <div id="resultsContainer">
     @await Html.PartialAsync("_KnjizicaListPartial", Model)

@@ -20,21 +20,21 @@ public class PlaninarskiObjektController : BaseController
     }
 
     [AllowAnonymous]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        var model = BuildIndexModel(null);
+        var model = await BuildIndexModel(null);
         ViewData["Title"] = "Objekti";
         return View(model);
     }
 
     [HttpGet]
-    public IActionResult Search(string? searchTerm)
+    public async Task<IActionResult> Search(string? searchTerm)
     {
-        var model = BuildIndexModel(searchTerm);
+        var model = await BuildIndexModel(searchTerm);
         return PartialView("_PlaninarskiObjektListPartial", model);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Planinar")]
     public IActionResult Create()
     {
         ViewData["Title"] = "Novi objekt";
@@ -43,8 +43,8 @@ public class PlaninarskiObjektController : BaseController
 
     private bool ValidirajUdruguIPodrucje(PlaninarskiObjektCreateModel model)
     {
-        var imaPodrucje = Db.Podrucja.Any(p => p.IdPodrucje == model.IdPodrucje && p.DeletedAt == null);
-        var imaUdrugu = Db.PlaninarskeUdruge.Any(u => u.IdPlaninarskaUdruga == model.IdPlaninarskaUdruga && u.DeletedAt == null);
+        var imaPodrucje = Db.Podrucja.Any(p => p.IdPodrucje == model.IdPodrucje && p.DeletedAt == null && p.JeOdobreno);
+        var imaUdrugu = Db.PlaninarskeUdruge.Any(u => u.IdPlaninarskaUdruga == model.IdPlaninarskaUdruga && u.DeletedAt == null && u.JeOdobreno);
 
         if (imaPodrucje && imaUdrugu)
         {
@@ -87,7 +87,7 @@ public class PlaninarskiObjektController : BaseController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Planinar")]
     public async Task<IActionResult> Create(PlaninarskiObjektCreateModel model)
     {
         if (!ModelState.IsValid)
@@ -114,6 +114,7 @@ public class PlaninarskiObjektController : BaseController
             return View(model);
         }
 
+        var kreator = await GetCurrentKorisnikAsync();
         var entity = new PlaninarskiObjekt
         {
             IdPodrucje = model.IdPodrucje,
@@ -129,7 +130,10 @@ public class PlaninarskiObjektController : BaseController
             Adresa = model.Adresa,
             ImaNocenje = model.ImaNocenje,
             ImaHranu = model.ImaHranu,
-            RadnoVrijemeOpis = model.RadnoVrijemeOpis
+            RadnoVrijemeOpis = model.RadnoVrijemeOpis,
+            JeOdobreno = IsAdmin,
+            IdKreator = kreator?.IdKorisnik,
+            DatumPrijave = IsAdmin ? null : DateTime.UtcNow
         };
 
         try
@@ -148,11 +152,13 @@ public class PlaninarskiObjektController : BaseController
 
         _logger.LogInformation("Planinarski objekt {IdPlaninarskiObjekt} kreiran ({Naziv}).", entity.IdPlaninarskiObjekt, entity.Naziv);
         TempData["NewId"] = entity.IdPlaninarskiObjekt;
-        TempData["Success"] = "Objekt je uspjesno dodan.";
+        TempData["Success"] = IsAdmin
+            ? "Objekt je uspjesno dodan."
+            : "Objekt je poslan na odobravanje administratoru.";
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Planinar")]
     [ActionName("Edit")]
     public async Task<IActionResult> EditGet(int id)
     {
@@ -163,6 +169,15 @@ public class PlaninarskiObjektController : BaseController
         if (entity == null)
         {
             return NotFound();
+        }
+
+        if (!IsAdmin)
+        {
+            var korisnik = await GetCurrentKorisnikAsync();
+            if (!entity.JeOdobreno && entity.IdKreator != korisnik?.IdKorisnik)
+            {
+                return Forbid();
+            }
         }
 
         var model = new PlaninarskiObjektEditModel
@@ -191,7 +206,7 @@ public class PlaninarskiObjektController : BaseController
 
     [HttpPost, ActionName("Edit")]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Planinar")]
     public async Task<IActionResult> EditPost(int id, PlaninarskiObjektEditModel model)
     {
         if (!ModelState.IsValid)
@@ -207,6 +222,12 @@ public class PlaninarskiObjektController : BaseController
         if (entity == null)
         {
             return NotFound();
+        }
+
+        var korisnik = await GetCurrentKorisnikAsync();
+        if (!IsAdmin && !entity.JeOdobreno && entity.IdKreator != korisnik?.IdKorisnik)
+        {
+            return Forbid();
         }
 
         if (!ValidirajUdruguIPodrucje(model))
@@ -240,6 +261,17 @@ public class PlaninarskiObjektController : BaseController
         entity.ImaHranu = model.ImaHranu;
         entity.RadnoVrijemeOpis = model.RadnoVrijemeOpis;
 
+        if (IsAdmin)
+        {
+            entity.JeOdobreno = true;
+        }
+        else
+        {
+            entity.JeOdobreno = false;
+            entity.IdKreator = korisnik?.IdKorisnik;
+            entity.DatumPrijave = DateTime.UtcNow;
+        }
+
         try
         {
             await Db.SaveChangesAsync();
@@ -254,7 +286,9 @@ public class PlaninarskiObjektController : BaseController
         }
 
         _logger.LogInformation("Planinarski objekt {IdPlaninarskiObjekt} ažuriran.", id);
-        TempData["Success"] = "Objekt je uspjesno azuriran.";
+        TempData["Success"] = IsAdmin
+            ? "Objekt je uspjesno azuriran."
+            : "Izmjena je poslana na odobravanje administratoru.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -294,7 +328,7 @@ public class PlaninarskiObjektController : BaseController
     }
 
     [AllowAnonymous]
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
         var objekt = Db.PlaninarskiObjekti
             .Include(po => po.Podrucje)
@@ -303,6 +337,15 @@ public class PlaninarskiObjektController : BaseController
 
         if (objekt == null)
             return NotFound();
+
+        if (!objekt.JeOdobreno && !IsAdmin)
+        {
+            var korisnik = await GetCurrentKorisnikAsync();
+            if (objekt.IdKreator != korisnik?.IdKorisnik)
+            {
+                return NotFound();
+            }
+        }
 
         ViewData["Title"] = objekt.Naziv;
         return View(objekt);
@@ -327,14 +370,22 @@ public class PlaninarskiObjektController : BaseController
         return o[..max].TrimEnd() + "...";
     }
 
-    private List<PlaninarskiObjektIndexCardViewModel> BuildIndexModel(string? searchTerm)
+    private async Task<List<PlaninarskiObjektIndexCardViewModel>> BuildIndexModel(string? searchTerm)
     {
+        var korisnik = await GetCurrentKorisnikAsync();
+        var idKorisnik = korisnik?.IdKorisnik;
+
         var query = Db.PlaninarskiObjekti
             .Include(po => po.Podrucje)
             .Include(po => po.PlaninarskaUdruga)
             .Where(po => po.DeletedAt == null &&
                          (po.Podrucje == null || po.Podrucje.DeletedAt == null) &&
                          (po.PlaninarskaUdruga == null || po.PlaninarskaUdruga.DeletedAt == null));
+
+        if (!IsAdmin)
+        {
+            query = query.Where(po => po.JeOdobreno || (idKorisnik.HasValue && po.IdKreator == idKorisnik.Value));
+        }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -360,7 +411,8 @@ public class PlaninarskiObjektController : BaseController
                 OdgovornaOsoba = po.ImeOdgovorneOsobe,
                 ImaNocenje = po.ImaNocenje,
                 ImaHranu = po.ImaHranu,
-                OpisPreview = TrimOpis(po.Opis, 140)
+                OpisPreview = TrimOpis(po.Opis, 140),
+                JeOdobreno = po.JeOdobreno
             })
             .ToList();
     }

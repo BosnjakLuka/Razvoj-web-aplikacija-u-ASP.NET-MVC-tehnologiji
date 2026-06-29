@@ -1,4 +1,23 @@
 @model IEnumerable<planinarenje.Entiteti.Obavijest>
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using planinarenje.Data
+@using planinarenje.Entiteti
+@inject UserManager<AppUser> UserManager
+@inject PlaninarstvoDbContext DbContext
+
+@{
+    var jeAdmin = User.IsInRole("Admin");
+    int? ownKorisnikId = null;
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        var appUserId = UserManager.GetUserId(User);
+        ownKorisnikId = await DbContext.Korisnici
+            .Where(k => k.AppUserId == appUserId)
+            .Select(k => (int?)k.IdKorisnik)
+            .FirstOrDefaultAsync();
+    }
+}
 
 @if (!Model.Any())
 {
@@ -36,8 +55,14 @@ else
                         </td>
                         <td class="text-end pe-4">
                             <a asp-action="Details" asp-route-id="@obavijest.IdObavijest" class="btn btn-sm btn-outline-primary">Detalji</a>
-                            <a asp-action="Edit" asp-route-id="@obavijest.IdObavijest" class="btn btn-sm btn-outline-secondary">Uredi</a>
-                            <a asp-action="Delete" asp-route-id="@obavijest.IdObavijest" class="btn btn-sm btn-outline-danger">Obrisi</a>
+                            @if (jeAdmin || (ownKorisnikId.HasValue && ownKorisnikId == obavijest.IdKorisnik))
+                            {
+                                <a asp-action="Edit" asp-route-id="@obavijest.IdObavijest" class="btn btn-sm btn-outline-secondary">Uredi</a>
+                            }
+                            @if (jeAdmin)
+                            {
+                                <a asp-action="Delete" asp-route-id="@obavijest.IdObavijest" class="btn btn-sm btn-outline-danger">Obrisi</a>
+                            }
                         </td>
                     </tr>
                 }

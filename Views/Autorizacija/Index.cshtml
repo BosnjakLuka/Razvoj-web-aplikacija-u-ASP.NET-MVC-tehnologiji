@@ -1,0 +1,124 @@
+@model planinarenje.Models.ViewModels.AutorizacijaViewModel
+
+@{
+    ViewData["Title"] = "Autorizacija";
+}
+
+@section Breadcrumbs {
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Naslovnica</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Autorizacija</li>
+        </ol>
+    </nav>
+}
+
+<section class="mb-4">
+    <h1 class="section-title mb-2">Autorizacija</h1>
+    <p class="text-muted mb-0">Pregled i odobravanje sadržaja koji čeka potvrdu administratora.</p>
+</section>
+
+<div class="app-card mb-4">
+    <h2 class="h5 mb-3">Posjeti na čekanju potvrde</h2>
+    @if (!Model.PosjetiNaCekanju.Any())
+    {
+        <p class="text-muted mb-0">Nema posjeta koji čekaju potvrdu.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Korisnik</th>
+                        <th>Kontrolna točka</th>
+                        <th>Ruta</th>
+                        <th>Datum posjeta</th>
+                        <th>Prijavljeno</th>
+                        <th class="text-end">Akcije</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model.PosjetiNaCekanju)
+                    {
+                        <tr>
+                            <td>@p.ImePrezimeKorisnika</td>
+                            <td>@p.NazivKontrolneTocke</td>
+                            <td>@p.NazivRute</td>
+                            <td>@p.DatumVrijemePosjeta.ToString("dd.MM.yyyy.")</td>
+                            <td>@p.DatumKreiranjaZapisa.ToString("dd.MM.yyyy. HH:mm")</td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-2">
+                                    <form method="post" asp-action="PotvrdiPosjet" asp-route-id="@p.IdPosjet">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-success">Potvrdi</button>
+                                    </form>
+                                    <form method="post" asp-action="OdbijPosjet" asp-route-id="@p.IdPosjet" onsubmit="return confirm('Sigurno odbiti ovaj posjet?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Odbij</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@if (Model.PrikaziPrijedlogeSadrzaja)
+{
+    <div class="app-card">
+        <h2 class="h5 mb-3">Prijedlozi sadržaja na čekanju</h2>
+        @if (!Model.EntitetiNaCekanju.Any())
+        {
+            <p class="text-muted mb-0">Nema prijedloga koji čekaju odobrenje.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Tip</th>
+                            <th>Naziv</th>
+                            <th>Detalji</th>
+                            <th>Predložio</th>
+                            <th>Prijavljeno</th>
+                            <th class="text-end">Akcije</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var e in Model.EntitetiNaCekanju)
+                        {
+                            <tr>
+                                <td><span class="badge bg-secondary-subtle text-secondary-emphasis">@e.TipEntitetaNaziv</span></td>
+                                <td>@e.Naziv</td>
+                                <td>@(e.Podnaslov ?? "-")</td>
+                                <td>@(e.ImePrezimeKreatora ?? "-")</td>
+                                <td>@(e.DatumPrijave?.ToString("dd.MM.yyyy. HH:mm") ?? "-")</td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-2">
+                                        <form method="post" asp-action="OdobriEntitet">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="tip" value="@e.TipEntiteta" />
+                                            <input type="hidden" name="id" value="@e.Id" />
+                                            <button type="submit" class="btn btn-sm btn-success">Odobri</button>
+                                        </form>
+                                        <form method="post" asp-action="OdbijEntitet" onsubmit="return confirm('Sigurno odbiti ovaj prijedlog?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="tip" value="@e.TipEntiteta" />
+                                            <input type="hidden" name="id" value="@e.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Odbij</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}

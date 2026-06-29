@@ -20,17 +20,17 @@ namespace planinarenje.Controllers
         }
 
         [AllowAnonymous]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var model = BuildIndexModel(null);
+            var model = await BuildIndexModel(null);
             ViewData["Title"] = "Podrucja";
             return View(model);
         }
 
         [HttpGet]
-        public IActionResult Search(string? searchTerm)
+        public async Task<IActionResult> Search(string? searchTerm)
         {
-            var model = BuildIndexModel(searchTerm);
+            var model = await BuildIndexModel(searchTerm);
             return PartialView("_PodrucjeListPartial", model);
         }
 
@@ -38,7 +38,7 @@ namespace planinarenje.Controllers
         public IActionResult AutocompleteSearch(string term)
         {
             var results = Db.Podrucja
-                .Where(p => p.DeletedAt == null && p.Naziv.Contains(term))
+                .Where(p => p.DeletedAt == null && p.JeOdobreno && p.Naziv.Contains(term))
                 .OrderBy(p => p.Naziv)
                 .Take(15)
                 .Select(p => new
@@ -51,7 +51,7 @@ namespace planinarenje.Controllers
             return Json(results);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Planinar")]
         public IActionResult Create()
         {
             ViewData["Title"] = "Novo podrucje";
@@ -95,7 +95,7 @@ namespace planinarenje.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Planinar")]
         public async Task<IActionResult> Create(PodrucjeCreateModel model)
         {
             if (!ModelState.IsValid)
@@ -110,12 +110,16 @@ namespace planinarenje.Controllers
                 return View(model);
             }
 
+            var kreator = await GetCurrentKorisnikAsync();
             var podrucje = new Podrucje
             {
                 Naziv = model.Naziv,
                 Opis = model.Opis,
                 Regija = model.Regija,
-                MinimalanBrojKTZaObilazak = model.MinimalanBrojKTZaObilazak
+                MinimalanBrojKTZaObilazak = model.MinimalanBrojKTZaObilazak,
+                JeOdobreno = IsAdmin,
+                IdKreator = kreator?.IdKorisnik,
+                DatumPrijave = IsAdmin ? null : DateTime.UtcNow
             };
 
             try
@@ -132,18 +136,29 @@ namespace planinarenje.Controllers
 
             _logger.LogInformation("Područje {IdPodrucje} kreirano ({Naziv}).", podrucje.IdPodrucje, podrucje.Naziv);
             TempData["NewId"] = podrucje.IdPodrucje;
-            TempData["Success"] = "Podrucje je uspjesno dodano.";
+            TempData["Success"] = IsAdmin
+                ? "Podrucje je uspjesno dodano."
+                : "Podrucje je poslano na odobravanje administratoru.";
             return RedirectToAction(nameof(Index));
         }
 
         [ActionName("Edit")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Planinar")]
         public async Task<IActionResult> EditGet(int id)
         {
             var podrucje = await Db.Podrucja.FirstOrDefaultAsync(p => p.IdPodrucje == id && p.DeletedAt == null);
             if (podrucje is null)
             {
                 return NotFound();
+            }
+
+            if (!IsAdmin)
+            {
+                var korisnik = await GetCurrentKorisnikAsync();
+                if (!podrucje.JeOdobreno && podrucje.IdKreator != korisnik?.IdKorisnik)
+                {
+                    return Forbid();
+                }
             }
 
             var model = new PodrucjeEditModel
@@ -161,7 +176,7 @@ namespace planinarenje.Controllers
 
         [HttpPost, ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Planinar")]
         public async Task<IActionResult> EditPost(int id, PodrucjeEditModel model)
         {
             if (!ModelState.IsValid)
@@ -176,6 +191,12 @@ namespace planinarenje.Controllers
                 return NotFound();
             }
 
+            var korisnik = await GetCurrentKorisnikAsync();
+            if (!IsAdmin && !podrucje.JeOdobreno && podrucje.IdKreator != korisnik?.IdKorisnik)
+            {
+                return Forbid();
+            }
+
             var ukupnoKt = DohvatiUkupnoKontrolnihTocaka(id);
             if (DodajGreskeZaDuplikatPodrucja(model.Naziv, model.Regija, model.MinimalanBrojKTZaObilazak, model.UkupanBrojKT ?? ukupnoKt, id))
             {
@@ -187,6 +208,17 @@ namespace planinarenje.Controllers
             podrucje.Opis = model.Opis;
             podrucje.Regija = model.Regija;
             podrucje.MinimalanBrojKTZaObilazak = model.MinimalanBrojKTZaObilazak;
+
+            if (IsAdmin)
+            {
+                podrucje.JeOdobreno = true;
+            }
+            else
+            {
+                podrucje.JeOdobreno = false;
+                podrucje.IdKreator = korisnik?.IdKorisnik;
+                podrucje.DatumPrijave = DateTime.UtcNow;
+            }
 
             try
             {
@@ -200,7 +232,9 @@ namespace planinarenje.Controllers
             }
 
             _logger.LogInformation("Područje {IdPodrucje} ažurirano.", id);
-            TempData["Success"] = "Podrucje je uspjesno azurirano.";
+            TempData["Success"] = IsAdmin
+                ? "Podrucje je uspjesno azurirano."
+                : "Izmjena je poslana na odobravanje administratoru.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -235,7 +269,7 @@ namespace planinarenje.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public IActionResult Details(int id)
+        public async Task<IActionResult> Details(int id)
         {
             var podrucje = Db.Podrucja
                 .Include(p => p.KontrolneTocke)
@@ -244,6 +278,15 @@ namespace planinarenje.Controllers
             if (podrucje is null)
             {
                 return NotFound();
+            }
+
+            if (!podrucje.JeOdobreno && !IsAdmin)
+            {
+                var korisnik = await GetCurrentKorisnikAsync();
+                if (podrucje.IdKreator != korisnik?.IdKorisnik)
+                {
+                    return NotFound();
+                }
             }
 
             if (podrucje.KontrolneTocke != null)
@@ -266,7 +309,7 @@ namespace planinarenje.Controllers
 
             var tocke = Db.KontrolneTocke
                 .Include(kt => kt.Podrucje)
-                .Where(kt => kt.IdPodrucje == id && kt.DeletedAt == null)
+                .Where(kt => kt.IdPodrucje == id && kt.DeletedAt == null && kt.JeOdobreno)
                 .OrderBy(kt => kt.Naziv)
                 .ToList();
 
@@ -290,10 +333,18 @@ namespace planinarenje.Controllers
             return normalized[..maxLength].TrimEnd() + "...";
         }
 
-        private List<PodrucjeIndexCardViewModel> BuildIndexModel(string? searchTerm)
+        private async Task<List<PodrucjeIndexCardViewModel>> BuildIndexModel(string? searchTerm)
         {
+            var korisnik = await GetCurrentKorisnikAsync();
+            var idKorisnik = korisnik?.IdKorisnik;
+
             var filteredPodrucja = Db.Podrucja
                 .Where(p => p.DeletedAt == null);
+
+            if (!IsAdmin)
+            {
+                filteredPodrucja = filteredPodrucja.Where(p => p.JeOdobreno || (idKorisnik.HasValue && p.IdKreator == idKorisnik.Value));
+            }
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
@@ -320,7 +371,8 @@ namespace planinarenje.Controllers
                     Regija = string.IsNullOrWhiteSpace(p.Regija) ? "Regija nije navedena" : p.Regija,
                     OpisPreview = TrimOpis(p.Opis, 170),
                     MinimalanBrojKTZaObilazak = p.MinimalanBrojKTZaObilazak,
-                    UkupanBrojKT = ktCountByPodrucje.TryGetValue(p.IdPodrucje, out var count) ? count : 0
+                    UkupanBrojKT = ktCountByPodrucje.TryGetValue(p.IdPodrucje, out var count) ? count : 0,
+                    JeOdobreno = p.JeOdobreno
                 })
                 .ToList();
         }
